@@ -1,5 +1,6 @@
 from .asha_synthetic import run_asha_admission
 from .local_patch_admission import audit_local_patch_admission_report, run_local_patch_admission
+from .local_patch_readmission import run_local_patch_readmission, seal_local_patch_readmission
 from .local_patch_reliability import audit_local_patch_invalids, replay_local_patch_mechanics
 
 __all__ = [
@@ -8,4 +9,6 @@ __all__ = [
     "replay_local_patch_mechanics",
     "run_asha_admission",
     "run_local_patch_admission",
+    "run_local_patch_readmission",
+    "seal_local_patch_readmission",
 ]

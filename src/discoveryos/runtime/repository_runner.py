@@ -82,16 +82,17 @@ class IsolatedRepositoryRunner:
                 self._git(repository, ("worktree", "add", "--detach", "--force", str(worktree), bundle.base_commit), self._remaining(deadline))
                 try:
                     for patch_index, patch in enumerate(bundle.effective_patch_stack):
-                        patch_failure = self._apply_patch(
+                        patch_result = self._apply_patch(
                             worktree,
                             patch,
                             self._remaining(deadline),
                             patch_index=patch_index,
                             recount=bundle.patch_apply_policy == "recount_hunks",
                         )
-                        if patch_failure is not None:
-                            logs.append(patch_failure)
-                            lowered = patch_failure.stderr.lower()
+                        if bundle.patch_apply_policy == "recount_hunks" or patch_result.exit_code != 0:
+                            logs.append(patch_result)
+                        if patch_result.exit_code != 0:
+                            lowered = patch_result.stderr.lower()
                             category = (
                                 "PATCH_PARSE_FAILURE"
                                 if any(marker in lowered for marker in ("corrupt patch", "patch fragment", "unrecognized input"))
@@ -99,7 +100,7 @@ class IsolatedRepositoryRunner:
                             )
                             return self._failure(
                                 FailureKind.PATCH_REJECTED,
-                                f"{category}:patch_index={patch_index}:exit={patch_failure.exit_code}",
+                                f"{category}:patch_index={patch_index}:exit={patch_result.exit_code}",
                                 self._store_logs(logs),
                                 self._usage(logs, wall_seconds=time.monotonic() - started_run),
                             )
@@ -273,9 +274,11 @@ class IsolatedRepositoryRunner:
         *,
         patch_index: int,
         recount: bool,
-    ) -> CommandResult | None:
+    ) -> CommandResult:
         started = time.monotonic()
         recount_flag = ("--recount",) if recount else ()
+        stdout: list[str] = []
+        stderr: list[str] = []
         for arguments in (
             ("apply", "--check", *recount_flag, "-"),
             ("apply", "--whitespace=nowarn", *recount_flag, "-"),
@@ -290,13 +293,15 @@ class IsolatedRepositoryRunner:
                 timeout=timeout,
                 check=False,
             )
+            stdout.append(result.stdout)
+            stderr.append(result.stderr)
             if result.returncode != 0:
                 return CommandResult(
-                    step="patch",
+                    step="patch_recount" if recount else "patch_strict",
                     argv=("git", *arguments[:-1], f"<patch-{patch_index}>"),
                     exit_code=result.returncode,
-                    stdout=result.stdout,
-                    stderr=result.stderr,
+                    stdout="".join(stdout),
+                    stderr="".join(stderr),
                     wall_seconds=time.monotonic() - started,
                     cpu_seconds=0.0,
                     peak_rss_bytes=0,
@@ -304,7 +309,19 @@ class IsolatedRepositoryRunner:
                     uses_gpu=False,
                     uses_device=False,
                 )
-        return None
+        return CommandResult(
+            step="patch_recount" if recount else "patch_strict",
+            argv=("git", "apply", *(("--recount",) if recount else ()), f"<patch-{patch_index}>"),
+            exit_code=0,
+            stdout="".join(stdout),
+            stderr="".join(stderr),
+            wall_seconds=time.monotonic() - started,
+            cpu_seconds=0.0,
+            peak_rss_bytes=0,
+            timed_out=False,
+            uses_gpu=False,
+            uses_device=False,
+        )
 
     @staticmethod
     def _changed_paths(

@@ -60,7 +60,7 @@ generation request、raw response、provider/model/settings、prompt-template di
 
 ## 授权边界
 
-当前只允许进入 **R1.0-BR Local Patch Validity Repair**。现有 6-task corpus 已 consumed，只能用于 invalid autopsy、mechanics development 与 replay 回归；换一个 workspace 重跑同一 corpus 不构成 fresh admission。正式 readmission 必须使用新冻结的 6–8 个同等级任务。仍不授权：
+R1.0-BR 与 8-task BR-A fresh readmission 均已完成。BR-A 证明 reliability 已通过，但 One-shot 与 Iterative 同为 8/8、累计 improvement 同为 `5.50357143`、paired 为 `0/8/0`，因此原 search-value gate 失败，verdict 继续为 `LLM_LOCAL_PATCH_NOT_ADMITTED`。现有 6-task corpus 和 BR-A corpus 均已 consumed，不能通过换 workspace 重跑或追加 repair 改写结论。仍不授权：
 
 - BlindAssist fresh target 四臂赛马；
 - Portfolio；
@@ -69,6 +69,6 @@ generation request、raw response、provider/model/settings、prompt-template di
 - Meta-Strategy；
 - 学习型 Advisor。
 
-首要问题不是新增搜索器，而是降低合法 patch 的 invalid/repair rate，并证明 iterative 在 matched-token 下能稳定增加成功任务数且不产生 paired loss。
+当前主问题不再是 patch parser/reliability，而是 iterative Local Patch 没有显示出高于同模型 One-shot 的额外搜索价值。后续工作应针对 operator/search policy，并通过新的预冻结 admission 证明增量价值。
 
 R1.0-BR 的 autopsy、修复边界和 fresh readmission 门见 [Local Patch Validity Repair](LLM_LOCAL_PATCH_RELIABILITY.md)。

@@ -306,7 +306,7 @@ async def _run_arm(
             )
             scientific_calls += 1
             if result.candidate is None:
-                continue
+                break
             generated_candidates += 1
             candidate = result.candidate
             candidate_evidence = await _evaluate_candidate(arm, candidate, attempt=f"proposal-{index}")

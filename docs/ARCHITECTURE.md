@@ -43,7 +43,7 @@ ResourceReservation
 
 ## 下一批实现顺序
 
-1. **R1.0-BR Local Patch Validity Repair**：R1.0-B 已以 `LLM_LOCAL_PATCH_NOT_ADMITTED` 冻结；当前只修 deterministic patch validity、repair diagnostics 与 scientific-parent isolation。现有 6-task corpus 仅供 BR-D development，BR-A 必须在新冻结的 6–8 个任务上按原 search-value gate 和预冻结 reliability gate readmit，不能提前进入 R1.0-C。
+1. **Local Patch operator/search policy**：R1.0-BR-A 已完成；fresh reliability gate 通过，但 One-shot 与 Iterative 在 8 个 task 上全部打平，原 search-value gate 失败，verdict 保持 `LLM_LOCAL_PATCH_NOT_ADMITTED`。不再继续修 parser 或在 consumed corpus 上 replay；任何后续 operator/search-policy 研究都必须使用新的预冻结 admission，不能提前进入 R1.0-C。
 2. **R0.2 生产隔离**：final-blind 独立服务身份、一次性认证票据、shadow 聚合反馈与查询预算。
 3. **R1.1 搜索组合扩展**：仅在 BlindAssist fresh target 四臂赛马证明组合价值后考虑 BOHB、Structural Rewrite 和更广 operator schema。
 4. **R1.2 图搜索**：Hypothesis/Component effect ledger、分支预算、cross-branch transfer、自动消融、failure signature library。

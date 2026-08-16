@@ -11,6 +11,8 @@ from discoveryos.benchmarks import (
     replay_local_patch_mechanics,
     run_asha_admission,
     run_local_patch_admission,
+    run_local_patch_readmission,
+    seal_local_patch_readmission,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
@@ -53,6 +55,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="replay patch/build/public-test mechanics on the consumed corpus without model or scientific evaluation",
     )
     mechanics_replay.add_argument("--workspace", type=Path, default=Path("runs/local-patch-admission-r1"))
+    br_a_seal = subparsers.add_parser(
+        "local-patch-br-a-seal",
+        help="freeze the eight-task BR-A manifest without making model calls",
+    )
+    br_a_seal.add_argument("--workspace", type=Path, default=Path("runs/local-patch-br-a-readmission-r1"))
+    br_a_seal.add_argument("--model", required=True, help="frozen Codex model identifier")
+    br_a_seal.add_argument("--codex-command", default="codex", help="quoted command used to launch Codex CLI")
+    br_a_seal.add_argument("--reasoning-effort", default="medium")
+    br_a_seal.add_argument("--token-ceiling", type=int, default=90000)
+    br_a_seal.add_argument("--iterations", type=int, default=3)
+    br_a_run = subparsers.add_parser(
+        "local-patch-br-a-readmission",
+        help="execute the already-sealed eight-task BR-A fresh readmission",
+    )
+    br_a_run.add_argument("--workspace", type=Path, default=Path("runs/local-patch-br-a-readmission-r1"))
+    br_a_run.add_argument("--manifest-digest", required=True)
+    br_a_run.add_argument("--model", required=True, help="must match the sealed Codex model identifier")
+    br_a_run.add_argument("--codex-command", default="codex", help="quoted command used to launch Codex CLI")
+    br_a_run.add_argument("--reasoning-effort", default="medium")
     return parser
 
 
@@ -84,6 +105,30 @@ def main(argv: list[str] | None = None) -> int:
             result = audit_local_patch_invalids(args.workspace)
         elif args.command == "local-patch-brd-mechanics-replay":
             result = replay_local_patch_mechanics(args.workspace)
+        elif args.command == "local-patch-br-a-seal":
+            provider = CodexExecProvider(
+                command=tuple(shlex.split(args.codex_command, posix=False)),
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+            )
+            result = seal_local_patch_readmission(
+                args.workspace,
+                provider=provider,
+                token_ceiling=args.token_ceiling,
+                iterations=args.iterations,
+            )
+        elif args.command == "local-patch-br-a-readmission":
+            provider = CodexExecProvider(
+                command=tuple(shlex.split(args.codex_command, posix=False)),
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+            )
+            result = run_local_patch_readmission(
+                args.workspace,
+                provider=provider,
+                manifest_digest=args.manifest_digest,
+                progress=lambda message: print(message, file=sys.stderr, flush=True),
+            )
         else:
             result = demo_status(args.workspace)
     except (RuntimeError, ValueError, PermissionError) as error:
