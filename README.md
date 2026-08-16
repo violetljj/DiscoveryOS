@@ -7,10 +7,15 @@ DiscoveryOS 是一个“证据优先”的算法研究操作系统内核。当�
 ## 已实现
 
 - 不可变 `ProblemContract`、`CandidateSpec`、`ExperimentSpec`、`EvidenceRecord`。
+- Trial/Rung/Replicate/Attempt 身份与资源指纹；同一候选可在不同 rung、seed 和机械 retry 下拥有独立 experiment。
 - evaluator、data split、contract、candidate artifact 的 SHA-256 绑定。
 - create-once artifact/receipt store 与 SQLite WAL 证据账本。
 - Candidate / Experiment / Evidence 统一研究图和谱系边。
-- token、CPU、GPU、device、wall-time 多维预算预留。
+- token、CPU、GPU、device、wall-time 多维预算预留、实际消耗结算和可重放的超预算拒绝记录。
+- LLM input/output/cache token、子进程退出码、peak RSS、GPU/device/wall-time 使用量收据。
+- fidelity 到 evaluator id/digest 的冻结绑定，不再默认使用列表中的第一个 evaluator。
+- `ExecutableCandidateBundle`：冻结 base repository/commit、`patch.diff`、路径策略、entrypoint、环境锁和 build/test/evaluation 命令。
+- 临时 Git worktree runner：patch 校验、mutable/forbidden/touched path 检查、硬超时进程树终止、日志与 run receipt 固化。
 - CPU/GPU/device 分池的异步执行底座与 backpressure。
 - G0 静态准入、G1 proxy、G2 development、G7 final blind。
 - 硬约束与多目标 Pareto 分离；冻结的字典序 winner rule。
@@ -75,6 +80,23 @@ flowchart LR
 
 这是可信研究内核，不是整份远景设计已经全部完成。尚未实现的主要能力包括 BOHB/qNEHVI、LLM Local Patch/Rewrite、跨分支组件迁移、G3–G6 的正式策略、shadow 查询预算、容器/独立 OS 账号级的 hostile-worker 隔离、远端 GPU/device worker、Meta-Strategy Evolver、外部 challenger adapter 和学习型 Advisor。
 
-当前 `SplitVault` 是 fail-closed 的应用能力边界，能阻止正常 worker 通过系统 API 读取 blind；它不能把同一 OS 用户下的恶意任意代码变成安全沙箱。真实数据认证必须把 final-blind vault 部署为独立服务或独立系统身份，只向认证 worker 返回受控结果。
+当前 `SplitVault` 是 fail-closed 的应用能力边界，能阻止正常 worker 通过系统 API 读取 blind；`IsolatedRepositoryRunner` 提供临时 worktree 和独立子进程，但它同样不是 hostile-code 安全沙箱。真实数据认证必须把 final-blind vault 部署为独立服务或独立系统身份，只向认证 worker 返回受控结果。
 
-下一阶段及正式扩展点见 [架构与路线图](docs/ARCHITECTURE.md)。
+Executable evaluation 命令必须把单个 JSON object 写到 stdout 的最后一行：
+
+```json
+{
+  "metrics": {"objective": 0.42},
+  "usage": {
+    "llm_input_tokens": 0,
+    "llm_output_tokens": 0,
+    "llm_cache_tokens": 0,
+    "gpu_seconds": 0.0,
+    "device_seconds": 0.0
+  }
+}
+```
+
+runner 通过 `DISCOVERYOS_DATA_PATH`、`DISCOVERYOS_FIDELITY`、`DISCOVERYOS_SEED`、`DISCOVERYOS_TRIAL_ID` 和 `DISCOVERYOS_RUNG_ID` 提供冻结执行上下文。命令以 argv vector 直接启动，不经过 shell。
+
+当前仍未实现 ASHA、LLM Local Patch operator、RepairQueue、matched-budget benchmark、Meta-Strategy、qNEHVI 或生产级 final-blind 服务。下一阶段及正式扩展点见 [架构与路线图](docs/ARCHITECTURE.md)。
