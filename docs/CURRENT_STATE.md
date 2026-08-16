@@ -14,6 +14,8 @@ DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
 DISCOVERYOS_PRODUCTION_NOT_READY
 SI1_PARENT_EFFECTIVENESS_REPAIRED
 SI1_NOVELTY_COST_REPAIRED
+SI2_PROTOCOL_DESIGN_OPEN
+SI2_EXECUTION_NOT_AUTHORIZED
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -57,6 +59,14 @@ SI1_NOVELTY_COST_REPAIRED
 - SI-1R 对冻结 SI-1 records 的 autopsy 证明：首步存在真实 pool starvation，但主要 parent 缺陷是多候选时的权重塌缩，不是 archive visibility 或 controller opportunity 缺失；novelty 高成本来自 rejection 后无条件昂贵 resample。
 - Parent 的单候选概率上限和完整 opportunity receipt 已在 deterministic fixture 与真实 consumed-task trace 中改变合法 parent 分布；novelty cheap-first cascade 与 affordability gate 将四次 avoided evaluation 的 resample generation overhead 降为零。
 - 有界 verdict 为 `SI1_PARENT_EFFECTIVENESS_REPAIRED` 与 `SI1_NOVELTY_COST_REPAIRED`。真实 pilot 没有提高最终 median、没有新 stepping-stone，且 parent arms 未超过 CORE aggregate diversity；因此仍是 development mechanics，不是 search-value admission。
+- SI-1R 已正式收口。其累计 `719,922` generation tokens 不再支持继续在 consumed pilot corpus 上调 parent、novelty 或 selection diagnostics；结果保持 `DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED`。
+
+## SI-2 在研状态
+
+- 下一阶段已定义为 `SI-2 — Fresh Search-Value Trial`，当前仅为 `SI2_PROTOCOL_DESIGN_OPEN`，尚未封存 task suite、external baseline、replicates、budgets 或统计门，也未授权执行。
+- 固定比较形状为 `CORE`、`CURRENT_DISCOVERYOS`、`VANILLA_STRONG_AGENT`、`EXTERNAL_STRONG_BASELINE`；Parent / Novelty 不再拆成 confirmatory ablation。
+- Primary 为 matched-token final best、Anytime AUC 和 fresh-task win rate；evaluator/generation/wall、valid rate 与冻结定义下的 structural/basin diversity 为 Secondary。
+- 在 SI-2 结果闭合前冻结搜索机制开发；只有会使协议无效或不可执行的 blocker 可以修复，且不得把策略调优包装成基础设施修复。
 
 ## 明确尚未建立或尚未实现
 
@@ -69,10 +79,10 @@ SI1_NOVELTY_COST_REPAIRED
 
 ## 当前下一道门
 
-1. SI-1R 已满足 repair stop rule；停止继续调参或增加 strategy。
-2. 如需继续，只能先讨论并预注册新的、未污染的 SI-1 fresh admission；不得从 SI-1R 直接晋升。
-3. 若设计新 admission，必须在任何候选模型调用前冻结 task provenance、matched-resource surface、replicates、gate 和 claim ceiling。
-4. 只有 search value 在冻结分布上成立后，才扩大到远端执行、更多策略或生产 blind isolation。
+1. 完成 SI-2 task freshness/contamination contract、四臂实现边界和外部 baseline mechanics preflight；不得查看 task outcome。
+2. 在任何候选模型调用前，冻结 task/confirmation roster、provider/model/settings、matched-resource surface、replicates、metrics、统计 gate、winner rule 和 claim ceiling，并由 validator fail closed。
+3. 封存前状态只能是 `SI2_PROTOCOL_DESIGN_OPEN`；通过 create-once manifest 验证后才可进入 `SI2_SEALED_PRE_MODEL` 并另行启动正式执行。
+4. 只有 search value 在冻结 fresh distribution 上成立后，才讨论更多策略、远端扩展或生产 blind isolation。
 
 ## 状态更新规则
 
@@ -90,3 +100,4 @@ SI1_NOVELTY_COST_REPAIRED
 - MVP-0：[`SEARCH_VALUE_MVP0.md`](SEARCH_VALUE_MVP0.md)、[`MVP0_BUDGET_REACHABILITY_REPAIR.md`](MVP0_BUDGET_REACHABILITY_REPAIR.md)
 - SI-1：[`STRATEGY_INTEGRATION_SI1.md`](STRATEGY_INTEGRATION_SI1.md)、[`SHINKA_MECHANISM_MAPPING.md`](SHINKA_MECHANISM_MAPPING.md)
 - SI-1R：[`SI1_PARENT_NOVELTY_REPAIR.md`](SI1_PARENT_NOVELTY_REPAIR.md)
+- SI-2：[`SI2_FRESH_SEARCH_VALUE_TRIAL.md`](SI2_FRESH_SEARCH_VALUE_TRIAL.md)

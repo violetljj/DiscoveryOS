@@ -99,4 +99,4 @@ Compared with frozen SI-1, SI-1R avoided four duplicate evaluations with zero re
 
 Parent selection now demonstrably changes the realized parent distribution when legal alternatives exist, and novelty retains duplicate-evaluation avoidance without automatic expensive regeneration. BR affordability and reachability mechanics did not regress. The SI-1R stop rule is therefore satisfied.
 
-Do not hand-tune final benchmark scores or add another strategy. A fresh SI-1 admission may be discussed next, but it has not been opened or authorized by this result.
+Do not hand-tune final benchmark scores or add another strategy. SI-1R is closed as the last mechanism-repair stage before SI-2. The next authorized work is protocol design for the fresh system-level search-value trial; SI-2 model execution remains closed until its own create-once manifest and validator are sealed pre-model.

@@ -114,3 +114,4 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - Search policy protocol：`SEARCH_POLICY_ADMISSION.md`
 - Shinka-style mechanism mapping / SI-1：`SHINKA_MECHANISM_MAPPING.md`、`STRATEGY_INTEGRATION_SI1.md`
 - SI-1 parent/novelty repair：`SI1_PARENT_NOVELTY_REPAIR.md`
+- SI-2 fresh search-value trial：`SI2_FRESH_SEARCH_VALUE_TRIAL.md`
