@@ -56,8 +56,10 @@ python -m unittest discover -s tests -v
 
 ## Git 交付
 
+- 默认直接在 `main` 主分支工作并向 `origin/main` 交付；只有用户明确指定其他分支、仓库策略禁止直推，或并发/隔离风险要求独立分支时才切换，并在行动前说明原因。
 - 只暂存本任务拥有的路径，提交前检查 `git diff --cached --check` 和 staged diff。
-- 已授权的实现完成且验证通过后，提交并推送当前分支；不主动创建 PR。
+- 将较长工作拆成边界清晰、可独立验证的阶段。每个阶段达到其验收标准并完成相称验证后，自动暂存该阶段拥有的文件、提交并推送；无需等待用户再次说“提交”或“推送”，也不主动创建 PR。
+- 阶段提交前确认 `main` 与 `origin/main` 没有意外分歧；推送后确认本地与远端提交一致。不要为了制造提交而拆分尚未闭合或无法独立验证的中间状态。
 - 遇到重叠 WIP、非 fast-forward、远端分歧、凭据问题或无法证明归属的改动时停止，不做自动 merge、reset、stash 或清理。
 - Commit message 描述实际交付，不把 mechanics 写成 admission，也不把开发信号写成 scientific win。
 
