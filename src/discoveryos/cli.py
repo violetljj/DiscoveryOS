@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
+import sys
 from pathlib import Path
 
-from discoveryos.benchmarks import run_asha_admission
+from discoveryos.benchmarks import run_asha_admission, run_local_patch_admission
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
+from discoveryos.providers import CodexExecProvider
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -25,6 +28,16 @@ def build_parser() -> argparse.ArgumentParser:
     asha = subparsers.add_parser("asha-admission", help="run matched-budget deterministic Random vs ASHA admission")
     asha.add_argument("--workspace", type=Path, default=Path("runs/asha-admission"))
     asha.add_argument("--seeds", type=int, default=12)
+    local_patch = subparsers.add_parser(
+        "local-patch-admission",
+        help="run matched-token Baseline vs One-shot LLM vs Iterative Local Patch real-code admission",
+    )
+    local_patch.add_argument("--workspace", type=Path, default=Path("runs/local-patch-admission"))
+    local_patch.add_argument("--model", required=True, help="frozen Codex model identifier")
+    local_patch.add_argument("--codex-command", default="codex", help="quoted command used to launch Codex CLI")
+    local_patch.add_argument("--reasoning-effort", default="medium")
+    local_patch.add_argument("--token-ceiling", type=int, default=90000)
+    local_patch.add_argument("--iterations", type=int, default=3)
     return parser
 
 
@@ -39,6 +52,19 @@ def main(argv: list[str] | None = None) -> int:
             result = replay_demo(args.workspace)
         elif args.command == "asha-admission":
             result = run_asha_admission(args.workspace, seeds=args.seeds)
+        elif args.command == "local-patch-admission":
+            provider = CodexExecProvider(
+                command=tuple(shlex.split(args.codex_command, posix=False)),
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+            )
+            result = run_local_patch_admission(
+                args.workspace,
+                provider=provider,
+                token_ceiling=args.token_ceiling,
+                iterations=args.iterations,
+                progress=lambda message: print(message, file=sys.stderr, flush=True),
+            )
         else:
             result = demo_status(args.workspace)
     except (RuntimeError, ValueError, PermissionError) as error:

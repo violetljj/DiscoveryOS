@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator
 
-from discoveryos.contracts.codec import candidate_from_dict, evidence_from_dict, experiment_from_dict
+from discoveryos.contracts.codec import candidate_from_dict, evidence_from_dict, experiment_from_dict, generation_record_from_dict
 from discoveryos.contracts.models import (
     CandidateSpec,
     EvidenceRecord,
@@ -17,6 +17,7 @@ from discoveryos.contracts.models import (
     ResourceReservation,
     ResourceUsage,
 )
+from discoveryos.contracts.patch import GenerationKind, GenerationRecord
 from discoveryos.util import canonical_json, jsonable, utc_now
 
 
@@ -102,6 +103,13 @@ class EvidenceLedger:
                     confidence TEXT NOT NULL, tags TEXT NOT NULL, created_at TEXT NOT NULL,
                     FOREIGN KEY(candidate_id) REFERENCES candidates(candidate_id)
                 );
+                CREATE TABLE IF NOT EXISTS generation_records(
+                    generation_id TEXT PRIMARY KEY, root_generation_id TEXT NOT NULL,
+                    kind TEXT NOT NULL, status TEXT NOT NULL, payload TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS one_mechanical_repair_per_generation
+                    ON generation_records(root_generation_id) WHERE kind='MECHANICAL_REPAIR';
                 CREATE TABLE IF NOT EXISTS events(
                     sequence INTEGER PRIMARY KEY AUTOINCREMENT, event_type TEXT NOT NULL, payload TEXT NOT NULL,
                     created_at TEXT NOT NULL
@@ -167,6 +175,30 @@ class EvidenceLedger:
         )
         self.add_node(evidence.receipt_id, "evidence", evidence)
         self.add_edge(evidence.experiment_id, evidence.receipt_id, "PRODUCED", {})
+        return added
+
+    def add_generation(self, record: GenerationRecord) -> bool:
+        added = self._insert_once(
+            "generation_records",
+            "generation_id",
+            record.generation_id,
+            {
+                "root_generation_id": record.root_generation_id,
+                "kind": record.kind.value,
+                "status": record.status.value,
+                "payload": record,
+                "created_at": record.created_at,
+            },
+        )
+        self.add_node(record.generation_id, "llm_generation", record)
+        self.add_edge(
+            record.parent_candidate_id,
+            record.generation_id,
+            "PROPOSED_BY" if record.kind is GenerationKind.PROPOSAL else "REPAIRED_BY",
+            {"status": record.status.value},
+        )
+        if record.candidate_id:
+            self.add_edge(record.generation_id, record.candidate_id, "MATERIALIZED", {})
         return added
 
     def add_node(self, node_id: str, node_type: str, payload: Any) -> bool:
@@ -431,6 +463,31 @@ class EvidenceLedger:
             raise KeyError(candidate_id)
         return candidate_from_dict(json.loads(row["payload"]))
 
+    def get_generation(self, generation_id: str) -> GenerationRecord:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT payload FROM generation_records WHERE generation_id=?",
+                (generation_id,),
+            ).fetchone()
+        if not row:
+            raise KeyError(generation_id)
+        return generation_record_from_dict(json.loads(row["payload"]))
+
+    def repair_for_root(self, root_generation_id: str) -> GenerationRecord | None:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT payload FROM generation_records WHERE root_generation_id=? AND kind=?",
+                (root_generation_id, GenerationKind.MECHANICAL_REPAIR.value),
+            ).fetchone()
+        return generation_record_from_dict(json.loads(row["payload"])) if row else None
+
+    def generation_records(self) -> list[GenerationRecord]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT payload FROM generation_records ORDER BY created_at,generation_id"
+            ).fetchall()
+        return [generation_record_from_dict(json.loads(row["payload"])) for row in rows]
+
     def evidence_payloads(self, *, fidelity: str | None = None) -> list[dict[str, Any]]:
         query = "SELECT payload FROM evidence"
         parameters: tuple[Any, ...] = ()
@@ -471,6 +528,7 @@ class EvidenceLedger:
             "frozen_candidates",
             "resource_reservations",
             "resource_reservation_rejections",
+            "generation_records",
         )
         with self.connect() as connection:
             return {table: int(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]) for table in tables}

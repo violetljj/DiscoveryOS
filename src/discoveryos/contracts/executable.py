@@ -48,6 +48,8 @@ class ExecutableCandidateBundle:
     build_command: CommandSpec
     test_command: CommandSpec
     evaluation_command: CommandSpec
+    generation_provenance_digest: str | None = None
+    patch_stack: tuple[str, ...] = ()
     format_version: str = "executable-candidate-v1"
 
     def __post_init__(self) -> None:
@@ -59,6 +61,10 @@ class ExecutableCandidateBundle:
             _validate_relative_path(path)
         if len(set(self.touched_paths)) != len(self.touched_paths):
             raise ContractError("touched paths must be unique")
+        if self.generation_provenance_digest is not None and len(self.generation_provenance_digest) != 64:
+            raise ContractError("generation provenance requires a SHA-256 digest")
+        if self.patch_stack and any(not patch.strip() for patch in self.patch_stack):
+            raise ContractError("candidate patch stack cannot contain an empty patch")
         mutable = tuple(_normalize_path(path) for path in self.mutable_paths)
         forbidden = tuple(_normalize_path(path) for path in self.forbidden_paths)
         for path in self.touched_paths:
@@ -96,8 +102,14 @@ class ExecutableCandidateBundle:
                 manifest["evaluation_command"]["uses_gpu"],
                 manifest["evaluation_command"]["uses_device"],
             ),
+            generation_provenance_digest=manifest.get("generation_provenance_digest"),
+            patch_stack=tuple(manifest.get("patch_stack", ())),
             format_version=manifest["format_version"],
         )
+
+    @property
+    def effective_patch_stack(self) -> tuple[str, ...]:
+        return self.patch_stack or (self.patch_diff,)
 
     def verify_environment_lock(self, worktree: Path) -> bool:
         path = worktree / Path(self.environment_lock.relative_path)

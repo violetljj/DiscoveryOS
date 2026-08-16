@@ -68,7 +68,7 @@ class ReplayEngine:
             if digest_bytes(data) != evidence.data_digest:
                 issues.append("DATA_BINDING_MISMATCH")
         gate = GateEngine().evaluate(self.contract, evidence)
-        if gate.decision.value == "INVALID":
+        if gate.decision.value == "INVALID" and evidence.validity is EvidenceValidity.VALID:
             issues.extend(gate.violations)
         if issues:
             return ReplayResult(evidence.receipt_id, False, False, tuple(dict.fromkeys(issues)))

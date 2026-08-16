@@ -81,7 +81,8 @@ class IsolatedRepositoryRunner:
                 worktree = Path(temporary) / "repo"
                 self._git(repository, ("worktree", "add", "--detach", "--force", str(worktree), bundle.base_commit), self._remaining(deadline))
                 try:
-                    self._apply_patch(worktree, bundle.patch_diff, self._remaining(deadline))
+                    for patch in bundle.effective_patch_stack:
+                        self._apply_patch(worktree, patch, self._remaining(deadline))
                     touched = self._changed_paths(worktree, bundle.base_commit, self._remaining(deadline))
                     if touched != tuple(sorted(bundle.touched_paths)):
                         return self._failure(

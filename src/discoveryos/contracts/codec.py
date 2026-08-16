@@ -24,6 +24,7 @@ from .models import (
     RunMode,
     WinnerRule,
 )
+from .patch import GenerationKind, GenerationRecord, GenerationStatus
 
 
 def contract_from_dict(value: dict[str, Any]) -> ProblemContract:
@@ -154,5 +155,24 @@ def experiment_from_dict(value: dict[str, Any]) -> ExperimentSpec:
         attempt_id=value.get("attempt_id", "attempt-0"),
         parent_trial_id=value.get("parent_trial_id"),
         promotion_reason=value.get("promotion_reason"),
+        created_at=value["created_at"],
+    )
+
+
+def generation_record_from_dict(value: dict[str, Any]) -> GenerationRecord:
+    return GenerationRecord(
+        generation_id=value["generation_id"],
+        kind=GenerationKind(value["kind"]),
+        root_generation_id=value["root_generation_id"],
+        parent_candidate_id=value["parent_candidate_id"],
+        status=GenerationStatus(value["status"]),
+        request_artifact_digest=value["request_artifact_digest"],
+        raw_response_digest=value.get("raw_response_digest"),
+        provenance_artifact_digest=value.get("provenance_artifact_digest"),
+        candidate_id=value.get("candidate_id"),
+        candidate_artifact_digest=value.get("candidate_artifact_digest"),
+        usage=ResourceUsage(**value["usage"]),
+        failure_signature=value.get("failure_signature"),
+        usage_is_exact=bool(value.get("usage_is_exact", True)),
         created_at=value["created_at"],
     )
