@@ -37,6 +37,8 @@ Scientific scope:
 - Do not call tools, inspect the filesystem, or seek context beyond FROZEN_CONTEXT_JSON.
 - The patch must be a standard unified diff relative to the visible parent file, with `--- a/path`,
   `+++ b/path`, and a numbered hunk header such as `@@ -1,3 +1,5 @@`.
+- Hunk line counts must match the actual context, removed, and added lines. Keep hunks minimal.
+- Binary patches, renames, copies, file creation/deletion, mode changes, and dependency changes are forbidden.
 - A bare `@@` header, `*** Begin Patch`, `*** Update File`, prose, or Markdown fence is invalid.
 
 Mechanical repair scope:
@@ -49,6 +51,21 @@ GENERATION_KIND
 FROZEN_CONTEXT_JSON
 {context_json}
 """
+
+MAX_PATCH_BYTES = 64 * 1024
+MAX_PATCH_CHANGED_LINES = 400
+FORBIDDEN_DIFF_MARKERS = (
+    "GIT binary patch",
+    "Binary files ",
+    "rename from ",
+    "rename to ",
+    "copy from ",
+    "copy to ",
+    "new file mode ",
+    "deleted file mode ",
+    "old mode ",
+    "new mode ",
+)
 
 
 class PatchProvider(Protocol):
@@ -379,7 +396,8 @@ class LocalPatchOperator:
             evaluation_command=build.evaluation_command,
             generation_provenance_digest=provenance_digest,
             patch_stack=(*build.parent_patch_stack, proposal.patch),
-            format_version="executable-candidate-v2",
+            patch_apply_policy="recount_hunks",
+            format_version="executable-candidate-v3",
         )
         candidate_artifact_digest = bundle.store(self.artifacts)
         candidate = CandidateSpec.create(
@@ -426,7 +444,30 @@ class LocalPatchOperator:
         for path in proposal.target_files:
             if not path_is_within(path, self.contract.mutable_paths) or path_is_within(path, self.contract.forbidden_paths):
                 raise ContractError(f"proposal target violates contract path policy: {path}")
-        touched = _touched_paths_from_patch(proposal.patch)
+        if len(proposal.patch.encode("utf-8")) > MAX_PATCH_BYTES:
+            raise ContractError(f"patch exceeds {MAX_PATCH_BYTES} byte limit")
+        if "\x00" in proposal.patch or any(marker in proposal.patch for marker in FORBIDDEN_DIFF_MARKERS):
+            raise ContractError("binary, rename, copy, create, delete, and mode-changing patches are forbidden")
+        if "--- /dev/null" in proposal.patch or "+++ /dev/null" in proposal.patch:
+            raise ContractError("file creation and deletion are forbidden")
+        hunk_lines = [line for line in proposal.patch.splitlines() if line.startswith("@@")]
+        if not hunk_lines or any(
+            re.fullmatch(r"@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@(?: .*)?", line) is None
+            for line in hunk_lines
+        ):
+            raise ContractError("patch requires numbered unified-diff hunk headers")
+        changed_lines = sum(
+            1
+            for line in proposal.patch.splitlines()
+            if (line.startswith("+") and not line.startswith("+++"))
+            or (line.startswith("-") and not line.startswith("---"))
+        )
+        if changed_lines > MAX_PATCH_CHANGED_LINES:
+            raise ContractError(f"patch exceeds {MAX_PATCH_CHANGED_LINES} changed-line limit")
+        old_paths, new_paths = _patch_header_paths(proposal.patch)
+        if not old_paths or len(old_paths) != len(new_paths) or old_paths != new_paths:
+            raise ContractError(f"patch must modify existing files without rename: old={old_paths}:new={new_paths}")
+        touched = tuple(sorted(set(new_paths)))
         if touched != tuple(sorted(proposal.target_files)):
             raise ContractError(f"patch headers do not match target_files: headers={touched}")
 
@@ -471,13 +512,16 @@ class LocalPatchOperator:
         )
 
 
-def _touched_paths_from_patch(patch: str) -> tuple[str, ...]:
-    paths: set[str] = set()
-    for match in re.finditer(r"^\+\+\+\s+(?:b/)?([^\t\r\n]+)", patch, flags=re.MULTILINE):
-        value = match.group(1).strip().replace("\\", "/")
-        if value != "/dev/null":
-            paths.add(value)
-    return tuple(sorted(paths))
+def _patch_header_paths(patch: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    def collect(prefix: str, optional_git_prefix: str) -> tuple[str, ...]:
+        values = []
+        pattern = rf"^{re.escape(prefix)}\s+(?:{optional_git_prefix}/)?([^\t\r\n]+)"
+        for match in re.finditer(pattern, patch, flags=re.MULTILINE):
+            value = match.group(1).strip().replace("\\", "/")
+            values.append(value)
+        return tuple(values)
+
+    return collect("---", "a"), collect("+++", "b")
 
 
 def _budget_dimensions(message: str) -> tuple[str, ...]:

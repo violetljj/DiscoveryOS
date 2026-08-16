@@ -6,7 +6,12 @@ import shlex
 import sys
 from pathlib import Path
 
-from discoveryos.benchmarks import run_asha_admission, run_local_patch_admission
+from discoveryos.benchmarks import (
+    audit_local_patch_invalids,
+    replay_local_patch_mechanics,
+    run_asha_admission,
+    run_local_patch_admission,
+)
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
 
@@ -38,6 +43,16 @@ def build_parser() -> argparse.ArgumentParser:
     local_patch.add_argument("--reasoning-effort", default="medium")
     local_patch.add_argument("--token-ceiling", type=int, default=90000)
     local_patch.add_argument("--iterations", type=int, default=3)
+    invalid_autopsy = subparsers.add_parser(
+        "local-patch-invalid-autopsy",
+        help="audit frozen local-patch invalids without model calls or scientific re-evaluation",
+    )
+    invalid_autopsy.add_argument("--workspace", type=Path, default=Path("runs/local-patch-admission-r1"))
+    mechanics_replay = subparsers.add_parser(
+        "local-patch-brd-mechanics-replay",
+        help="replay patch/build/public-test mechanics on the consumed corpus without model or scientific evaluation",
+    )
+    mechanics_replay.add_argument("--workspace", type=Path, default=Path("runs/local-patch-admission-r1"))
     return parser
 
 
@@ -65,6 +80,10 @@ def main(argv: list[str] | None = None) -> int:
                 iterations=args.iterations,
                 progress=lambda message: print(message, file=sys.stderr, flush=True),
             )
+        elif args.command == "local-patch-invalid-autopsy":
+            result = audit_local_patch_invalids(args.workspace)
+        elif args.command == "local-patch-brd-mechanics-replay":
+            result = replay_local_patch_mechanics(args.workspace)
         else:
             result = demo_status(args.workspace)
     except (RuntimeError, ValueError, PermissionError) as error:

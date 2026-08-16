@@ -81,8 +81,28 @@ class IsolatedRepositoryRunner:
                 worktree = Path(temporary) / "repo"
                 self._git(repository, ("worktree", "add", "--detach", "--force", str(worktree), bundle.base_commit), self._remaining(deadline))
                 try:
-                    for patch in bundle.effective_patch_stack:
-                        self._apply_patch(worktree, patch, self._remaining(deadline))
+                    for patch_index, patch in enumerate(bundle.effective_patch_stack):
+                        patch_failure = self._apply_patch(
+                            worktree,
+                            patch,
+                            self._remaining(deadline),
+                            patch_index=patch_index,
+                            recount=bundle.patch_apply_policy == "recount_hunks",
+                        )
+                        if patch_failure is not None:
+                            logs.append(patch_failure)
+                            lowered = patch_failure.stderr.lower()
+                            category = (
+                                "PATCH_PARSE_FAILURE"
+                                if any(marker in lowered for marker in ("corrupt patch", "patch fragment", "unrecognized input"))
+                                else "PATCH_APPLY_FAILURE"
+                            )
+                            return self._failure(
+                                FailureKind.PATCH_REJECTED,
+                                f"{category}:patch_index={patch_index}:exit={patch_failure.exit_code}",
+                                self._store_logs(logs),
+                                self._usage(logs, wall_seconds=time.monotonic() - started_run),
+                            )
                     touched = self._changed_paths(worktree, bundle.base_commit, self._remaining(deadline))
                     if touched != tuple(sorted(bundle.touched_paths)):
                         return self._failure(
@@ -246,8 +266,20 @@ class IsolatedRepositoryRunner:
         IsolatedRepositoryRunner._git(repository, ("cat-file", "-e", f"{commit}^{{commit}}"), timeout)
 
     @staticmethod
-    def _apply_patch(worktree: Path, patch: str, timeout: float | None) -> None:
-        for arguments in (("apply", "--check", "-"), ("apply", "--whitespace=nowarn", "-")):
+    def _apply_patch(
+        worktree: Path,
+        patch: str,
+        timeout: float | None,
+        *,
+        patch_index: int,
+        recount: bool,
+    ) -> CommandResult | None:
+        started = time.monotonic()
+        recount_flag = ("--recount",) if recount else ()
+        for arguments in (
+            ("apply", "--check", *recount_flag, "-"),
+            ("apply", "--whitespace=nowarn", *recount_flag, "-"),
+        ):
             result = subprocess.run(
                 ("git", "-C", str(worktree), *arguments),
                 input=patch,
@@ -259,7 +291,20 @@ class IsolatedRepositoryRunner:
                 check=False,
             )
             if result.returncode != 0:
-                raise RuntimeError("git apply rejected the frozen patch")
+                return CommandResult(
+                    step="patch",
+                    argv=("git", *arguments[:-1], f"<patch-{patch_index}>"),
+                    exit_code=result.returncode,
+                    stdout=result.stdout,
+                    stderr=result.stderr,
+                    wall_seconds=time.monotonic() - started,
+                    cpu_seconds=0.0,
+                    peak_rss_bytes=0,
+                    timed_out=False,
+                    uses_gpu=False,
+                    uses_device=False,
+                )
+        return None
 
     @staticmethod
     def _changed_paths(

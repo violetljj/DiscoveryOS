@@ -61,6 +61,19 @@ class CorrectAdaptiveStepProvider:
         )
 
 
+class MalformedHunkCountProvider(CorrectAdaptiveStepProvider):
+    def generate(self, request):
+        generated = super().generate(request)
+        payload = json.loads(generated.raw_response)
+        payload["patch"] = payload["patch"].replace("@@ -1,3 +1,9 @@", "@@ -1,300 +1,900 @@")
+        return ProviderGeneration(
+            raw_response=json.dumps(payload),
+            usage=generated.usage,
+            latency_seconds=generated.latency_seconds,
+            provider_version=generated.provider_version,
+            provider_request_id=generated.provider_request_id,
+            transport_log=generated.transport_log,
+        )
 class RealCodeAdmissionTests(unittest.TestCase):
     def test_corpus_has_six_real_code_categories_and_runnable_baselines(self) -> None:
         tasks = admission_tasks()
@@ -127,6 +140,24 @@ class RealCodeAdmissionTests(unittest.TestCase):
         )
         self.assertEqual((120, 30, 20), usage)
         self.assertEqual("thread-1", request_id)
+
+    def test_recount_policy_recovers_wrong_llm_hunk_counts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            task = admission_tasks()[0]
+            repository, commit = task.initialize_repository(root / "protocol")
+            arm = _initialize_arm(root / "arm", task, repository, commit, token_ceiling=1000)
+            report = asyncio.run(
+                _run_arm(
+                    arm,
+                    task,
+                    provider=MalformedHunkCountProvider(),
+                    iterations=1,
+                    token_ceiling=1000,
+                )
+            )
+            self.assertEqual(0, report["invalid_candidate_count"])
+            self.assertEqual(1.0, report["best_score"])
 
 
 if __name__ == "__main__":

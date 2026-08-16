@@ -60,7 +60,7 @@ generation request、raw response、provider/model/settings、prompt-template di
 
 ## 授权边界
 
-当前只允许继续改进 R1.0-B 本身并在全新 workspace 重跑同等级 admission。仍不授权：
+当前只允许进入 **R1.0-BR Local Patch Validity Repair**。现有 6-task corpus 已 consumed，只能用于 invalid autopsy、mechanics development 与 replay 回归；换一个 workspace 重跑同一 corpus 不构成 fresh admission。正式 readmission 必须使用新冻结的 6–8 个同等级任务。仍不授权：
 
 - BlindAssist fresh target 四臂赛马；
 - Portfolio；
@@ -70,3 +70,5 @@ generation request、raw response、provider/model/settings、prompt-template di
 - 学习型 Advisor。
 
 首要问题不是新增搜索器，而是降低合法 patch 的 invalid/repair rate，并证明 iterative 在 matched-token 下能稳定增加成功任务数且不产生 paired loss。
+
+R1.0-BR 的 autopsy、修复边界和 fresh readmission 门见 [Local Patch Validity Repair](LLM_LOCAL_PATCH_RELIABILITY.md)。

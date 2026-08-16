@@ -86,6 +86,35 @@ class RepositoryRunnerTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 _bundle(repository, commit, patch, forbidden_paths=("algorithm.py",))
 
+    def test_apply_policy_preserves_legacy_strict_counts_and_enables_v3_recount(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository, commit, patch = _make_repository(root)
+            malformed = patch.replace("@@ -1,2 +1,2 @@", "@@ -1,200 +1,200 @@")
+            artifacts = ArtifactStore(root / "artifacts")
+
+            strict = _bundle(repository, commit, malformed)
+            strict_digest = strict.store(artifacts)
+            strict_output = IsolatedRepositoryRunner(artifacts).run(
+                strict,
+                candidate_artifact_digest=strict_digest,
+                experiment=_experiment(strict_digest, wall_seconds=10),
+                data=None,
+            )
+            self.assertEqual(FailureKind.PATCH_REJECTED, strict_output.failure_kind)
+            self.assertIn("PATCH_PARSE_FAILURE", strict_output.failure_signature or "")
+
+            recount = replace(strict, patch_apply_policy="recount_hunks", format_version="executable-candidate-v3")
+            recount_digest = recount.store(artifacts)
+            recount_output = IsolatedRepositoryRunner(artifacts).run(
+                recount,
+                candidate_artifact_digest=recount_digest,
+                experiment=_experiment(recount_digest, wall_seconds=10),
+                data=None,
+            )
+            self.assertIsNone(recount_output.failure_kind)
+            self.assertEqual({"score": 2.0}, dict(recount_output.metrics))
+
     def test_executor_records_and_replays_a_real_code_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

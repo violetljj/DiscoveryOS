@@ -50,6 +50,7 @@ class ExecutableCandidateBundle:
     evaluation_command: CommandSpec
     generation_provenance_digest: str | None = None
     patch_stack: tuple[str, ...] = ()
+    patch_apply_policy: str = "strict_counts"
     format_version: str = "executable-candidate-v1"
 
     def __post_init__(self) -> None:
@@ -65,6 +66,8 @@ class ExecutableCandidateBundle:
             raise ContractError("generation provenance requires a SHA-256 digest")
         if self.patch_stack and any(not patch.strip() for patch in self.patch_stack):
             raise ContractError("candidate patch stack cannot contain an empty patch")
+        if self.patch_apply_policy not in {"strict_counts", "recount_hunks"}:
+            raise ContractError(f"unsupported patch apply policy: {self.patch_apply_policy}")
         mutable = tuple(_normalize_path(path) for path in self.mutable_paths)
         forbidden = tuple(_normalize_path(path) for path in self.forbidden_paths)
         for path in self.touched_paths:
@@ -104,6 +107,7 @@ class ExecutableCandidateBundle:
             ),
             generation_provenance_digest=manifest.get("generation_provenance_digest"),
             patch_stack=tuple(manifest.get("patch_stack", ())),
+            patch_apply_policy=manifest.get("patch_apply_policy", "strict_counts"),
             format_version=manifest["format_version"],
         )
 

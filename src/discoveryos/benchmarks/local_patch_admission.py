@@ -149,21 +149,25 @@ def run_local_patch_admission(
         for report in task_reports
         for arm in ("one_shot_llm", "iterative_local_patch")
     )
-    search_value_passed = (
+    observed_search_value_gate = (
         iterative_successes >= one_shot_successes + MIN_SUCCESS_MARGIN
         and iterative_improvement >= one_shot_improvement + MIN_SUMMED_IMPROVEMENT_MARGIN
         and wins >= 2
         and losses == 0
     )
+    fresh_corpus = False
+    search_value_passed = observed_search_value_gate and fresh_corpus
     passed = mechanics_passed and matched_token_ceiling and search_value_passed
     report = {
         "benchmark_id": "matched_token_real_code_local_patch_admission_v1",
         "status": "PASS" if passed else "FAIL",
         "verdict": "LLM_LOCAL_PATCH_ADMITTED_REAL_CODE_ONLY" if passed else "LLM_LOCAL_PATCH_NOT_ADMITTED",
-        "claim_ceiling": "REAL_CODE_SEARCH_MECHANISM_ONLY",
+        "claim_ceiling": "RELIABILITY_DEVELOPMENT_ONLY",
         "frozen_policy": {
             "provider": provider.provider_name,
             "model": provider.model,
+            "corpus_role": "CONSUMED_RELIABILITY_DEVELOPMENT_ONLY",
+            "fresh_corpus": fresh_corpus,
             "task_count": len(tasks),
             "task_categories": [task.category for task in tasks],
             "arms": ["Baseline", "One-shot LLM", "Iterative Local Patch"],
@@ -189,6 +193,7 @@ def run_local_patch_admission(
             "matched_token_ceiling": matched_token_ceiling,
             "mechanics_passed": mechanics_passed,
             "search_value_passed": search_value_passed,
+            "observed_search_value_gate": observed_search_value_gate,
             "final_blind_receipts": sum(
                 report[arm]["final_blind_receipts"]
                 for report in task_reports
@@ -262,6 +267,7 @@ async def _run_arm(
     baseline_score = _development_score(baseline_evidence)
     best_score = baseline_score
     best_candidate = arm.baseline
+    best_evidence = baseline_evidence
     first_improvement_tokens: int | None = None
     best_tokens: int | None = 0
     generated_candidates = 0
@@ -285,6 +291,8 @@ async def _run_arm(
             minimum_call_tokens = int(getattr(provider, "minimum_token_reservation", 1))
             if remaining_tokens < minimum_call_tokens:
                 break
+            if parent.candidate_id != best_candidate.candidate_id or not _scientific_parent_eligible(arm, parent, parent_evidence):
+                raise RuntimeError("scientific generation requires the current best valid executable parent and matching evidence")
             parent_bundle = ExecutableCandidateBundle.from_artifact(arm.artifacts, parent.artifact_digest)
             mutable_files = _materialize_files(parent_bundle, arm.contract.mutable_paths)
             result = operator.propose(
@@ -302,7 +310,6 @@ async def _run_arm(
             generated_candidates += 1
             candidate = result.candidate
             candidate_evidence = await _evaluate_candidate(arm, candidate, attempt=f"proposal-{index}")
-            repaired = False
             mechanical = _mechanical_failure(candidate_evidence)
             if mechanical is not None and token_ceiling - _generation_tokens(arm) >= minimum_call_tokens:
                 repaired_result = await _repair_once(
@@ -315,7 +322,6 @@ async def _run_arm(
                     token_ceiling - _generation_tokens(arm),
                 )
                 if repaired_result is not None:
-                    repaired = True
                     candidate, candidate_evidence = repaired_result
                     generated_candidates += 1
             score = _development_score(candidate_evidence, default=None)
@@ -323,9 +329,8 @@ async def _run_arm(
             if score is None or gate is not GateDecision.FEASIBLE:
                 invalid_candidates += 1
                 hard_gate_violations += int(gate is GateDecision.REJECT_HARD_CONSTRAINT)
-                parent_evidence = candidate_evidence
-                if repaired:
-                    parent = best_candidate
+                parent = best_candidate
+                parent_evidence = best_evidence
                 continue
             cumulative_tokens = _generation_tokens(arm)
             if score > baseline_score and first_improvement_tokens is None:
@@ -333,9 +338,10 @@ async def _run_arm(
             if score > best_score:
                 best_score = score
                 best_candidate = candidate
+                best_evidence = candidate_evidence
                 best_tokens = cumulative_tokens
             parent = best_candidate
-            parent_evidence = candidate_evidence if candidate.candidate_id == best_candidate.candidate_id else parent_evidence
+            parent_evidence = best_evidence
 
     makespan = time.monotonic() - started
     evidence = arm.ledger.evidence_records()
@@ -456,6 +462,8 @@ async def _repair_once(
             test_command=failed_bundle.test_command,
             evaluation_command=failed_bundle.evaluation_command,
             patch_stack=repair_stack,
+            patch_apply_policy=failed_bundle.patch_apply_policy,
+            format_version=failed_bundle.format_version,
         )
         mutable_files = _materialize_files(fallback, arm.contract.mutable_paths)
     result = operator.repair(
@@ -622,6 +630,21 @@ def _mechanical_failure(evidence: tuple[EvidenceRecord, ...]) -> EvidenceRecord 
     )
 
 
+def _scientific_parent_eligible(
+    arm: AdmissionArm,
+    candidate: CandidateSpec,
+    evidence: tuple[EvidenceRecord, ...],
+) -> bool:
+    if not evidence or any(item.candidate_id != candidate.candidate_id for item in evidence):
+        return False
+    g2 = next((item for item in evidence if item.fidelity is Fidelity.G2), None)
+    return bool(
+        g2 is not None
+        and g2.validity is EvidenceValidity.VALID
+        and GateEngine().evaluate(arm.contract, g2).decision is GateDecision.FEASIBLE
+    )
+
+
 def _mechanical_excerpt(arm: AdmissionArm, evidence: EvidenceRecord) -> str:
     blocks: list[str] = []
     for digest in evidence.artifacts:
@@ -629,7 +652,7 @@ def _mechanical_excerpt(arm: AdmissionArm, evidence: EvidenceRecord) -> str:
             value = json.loads(arm.artifacts.get_bytes(digest))
         except (json.JSONDecodeError, UnicodeDecodeError, KeyError):
             continue
-        if isinstance(value, dict) and value.get("step") in {"build", "test"}:
+        if isinstance(value, dict) and value.get("step") in {"patch", "build", "test"}:
             blocks.append(f"{value.get('step')} stdout:\n{value.get('stdout', '')}\nstderr:\n{value.get('stderr', '')}")
     return ("\n\n".join(blocks) or evidence.failure_signature or "mechanical failure")[-4000:]
 
@@ -673,8 +696,9 @@ def _materialize_files(bundle: ExecutableCandidateBundle, paths: tuple[str, ...]
         _git(repository, "worktree", "add", "--detach", "--force", str(worktree), bundle.base_commit)
         try:
             for patch in bundle.effective_patch_stack:
+                recount_flag = ("--recount",) if bundle.patch_apply_policy == "recount_hunks" else ()
                 result = subprocess.run(
-                    ("git", "-C", str(worktree), "apply", "--whitespace=nowarn", "-"),
+                    ("git", "-C", str(worktree), "apply", "--whitespace=nowarn", *recount_flag, "-"),
                     input=patch,
                     text=True,
                     encoding="utf-8",

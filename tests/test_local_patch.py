@@ -76,6 +76,8 @@ class LocalPatchOperatorTest(unittest.TestCase):
             self.assertEqual(result.record, stored)
             bundle = ExecutableCandidateBundle.from_artifact(context["artifacts"], result.candidate.artifact_digest)
             self.assertEqual((result.proposal.patch,), bundle.patch_stack)
+            self.assertEqual("recount_hunks", bundle.patch_apply_policy)
+            self.assertEqual("executable-candidate-v3", bundle.format_version)
             self.assertEqual(result.record.provenance_artifact_digest, bundle.generation_provenance_digest)
             self.assertEqual(1, context["ledger"].counts()["generation_records"])
 
@@ -106,6 +108,31 @@ class LocalPatchOperatorTest(unittest.TestCase):
                 build=failed["build"],
             )
             self.assertEqual(GenerationStatus.PROVIDER_FAILURE, result.record.status)
+            self.assertIsNone(result.candidate)
+
+    def test_forbidden_diff_mechanics_are_rejected_before_candidate_materialization(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            deletion = (
+                "diff --git a/algorithm.py b/algorithm.py\n"
+                "deleted file mode 100644\n"
+                "--- a/algorithm.py\n"
+                "+++ /dev/null\n"
+                "@@ -1,2 +0,0 @@\n"
+                "-def improve(value):\n"
+                "-    return value\n"
+            )
+            context = self._context(Path(directory), [self._response(deletion)])
+            result = context["operator"].propose(
+                parent=context["parent"],
+                mutable_files={"algorithm.py": "def improve(value):\n    return value\n"},
+                development_evidence_summary="",
+                failure_signature=None,
+                semantic_delta_memory=(),
+                remaining_budget=ResourceBudget(tokens=100, wall_seconds=30),
+                build=context["build"],
+            )
+            self.assertEqual(GenerationStatus.INVALID_RESPONSE, result.record.status)
+            self.assertIn("forbidden", result.record.failure_signature)
             self.assertIsNone(result.candidate)
 
     def test_repair_is_mechanical_only_and_allowed_once(self) -> None:

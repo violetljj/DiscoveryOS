@@ -43,7 +43,7 @@ ResourceReservation
 
 ## 下一批实现顺序
 
-1. **R1.0-B Code Search Admission**：bounded LLM Local Patch、一次机械 Repair、generation provenance/token accounting 与 6-task real-code benchmark 已实现；正式结果为 `LLM_LOCAL_PATCH_NOT_ADMITTED`。下一步只能降低 invalid/repair rate 并在全新 matched-token run 中重新准入，不能提前进入 R1.0-C。
+1. **R1.0-BR Local Patch Validity Repair**：R1.0-B 已以 `LLM_LOCAL_PATCH_NOT_ADMITTED` 冻结；当前只修 deterministic patch validity、repair diagnostics 与 scientific-parent isolation。现有 6-task corpus 仅供 BR-D development，BR-A 必须在新冻结的 6–8 个任务上按原 search-value gate 和预冻结 reliability gate readmit，不能提前进入 R1.0-C。
 2. **R0.2 生产隔离**：final-blind 独立服务身份、一次性认证票据、shadow 聚合反馈与查询预算。
 3. **R1.1 搜索组合扩展**：仅在 BlindAssist fresh target 四臂赛马证明组合价值后考虑 BOHB、Structural Rewrite 和更广 operator schema。
 4. **R1.2 图搜索**：Hypothesis/Component effect ledger、分支预算、cross-branch transfer、自动消融、failure signature library。
