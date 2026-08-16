@@ -54,7 +54,7 @@ class DeterministicActionControllerTests(unittest.TestCase):
         promoted = replace(
             before.candidates[0],
             fidelity=Fidelity.G2,
-            score=0.25,
+            scheduling_utility=0.25,
             promotion_eligible=False,
             promotion_target=None,
         )
@@ -62,7 +62,7 @@ class DeterministicActionControllerTests(unittest.TestCase):
             before,
             step=before.step + 1,
             candidates=(promoted,),
-            incumbent_score=0.25,
+            incumbent_utility=0.25,
             remaining_budget=ResourceBudget(tokens=70, cpu_seconds=8, wall_seconds=15),
             elapsed_usage=actual,
         )
@@ -77,8 +77,8 @@ class DeterministicActionControllerTests(unittest.TestCase):
                 actual_usage=actual,
             )
             self.assertEqual(SearchAction.PROMOTE_FIDELITY, record.selected_action)
-            self.assertEqual(0.05, record.best_metric_before)
-            self.assertEqual(0.25, record.best_metric_after)
+            self.assertEqual(0.05, record.best_utility_before)
+            self.assertEqual(0.25, record.best_utility_after)
             self.assertEqual(ResourceBudget(tokens=70, cpu_seconds=8, wall_seconds=15), record.budget_after)
             trace_path = next((artifacts.records / "search" / before.run_id / "anytime").glob("*.json"))
             payload = json.loads(trace_path.read_text(encoding="utf-8"))
@@ -126,7 +126,7 @@ class DeterministicActionControllerTests(unittest.TestCase):
             branch_id="branch-1",
             fidelity=Fidelity.G1,
             latest_evidence_receipt_id="receipt-local",
-            score=0.05,
+            scheduling_utility=0.05,
             uncertainty=0.01,
             replicate_count=2,
         )
@@ -149,7 +149,8 @@ class DeterministicActionControllerTests(unittest.TestCase):
                 run_id="search-value-mechanics",
                 step=step,
                 incumbent_candidate_id=candidate.candidate_id,
-                incumbent_score=candidate.score or 0.0,
+                incumbent_utility=candidate.scheduling_utility or 0.0,
+                utility_metric_name="score",
                 metric_direction=MetricDirection.MAXIMIZE,
                 candidates=(candidate,),
                 branches=(current_branch,),
@@ -178,7 +179,7 @@ class DeterministicActionControllerTests(unittest.TestCase):
             branch_id="branch-1",
             fidelity=Fidelity.G1,
             latest_evidence_receipt_id="receipt-structural",
-            score=0.05,
+            scheduling_utility=0.05,
             uncertainty=0.10,
             replicate_count=1,
         )

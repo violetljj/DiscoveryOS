@@ -4,6 +4,16 @@
 
 DiscoveryOS 是一个统一算法研究内核：吸收并重组 AdaEvolve、ShinkaEvolve、EvoX、MLEvolve、DeltaEvolve、PACEvolve、AgentNAS、BOHB/ASHA 等系统中的有效机制，使它们共享统一 Research Graph、Evidence Model、Candidate Store、Budget/Fidelity Controller、Memory 和异步执行底座；原版系统保留为隔离的 external challengers，用于检验统一内核是否真的更强。
 
+当前正式状态：
+
+```text
+DISCOVERYOS_KERNEL_ADMITTED
+DISCOVERYOS_ACTION_CONTROLLER_MECHANICS_READY
+DISCOVERYOS_AUTONOMOUS_SEARCH_LOOP_MECHANICS_READY
+DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
+DISCOVERYOS_PRODUCTION_NOT_READY
+```
+
 明确不采用下面这种多系统编排：
 
 ```text
@@ -86,9 +96,9 @@ ResourceReservation
 ## 下一批实现顺序
 
 1. **统一接口与 BR-A 封口**：candidate/evidence/artifact/budget/fidelity 接口已形成垂直切片；BR-A 保持 `LLM_LOCAL_PATCH_NOT_ADMITTED`，不再修 parser 或在 consumed corpus 上寻求翻案。
-2. **Search-Value MVP**：确定性的 `SearchState -> SearchDecision` acquisition controller 已接通 Local Patch、Structural Escape、Replicate、ASHA Promote 与 Stop，并为每笔结算写入 create-once anytime trace；下一步把真实 operator execution 接入该 loop 后立即运行 matched-resource Search-Value MVP。Controller v0 不调用 LLM，component transfer 只作为 Structural Escape 的冻结输入。R1.0-SP-A 只作为 pre-model task-selection guard，不是独立产品阶段。
-3. **远端并行计算**：在 MVP action/evidence contract 稳定后实现多进程与远端 CPU/GPU/device worker、heartbeat、retry、checkpoint/cache 和真实 resource measurement，避免先为错误 action model 建集群。
-4. **严格 matched-resource benchmark**：在多个预冻结 headroom task family 上，以 matched model/token/wall/compute/evaluator 比较 Random、Vanilla LLM、DiscoveryOS unified kernel，并通过隔离 adapters 加入 Official Ada/Shinka/EvoX challengers；外部状态不得回写 Discovery Mode。
+2. **Search-Value MVP**：单 active branch 的真实闭环已经由 `LedgerBackedSearchStateProjector -> DeterministicActionController -> UnifiedActionExecutor -> SearchLoopRunner` 接通 Local Patch、Structural Escape、Replicate、ASHA Promote 与 Stop，并为每笔结算写入 create-once anytime trace。State 只投影 ledger 中的 candidate/evidence/action settlement；`scheduling_utility` 只分配搜索资源，不覆盖 Gate/Pareto 的科学裁决。下一步停止扩展 controller，直接运行 matched-resource Search-Value MVP。R1.0-SP-A 只作为 pre-model task-selection guard，不是独立产品阶段。
+3. **严格 matched-resource benchmark**：立即在多个预冻结 headroom task family 上，以 matched model/token/wall/compute/evaluator 比较 Vanilla one-shot 与 DiscoveryOS unified loop；先回答 search value，不添加 agent framework、LLM planner 或 distributed queue。Anytime、效率和 search-behavior 指标与最终 task outcome 一起报告。
+4. **远端并行计算**：只有首轮 Search-Value MVP 暴露出真实吞吐瓶颈后，才实现多进程与远端 CPU/GPU/device worker、heartbeat、retry、checkpoint/cache 和真实 resource measurement，避免先为未经证明的 action model 建集群。
 5. **Search value 成立后补生产隔离**：只有稳定优势成立后，才把 final-blind 独立服务身份、一次性票据、shadow 查询预算和 hostile-worker isolation 提升为最高优先级。
 6. **后续内部机制**：逐项 admission novelty/parent selection、branch credit、crossover/rollback、BOHB/qNEHVI 和更强 multi-fidelity；不把 mechanics smoke、单 seed 或 development improvement 当算法证据。
 7. **Meta-Strategy / Advisor**：只在基础 search value 成立后实现受限 Meta-Strategy evolution，并只用通过复验和消融晋升的轨迹训练 Advisor。

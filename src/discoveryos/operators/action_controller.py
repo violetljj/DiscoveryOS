@@ -20,12 +20,12 @@ class SearchAction(str, Enum):
 @dataclass(frozen=True, slots=True)
 class ActionCost:
     action: SearchAction
-    resources: ResourceBudget
+    resource_floor: ResourceBudget
 
     def __post_init__(self) -> None:
         if self.action is SearchAction.STOP:
             raise ValueError("STOP cannot reserve resources")
-        if not any(self.resources.as_dict().values()):
+        if not any(self.resource_floor.as_dict().values()):
             raise ValueError("each executable action requires a non-zero resource floor")
 
 
@@ -35,7 +35,7 @@ class CandidateSearchState:
     branch_id: str
     fidelity: Fidelity
     latest_evidence_receipt_id: str | None
-    score: float | None
+    scheduling_utility: float | None
     resource_consumed: ResourceUsage = field(default_factory=ResourceUsage)
     uncertainty: float = 0.0
     replicate_count: int = 0
@@ -86,7 +86,8 @@ class SearchState:
     run_id: str
     step: int
     incumbent_candidate_id: str
-    incumbent_score: float
+    incumbent_utility: float
+    utility_metric_name: str
     metric_direction: MetricDirection
     candidates: tuple[CandidateSearchState, ...]
     branches: tuple[BranchSearchState, ...]
@@ -95,7 +96,7 @@ class SearchState:
     elapsed_usage: ResourceUsage = field(default_factory=ResourceUsage)
 
     def __post_init__(self) -> None:
-        if not self.run_id or not self.incumbent_candidate_id:
+        if not self.run_id or not self.incumbent_candidate_id or not self.utility_metric_name:
             raise ValueError("run and incumbent ids are required")
         if self.step < 0:
             raise ValueError("search step cannot be negative")
@@ -139,9 +140,9 @@ class ActionControllerConfig:
         if set(actions) != required:
             raise ValueError("resource floors are required for every executable action")
 
-    def cost_for(self, action: SearchAction) -> ResourceBudget:
+    def resource_floor_for(self, action: SearchAction) -> ResourceBudget:
         return next(
-            (item.resources for item in self.costs if item.action is action),
+            (item.resource_floor for item in self.costs if item.action is action),
             ResourceBudget(),
         )
 
@@ -163,7 +164,7 @@ class SearchDecision:
     operator_id: str | None
     fidelity: Fidelity | None
     reason_codes: tuple[str, ...]
-    requested_resources: ResourceBudget
+    resource_floor: ResourceBudget
     reusable_component_ids: tuple[str, ...] = ()
     created_at: str = field(default_factory=utc_now)
 
@@ -179,7 +180,7 @@ class SearchDecision:
         operator_id: str | None,
         fidelity: Fidelity | None,
         reason_codes: tuple[str, ...],
-        requested_resources: ResourceBudget,
+        resource_floor: ResourceBudget,
         reusable_component_ids: tuple[str, ...] = (),
     ) -> "SearchDecision":
         identity = {
@@ -193,7 +194,7 @@ class SearchDecision:
             "operator_id": operator_id,
             "fidelity": fidelity,
             "reason_codes": reason_codes,
-            "requested_resources": requested_resources,
+            "resource_floor": resource_floor,
             "reusable_component_ids": reusable_component_ids,
         }
         return cls(decision_id=f"decision_{digest_json(identity)[:24]}", **identity)
@@ -214,13 +215,13 @@ class AnytimeTraceRecord:
     fidelity: Fidelity | None
     reason_codes: tuple[str, ...]
     budget_before: ResourceBudget
-    budget_reserved: ResourceBudget
+    budget_floor: ResourceBudget
     budget_actual: ResourceUsage
     budget_after: ResourceBudget
     incumbent_before: str
     incumbent_after: str
-    best_metric_before: float
-    best_metric_after: float
+    best_utility_before: float
+    best_utility_after: float
     wall_elapsed: float
     tokens_elapsed: int
     cpu_elapsed: float
@@ -320,7 +321,7 @@ class DeterministicActionController:
             "operator_id",
             "fidelity",
             "reason_codes",
-            "requested_resources",
+            "resource_floor",
             "reusable_component_ids",
         )
         if any(getattr(decision, name) != getattr(reconstructed, name) for name in comparable_fields):
@@ -336,15 +337,19 @@ class DeterministicActionController:
             candidate
             for candidate in candidates
             if candidate.feasible
-            and candidate.score is not None
+            and candidate.scheduling_utility is not None
             and candidate.latest_evidence_receipt_id is not None
             and candidate.replicate_count < self.config.minimum_replicates
             and (
                 candidate.uncertainty > self.config.uncertainty_threshold
-                or abs(candidate.score - state.incumbent_score) <= self.config.incumbent_proximity
+                or abs(candidate.scheduling_utility - state.incumbent_utility) <= self.config.incumbent_proximity
             )
         ]
-        return min(eligible, key=lambda item: (abs(item.score - state.incumbent_score), item.candidate_id), default=None)
+        return min(
+            eligible,
+            key=lambda item: (abs(item.scheduling_utility - state.incumbent_utility), item.candidate_id),
+            default=None,
+        )
 
     def _promotion_candidate(
         self,
@@ -355,7 +360,7 @@ class DeterministicActionController:
             candidate
             for candidate in candidates
             if candidate.feasible
-            and candidate.score is not None
+            and candidate.scheduling_utility is not None
             and candidate.promotion_eligible
             and candidate.uncertainty <= self.config.uncertainty_threshold
             and candidate.replicate_count >= self.config.minimum_replicates
@@ -363,7 +368,10 @@ class DeterministicActionController:
         reverse = state.metric_direction is MetricDirection.MAXIMIZE
         return min(
             eligible,
-            key=lambda item: ((-item.score if reverse else item.score), item.candidate_id),
+            key=lambda item: (
+                (-item.scheduling_utility if reverse else item.scheduling_utility),
+                item.candidate_id,
+            ),
             default=None,
         )
 
@@ -395,8 +403,8 @@ class DeterministicActionController:
         reason_codes: tuple[str, ...],
         reusable_component_ids: tuple[str, ...] = (),
     ) -> SearchDecision:
-        requested = self.config.cost_for(action)
-        if not _affords(state.remaining_budget, requested):
+        resource_floor = self.config.resource_floor_for(action)
+        if not _affords(state.remaining_budget, resource_floor):
             return self._stop(state, f"INSUFFICIENT_BUDGET_FOR_{action.value}")
         return SearchDecision.create(
             state=state,
@@ -407,7 +415,7 @@ class DeterministicActionController:
             operator_id=operator_id,
             fidelity=fidelity,
             reason_codes=reason_codes,
-            requested_resources=requested,
+            resource_floor=resource_floor,
             reusable_component_ids=reusable_component_ids,
         )
 
@@ -421,7 +429,7 @@ class DeterministicActionController:
             operator_id=self.operator_id,
             fidelity=None,
             reason_codes=(reason,),
-            requested_resources=ResourceBudget(),
+            resource_floor=ResourceBudget(),
         )
 
 
@@ -458,7 +466,7 @@ class AnytimeTraceRecorder:
             "budget_actual": actual_usage,
             "budget_after": state_after.remaining_budget,
             "incumbent_after": state_after.incumbent_candidate_id,
-            "best_metric_after": state_after.incumbent_score,
+            "best_utility_after": state_after.incumbent_utility,
         }
         record = AnytimeTraceRecord(
             trace_id=f"trace_{digest_json(identity)[:24]}",
@@ -474,13 +482,13 @@ class AnytimeTraceRecorder:
             fidelity=decision.fidelity,
             reason_codes=decision.reason_codes,
             budget_before=state_before.remaining_budget,
-            budget_reserved=decision.requested_resources,
+            budget_floor=decision.resource_floor,
             budget_actual=actual_usage,
             budget_after=state_after.remaining_budget,
             incumbent_before=state_before.incumbent_candidate_id,
             incumbent_after=state_after.incumbent_candidate_id,
-            best_metric_before=state_before.incumbent_score,
-            best_metric_after=state_after.incumbent_score,
+            best_utility_before=state_before.incumbent_utility,
+            best_utility_after=state_after.incumbent_utility,
             wall_elapsed=state_after.elapsed_usage.wall_seconds,
             tokens_elapsed=state_after.elapsed_usage.tokens,
             cpu_elapsed=state_after.elapsed_usage.cpu_seconds,

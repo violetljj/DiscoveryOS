@@ -110,6 +110,15 @@ class EvidenceLedger:
                 );
                 CREATE UNIQUE INDEX IF NOT EXISTS one_mechanical_repair_per_generation
                     ON generation_records(root_generation_id) WHERE kind='MECHANICAL_REPAIR';
+                CREATE TABLE IF NOT EXISTS search_runs(
+                    run_id TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS search_actions(
+                    decision_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, step INTEGER NOT NULL,
+                    payload TEXT NOT NULL, created_at TEXT NOT NULL,
+                    FOREIGN KEY(run_id) REFERENCES search_runs(run_id),
+                    UNIQUE(run_id, step)
+                );
                 CREATE TABLE IF NOT EXISTS events(
                     sequence INTEGER PRIMARY KEY AUTOINCREMENT, event_type TEXT NOT NULL, payload TEXT NOT NULL,
                     created_at TEXT NOT NULL
@@ -463,6 +472,11 @@ class EvidenceLedger:
             raise KeyError(candidate_id)
         return candidate_from_dict(json.loads(row["payload"]))
 
+    def candidate_records(self) -> list[CandidateSpec]:
+        with self.connect() as connection:
+            rows = connection.execute("SELECT payload FROM candidates ORDER BY created_at,candidate_id").fetchall()
+        return [candidate_from_dict(json.loads(row["payload"])) for row in rows]
+
     def get_generation(self, generation_id: str) -> GenerationRecord:
         with self.connect() as connection:
             row = connection.execute(
@@ -510,8 +524,44 @@ class EvidenceLedger:
             raise KeyError(experiment_id)
         return experiment_from_dict(json.loads(row["payload"]))
 
+    def experiment_records(self) -> list[ExperimentSpec]:
+        with self.connect() as connection:
+            rows = connection.execute("SELECT payload FROM experiments ORDER BY created_at,experiment_id").fetchall()
+        return [experiment_from_dict(json.loads(row["payload"])) for row in rows]
+
     def evidence_records(self) -> list[EvidenceRecord]:
         return [evidence_from_dict(payload) for payload in self.evidence_payloads()]
+
+    def add_search_run(self, run_id: str, payload: Any) -> bool:
+        return self._insert_once(
+            "search_runs",
+            "run_id",
+            run_id,
+            {"payload": payload, "created_at": utc_now()},
+        )
+
+    def get_search_run(self, run_id: str) -> dict[str, Any]:
+        with self.connect() as connection:
+            row = connection.execute("SELECT payload FROM search_runs WHERE run_id=?", (run_id,)).fetchone()
+        if not row:
+            raise KeyError(run_id)
+        return json.loads(row["payload"])
+
+    def add_search_action(self, *, decision_id: str, run_id: str, step: int, payload: Any) -> bool:
+        return self._insert_once(
+            "search_actions",
+            "decision_id",
+            decision_id,
+            {"run_id": run_id, "step": step, "payload": payload, "created_at": utc_now()},
+        )
+
+    def search_action_payloads(self, run_id: str) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT payload FROM search_actions WHERE run_id=? ORDER BY step,decision_id",
+                (run_id,),
+            ).fetchall()
+        return [json.loads(row["payload"]) for row in rows]
 
     def record_event(self, event_type: str, payload: Any) -> None:
         with self.connect() as connection:
@@ -529,6 +579,8 @@ class EvidenceLedger:
             "resource_reservations",
             "resource_reservation_rejections",
             "generation_records",
+            "search_runs",
+            "search_actions",
         )
         with self.connect() as connection:
             return {table: int(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]) for table in tables}
