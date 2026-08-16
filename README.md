@@ -1,8 +1,8 @@
 # DiscoveryOS
 
-DiscoveryOS 是一个“证据优先”的算法研究操作系统内核。当前版本从零实现了可运行的 **Phase 0 + Phase 1 垂直切片**：它能冻结研究协议、生成内容寻址候选、异步执行 G0/G1/G2 多保真赛马、先过硬约束再维护 Pareto front，并在 winner 冻结后通过独立命令执行 G7 final-blind 认证。
+DiscoveryOS 是一个“证据优先”的统一算法研究内核。它把其他算法发现系统中有价值的机制重构为共享 Research Graph、Evidence Model、Candidate Store、Budget/Fidelity Controller、Memory 和异步执行底座的内部原语；官方原版系统只作为隔离 external challengers。当前版本从零实现了可运行的 **Phase 0 + Phase 1 垂直切片**：它能冻结研究协议、生成内容寻址候选、异步执行 G0/G1/G2 多保真赛马、先过硬约束再维护 Pareto front，并在 winner 冻结后通过独立命令执行 G7 final-blind 认证。
 
-它不是把 ShinkaEvolve、AdaEvolve、EvoX 等系统串在一起，也不把调度分数冒充科学结论。
+它不是把 ShinkaEvolve、AdaEvolve、EvoX 等完整 runtime 串在一起，也不让多套 population/memory/budget/evaluator 语义进入 Discovery Mode，更不把调度分数冒充科学结论。外部 adapter 只服务 Benchmark Mode 的隔离公平对照。
 
 ## 已实现
 
@@ -104,4 +104,4 @@ Executable evaluation 命令必须把单个 JSON object 写到 stdout 的最后�
 
 runner 通过 `DISCOVERYOS_DATA_PATH`、`DISCOVERYOS_FIDELITY`、`DISCOVERYOS_SEED`、`DISCOVERYOS_TRIAL_ID` 和 `DISCOVERYOS_RUNG_ID` 提供冻结执行上下文。命令以 argv vector 直接启动，不经过 shell。
 
-R1.0-A synthetic admission 的冻结协议、结果与限制见 [ASHA admission 记录](docs/ASHA_ADMISSION.md)。R1.0-B 已实现 bounded LLM Local Patch、一次 mechanical repair、generation provenance/token accounting 与 matched-token real-code benchmark；详见 [Local Patch admission 记录](docs/LLM_LOCAL_PATCH_ADMISSION.md)。[R1.0-BR-A fresh readmission](docs/LLM_LOCAL_PATCH_RELIABILITY.md) 已在 8 个冻结 task 上完成：reliability PASS，但 One-shot 与 Iterative 均为 8/8、paired 0 胜 8 平 0 负，search-value FAIL，因此正式 verdict 继续是 `LLM_LOCAL_PATCH_NOT_ADMITTED`。当前瓶颈是 operator/search policy，不再是 parser/repair；BlindAssist fresh target 四臂赛马、Portfolio、Meta-Strategy、qNEHVI 和 Structural Rewrite 仍未获授权。下一阶段及正式扩展点见 [架构与路线图](docs/ARCHITECTURE.md)。
+R1.0-A synthetic admission 的冻结协议、结果与限制见 [ASHA admission 记录](docs/ASHA_ADMISSION.md)。R1.0-B 已实现 bounded LLM Local Patch、一次 mechanical repair、generation provenance/token accounting 与 matched-token real-code benchmark；详见 [Local Patch admission 记录](docs/LLM_LOCAL_PATCH_ADMISSION.md)。[R1.0-BR-A fresh readmission](docs/LLM_LOCAL_PATCH_RELIABILITY.md) 已在 8 个冻结 task 上完成：reliability PASS，但 One-shot 与 Iterative 均为 8/8、paired 0 胜 8 平 0 负，search-value FAIL，因此正式 verdict 继续是 `LLM_LOCAL_PATCH_NOT_ADMITTED`。下一项局部证据工作是 [R1.0-SP-A residual-headroom mechanism admission](docs/SEARCH_POLICY_ADMISSION.md)：必须在任何候选模型调用前独立冻结有真实 headroom 的任务，再以相同模型、总预算、evaluator 和初始状态比较内部 policy mechanism；它目前仍是 `SEARCH_POLICY_PROTOCOL_ONLY`，不能代表 DiscoveryOS 统一搜索内核已获 admission。总体架构、内部机制与 external challenger 的边界见 [架构与路线图](docs/ARCHITECTURE.md)。
