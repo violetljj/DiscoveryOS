@@ -87,23 +87,25 @@ C:\Program Files\WindowsApps\OpenAI.Codex_*\app\resources\codex.exe
 
 该入口在子进程中已验证为 `拒绝访问` / WinError 5，不得用于 DiscoveryOS provider。`.codex\.sandbox-bin` 下的 `codex-command-runner-*.exe` 也不是 CLI，它们需要内部 pipe 协议，不能用 `--version` 代替 Codex CLI。
 
-### PATH 修复建议
+### PATH 集成（已启用）
 
-不建议覆盖或拼接保存整段用户 PATH。由于 `E:\codex-tools\bin` 已在常用命令搜索路径前部，若用户授权持久化修复，优先新增：
+不覆盖或拼接保存整段用户 PATH。`E:\codex-tools\bin` 已在 WindowsApps 之前，当前已新增：
 
 ```bat
 @echo off
 "%USERPROFILE%\.codex\.sandbox-bin\codex.exe" %*
 ```
 
-保存为 `E:\codex-tools\bin\codex.cmd`，再在全新 PowerShell 子进程中验证：
+文件位置为 `E:\codex-tools\bin\codex.cmd`。2026-08-17 已在全新 PowerShell 子进程中验证：
 
 ```powershell
 Get-Command codex -All
 codex --version
 ```
 
-包装器只解决命令解析；Codex Desktop 更新后仍需重新验证版本和实际 exe。未经用户明确授权，不修改用户/系统 PATH，也不创建仓库外包装器。
+首个解析结果为 `E:\codex-tools\bin\codex.cmd`，`codex --version` 返回 `codex-cli 0.148.0-alpha.9`，`codex exec --help` 正常。WindowsApps 入口仍会出现在后续候选中，但不再优先命中。
+
+包装器只解决命令解析，没有修改用户/系统 PATH。Codex Desktop 更新后仍需重新验证版本和实际 exe；如果 `%USERPROFILE%\.codex\.sandbox-bin\codex.exe` 消失，包装器应 fail closed，而不是退回 WindowsApps。
 
 ## 本机性能快照
 
