@@ -5,10 +5,10 @@ import io
 import math
 import tokenize
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 
-from discoveryos.contracts.models import ResourceUsage
+from discoveryos.contracts.models import ResourceBudget, ResourceUsage
 from discoveryos.util import digest_json, utc_now
 
 
@@ -16,6 +16,7 @@ class NoveltyDecision(str, Enum):
     ACCEPT = "ACCEPT"
     REJECT_RESAMPLE = "REJECT_RESAMPLE"
     REJECT_EXHAUSTED = "REJECT_EXHAUSTED"
+    REJECT_STOP = "REJECT_STOP"
 
 
 class NoveltyExhaustion(str, Enum):
@@ -31,6 +32,7 @@ class NoveltyConfig:
     semantic_difference_threshold: float = 0.12
     shingle_size: int = 3
     exhaustion: NoveltyExhaustion = NoveltyExhaustion.REJECT
+    affordability_gate: bool = False
 
     def __post_init__(self) -> None:
         if not self.policy_version or self.max_novelty_attempts < 1:
@@ -63,6 +65,7 @@ class NoveltySimilarity:
     exact_duplicate: bool
     structural_similarity: float
     semantic_difference: float
+    semantic_checked: bool
     comparison_code_digest: str
 
 
@@ -77,6 +80,7 @@ class NoveltyAssessment:
     reason_codes: tuple[str, ...]
     similarities: tuple[NoveltySimilarity, ...]
     false_reject_diagnostic: str
+    cascade_level: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,6 +171,10 @@ class ShinkaStyleNoveltyPolicy:
     ) -> NoveltyAssessment:
         if attempt < 1 or attempt > self.config.max_novelty_attempts:
             raise ValueError("novelty attempt is outside the frozen bound")
+        raw_duplicate = next(
+            (item for item in comparisons if item.code_digest == digest_json({"code": proposal_code})),
+            None,
+        )
         proposal_tokens = _normalized_tokens(proposal_code)
         proposal_normalized = " ".join(proposal_tokens)
         rows: list[NoveltySimilarity] = []
@@ -179,14 +187,14 @@ class ShinkaStyleNoveltyPolicy:
                 existing_tokens,
                 self.config.shingle_size,
             )
-            semantic_difference = _semantic_difference(proposal_code, comparison.code)
             rows.append(
                 NoveltySimilarity(
                     candidate_id=comparison.candidate_id,
                     scopes=comparison.scopes,
                     exact_duplicate=exact,
                     structural_similarity=similarity,
-                    semantic_difference=semantic_difference,
+                    semantic_difference=0.0,
+                    semantic_checked=False,
                     comparison_code_digest=comparison.code_digest,
                 )
             )
@@ -198,34 +206,60 @@ class ShinkaStyleNoveltyPolicy:
         )
         nearest = ordered[0] if ordered else None
         max_similarity = nearest.structural_similarity if nearest else 0.0
-        exact = bool(nearest and nearest.exact_duplicate)
+        exact = raw_duplicate is not None or bool(nearest and nearest.exact_duplicate)
         high_similarity = max_similarity > self.config.similarity_threshold
-        meaningfully_novel = bool(
-            nearest
-            and nearest.semantic_difference >= self.config.semantic_difference_threshold
-        )
-        if exact:
+        meaningfully_novel = False
+        if raw_duplicate is not None:
             reject = True
-            reasons = ("EXACT_NORMALIZED_DUPLICATE", "CHEAP_LEVEL_0_REJECT")
+            reasons = ("EXACT_ARTIFACT_HASH_DUPLICATE", "CHEAP_LEVEL_0_REJECT")
             diagnostic = "EXACT_DUPLICATE_LOW_FALSE_REJECT_RISK"
-        elif high_similarity and not meaningfully_novel:
+            cascade_level = "L0_ARTIFACT_HASH"
+        elif exact:
             reject = True
-            reasons = (
-                "LOCAL_STRUCTURAL_SIMILARITY_ABOVE_THRESHOLD",
-                "DETERMINISTIC_SEMANTIC_JUDGE_NOT_MEANINGFULLY_NOVEL",
+            reasons = ("EXACT_NORMALIZED_DUPLICATE", "CHEAP_LEVEL_1_REJECT")
+            diagnostic = "NORMALIZED_DUPLICATE_LOW_FALSE_REJECT_RISK"
+            cascade_level = "L1_NORMALIZED_FINGERPRINT"
+        elif high_similarity and not meaningfully_novel:
+            checked_rows = []
+            for item in ordered:
+                if item.structural_similarity > self.config.similarity_threshold:
+                    comparison = next(
+                        candidate for candidate in comparisons if candidate.candidate_id == item.candidate_id
+                    )
+                    checked_rows.append(
+                        replace(
+                            item,
+                            semantic_difference=_semantic_difference(proposal_code, comparison.code),
+                            semantic_checked=True,
+                        )
+                    )
+                else:
+                    checked_rows.append(item)
+            ordered = tuple(checked_rows)
+            nearest = ordered[0] if ordered else None
+            meaningfully_novel = bool(
+                nearest
+                and nearest.semantic_difference >= self.config.semantic_difference_threshold
             )
-            diagnostic = "NEAR_DUPLICATE_REVIEW_SAMPLE"
-        elif high_similarity:
-            reject = False
-            reasons = (
-                "LOCAL_STRUCTURAL_SIMILARITY_ABOVE_THRESHOLD",
-                "DETERMINISTIC_SEMANTIC_JUDGE_MEANINGFULLY_NOVEL",
-            )
-            diagnostic = "HIGH_SIMILARITY_ACCEPTED_AFTER_SEMANTIC_CHECK"
+            reject = not meaningfully_novel
+            cascade_level = "L3_DETERMINISTIC_SEMANTIC"
+            if meaningfully_novel:
+                reasons = (
+                    "LOCAL_STRUCTURAL_SIMILARITY_ABOVE_THRESHOLD",
+                    "DETERMINISTIC_SEMANTIC_JUDGE_MEANINGFULLY_NOVEL",
+                )
+                diagnostic = "HIGH_SIMILARITY_ACCEPTED_AFTER_SEMANTIC_CHECK"
+            else:
+                reasons = (
+                    "LOCAL_STRUCTURAL_SIMILARITY_ABOVE_THRESHOLD",
+                    "DETERMINISTIC_SEMANTIC_JUDGE_NOT_MEANINGFULLY_NOVEL",
+                )
+                diagnostic = "NEAR_DUPLICATE_REVIEW_SAMPLE"
         else:
             reject = False
             reasons = ("LOCAL_STRUCTURAL_SIMILARITY_BELOW_THRESHOLD",)
             diagnostic = "LOW_SIMILARITY_ACCEPT"
+            cascade_level = "L2_STRUCTURAL"
         if reject and attempt == self.config.max_novelty_attempts:
             if self.config.exhaustion is NoveltyExhaustion.ACCEPT_LAST:
                 decision = NoveltyDecision.ACCEPT
@@ -247,6 +281,39 @@ class ShinkaStyleNoveltyPolicy:
             reason_codes=reasons,
             similarities=ordered,
             false_reject_diagnostic=diagnostic,
+            cascade_level=cascade_level,
+        )
+
+    def resolve_resampling(
+        self,
+        assessment: NoveltyAssessment,
+        *,
+        generation_reserve: ResourceBudget,
+        evaluation_reserve: ResourceBudget,
+        remaining_resample_budget: ResourceBudget,
+    ) -> NoveltyAssessment:
+        """Separate duplicate rejection from an economically justified new generation."""
+        if assessment.decision is not NoveltyDecision.REJECT_RESAMPLE:
+            return assessment
+        if not self.config.affordability_gate:
+            return assessment
+        generation = generation_reserve.as_dict()
+        evaluation = evaluation_reserve.as_dict()
+        remaining = remaining_resample_budget.as_dict()
+        affordable = all(
+            generation[name] <= remaining[name] + 1e-12
+            and generation[name] <= evaluation[name] + 1e-12
+            for name in generation
+        )
+        if affordable:
+            return replace(
+                assessment,
+                reason_codes=(*assessment.reason_codes, "NOVELTY_RESAMPLE_AFFORDABLE"),
+            )
+        return replace(
+            assessment,
+            decision=NoveltyDecision.REJECT_STOP,
+            reason_codes=(*assessment.reason_codes, "NOVELTY_REJECT_AND_STOP_UNAFFORDABLE"),
         )
 
     def replay(
@@ -276,6 +343,7 @@ def novelty_diagnostics(receipts: tuple[NoveltyReceipt, ...]) -> NoveltyDiagnost
         if item.assessment.decision in {
             NoveltyDecision.REJECT_RESAMPLE,
             NoveltyDecision.REJECT_EXHAUSTED,
+            NoveltyDecision.REJECT_STOP,
         }
     )
     accepted = tuple(

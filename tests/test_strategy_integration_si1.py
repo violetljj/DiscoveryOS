@@ -123,6 +123,28 @@ class StrategyIntegrationPilotTests(unittest.TestCase):
             report["scientific_verdict"],
         )
 
+    def test_repair_mode_changes_parent_distribution_and_stops_unaffordable_resampling(self) -> None:
+        provider = _CommentProvider()
+        with tempfile.TemporaryDirectory() as directory:
+            report = run_strategy_integration_si1_pilot(
+                Path(directory) / "repair-pilot",
+                local_provider=provider,
+                structural_provider=provider,
+                task_ids=("bounded_knapsack_alpha",),
+                max_workers=1,
+                repair_mode=True,
+            )
+        self.assertEqual(
+            "SI1_PARENT_EFFECTIVENESS_REPAIRED",
+            report["parent_repair_verdict"],
+        )
+        self.assertEqual("SI1_NOVELTY_COST_REPAIRED", report["novelty_repair_verdict"])
+        self.assertTrue(report["repair_gates"]["parent_selected_non_incumbent"])
+        self.assertGreater(report["repair_gates"]["duplicate_evaluations_avoided"], 0)
+        self.assertEqual(0, report["repair_gates"]["extra_generation_tokens"])
+        self.assertEqual(0, report["repair_gates"]["selected_but_unaffordable_action_count"])
+        self.assertEqual(0, report["repair_gates"]["generation_budget_exceeded_count"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -48,7 +48,9 @@ class NoveltyMechanicsTests(unittest.TestCase):
         assessment = self.policy.assess(BASE + "# formatting only\n", self.comparisons, attempt=1)
         self.assertEqual(NoveltyDecision.REJECT_RESAMPLE, assessment.decision)
         self.assertTrue(assessment.exact_duplicate)
-        self.assertIn("CHEAP_LEVEL_0_REJECT", assessment.reason_codes)
+        self.assertIn("CHEAP_LEVEL_1_REJECT", assessment.reason_codes)
+        self.assertEqual("L1_NORMALIZED_FINGERPRINT", assessment.cascade_level)
+        self.assertTrue(all(not item.semantic_checked for item in assessment.similarities))
 
     def test_near_duplicate_takes_high_similarity_semantic_path(self) -> None:
         proposal = BASE.replace("value + 1", "value + 2")
@@ -153,6 +155,24 @@ class NoveltyMechanicsTests(unittest.TestCase):
         self.assertEqual(SearchAction.LOCAL_PATCH, decision.rejected_action)
         self.assertIn("STOP_BUDGET_INSUFFICIENT", decision.reason_codes)
         self.assertEqual(ResourceBudget(tokens=20, wall_seconds=2), decision.novelty_resample_reserve)
+
+    def test_duplicate_rejection_stops_when_generation_is_costlier_than_evaluation(self) -> None:
+        policy = ShinkaStyleNoveltyPolicy(
+            NoveltyConfig(
+                policy_version="shinka_novelty_dos_v2_cheap_first_affordable",
+                max_novelty_attempts=2,
+                affordability_gate=True,
+            )
+        )
+        assessment = policy.assess(BASE, self.comparisons, attempt=1)
+        resolved = policy.resolve_resampling(
+            assessment,
+            generation_reserve=ResourceBudget(tokens=100, wall_seconds=10),
+            evaluation_reserve=ResourceBudget(cpu_seconds=1, wall_seconds=1),
+            remaining_resample_budget=ResourceBudget(tokens=100, cpu_seconds=1, wall_seconds=11),
+        )
+        self.assertEqual(NoveltyDecision.REJECT_STOP, resolved.decision)
+        self.assertIn("NOVELTY_REJECT_AND_STOP_UNAFFORDABLE", resolved.reason_codes)
 
 
 if __name__ == "__main__":

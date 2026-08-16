@@ -112,3 +112,4 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - Search-value MVP：`SEARCH_VALUE_MVP0.md`、`MVP0_BUDGET_REACHABILITY_REPAIR.md`
 - Search policy protocol：`SEARCH_POLICY_ADMISSION.md`
 - Shinka-style mechanism mapping / SI-1：`SHINKA_MECHANISM_MAPPING.md`、`STRATEGY_INTEGRATION_SI1.md`
+- SI-1 parent/novelty repair：`SI1_PARENT_NOVELTY_REPAIR.md`

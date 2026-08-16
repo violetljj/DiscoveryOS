@@ -64,3 +64,10 @@
 - **决定**：开发、验证、benchmark 和正式运行默认使用当前本机；每次高资源运行根据实时 CPU、内存、GPU/显存、磁盘和负载选择有界并行、batch、缓存与断点续跑策略。远端/云端执行需要明确授权或冻结环境要求。
 - **原因**：本机执行减少环境漂移、传输和协调成本，也更容易绑定代码、数据、资源与收据；静态并发参数则可能浪费硬件或造成换页、OOM 和系统失去响应。
 - **后果**：独立 task/seed/arm 应在资源允许时并行，但共享 worktree/create-once root 的写入保持串行；性能参数和实际 usage 进入 manifest/receipt，优化不能改变协议语义或 matched-resource 公平面。
+
+## D-010：Parent 概率去垄断与 novelty resample 经济门分离
+
+- **状态**：Accepted
+- **决定**：当统一 archive 中存在多个合法 parent 时，parent sampler 必须保留可审计的非垄断概率面；当前 SI-1R policy 将单候选概率上限冻结为 `0.8`。Novelty rejection 只判定候选是否重复，是否重新调用 generator 是独立预算决定；只有 frozen generation reserve 不高于剩余 action budget 且不高于被避免的 evaluation reserve 时才可 resample。
+- **原因**：SI-1 冻结证据显示多 parent 时仍有 7/12 次权重塌缩，而三次 duplicate rejection 后的两次自动 resample 消耗 41,386 tokens 和 67.89 秒且没有 improvement。把 rejection 与 resample 绑定会用更贵 generation 替代便宜 evaluation。
+- **后果**：Receipt 必须保存完整 parent opportunity 和选择概率；invalid/不兼容 candidate 仍不可因概率修复获得 parent rights。Cheap novelty 层级先行，昂贵层只在前级不确定时运行；不可负担的 duplicate 默认 `REJECT_AND_STOP` 或交还 controller，不增加 arm 总预算。

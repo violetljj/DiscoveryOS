@@ -390,6 +390,7 @@ class LedgerBackedSearchStateProjector:
                     archive=bool(facts.evidence_by_candidate.get(candidate_id)),
                     incumbent=candidate_id == incumbent_id,
                     lineage_root_id=None,
+                    lineage_ids=self._candidate_lineage(facts, candidate_id),
                 )
                 for candidate_id in facts.candidates
             ),
@@ -415,6 +416,25 @@ class LedgerBackedSearchStateProjector:
             generation += 1
             current = parent
         return generation
+
+    @staticmethod
+    def _candidate_lineage(facts: _ProjectionFacts, candidate_id: str) -> tuple[str, ...]:
+        lineage = [candidate_id]
+        current = candidate_id
+        seen: set[str] = set()
+        while True:
+            if current in seen:
+                raise ValueError("candidate lineage contains a cycle")
+            seen.add(current)
+            parent = next(
+                (item for item in facts.candidates[current].parent_ids if item in facts.candidates),
+                None,
+            )
+            if parent is None:
+                break
+            lineage.append(parent)
+            current = parent
+        return tuple(reversed(lineage))
 
     def novelty_comparisons(
         self,
@@ -769,7 +789,10 @@ class UnifiedActionExecutor:
                     cost.generation_reserve,
                     self.novelty_policy.config.max_novelty_attempts - 1,
                 )
-                if not _affords_budget(cost.novelty_resample_reserve, required):
+                if (
+                    not self.novelty_policy.config.affordability_gate
+                    and not _affords_budget(cost.novelty_resample_reserve, required)
+                ):
                     raise ValueError(
                         f"{action.value} novelty retry reserve does not cover the frozen worst case"
                     )
@@ -908,6 +931,15 @@ class UnifiedActionExecutor:
                     comparisons,
                     attempt=attempt,
                 )
+                assessment = self.novelty_policy.resolve_resampling(
+                    assessment,
+                    generation_reserve=decision.generation_reserve,
+                    evaluation_reserve=decision.evaluation_reserve,
+                    remaining_resample_budget=_sum_budgets(
+                        decision.novelty_resample_reserve,
+                        decision.evaluation_reserve,
+                    ),
+                )
                 novelty_usage = ResourceUsage(
                     cpu_seconds=max(0.0, time.process_time() - cpu_start),
                     wall_seconds=max(0.0, time.perf_counter() - wall_start),
@@ -942,7 +974,10 @@ class UnifiedActionExecutor:
                     if assessment.decision is NoveltyDecision.REJECT_EXHAUSTED
                     else "NOVELTY_DUPLICATE_REJECTED"
                 )
-                if assessment.decision is NoveltyDecision.REJECT_EXHAUSTED:
+                if assessment.decision in {
+                    NoveltyDecision.REJECT_EXHAUSTED,
+                    NoveltyDecision.REJECT_STOP,
+                }:
                     break
                 novelty_feedback.append(
                     f"NOVELTY_REJECTED_ATTEMPT_{attempt}: avoid repeating proposal "
@@ -1346,6 +1381,16 @@ def _scale_budget(budget: ResourceBudget, multiplier: int) -> ResourceBudget:
         gpu_seconds=budget.gpu_seconds * multiplier,
         device_seconds=budget.device_seconds * multiplier,
         wall_seconds=budget.wall_seconds * multiplier,
+    )
+
+
+def _sum_budgets(*budgets: ResourceBudget) -> ResourceBudget:
+    return ResourceBudget(
+        tokens=sum(item.tokens for item in budgets),
+        cpu_seconds=sum(item.cpu_seconds for item in budgets),
+        gpu_seconds=sum(item.gpu_seconds for item in budgets),
+        device_seconds=sum(item.device_seconds for item in budgets),
+        wall_seconds=sum(item.wall_seconds for item in budgets),
     )
 
 

@@ -23,12 +23,15 @@ class ParentSelectionConfig:
     selection_lambda: float = 10.0
     base_seed: int = 0
     minimum_component: float = 1e-12
+    maximum_selection_probability: float = 1.0
 
     def __post_init__(self) -> None:
         if not self.policy_version or self.selection_lambda <= 0:
             raise ValueError("parent policy version and positive selection lambda are required")
         if self.base_seed < 0 or not 0 < self.minimum_component < 1:
             raise ValueError("parent selection seed/component floor is invalid")
+        if not 0 < self.maximum_selection_probability <= 1:
+            raise ValueError("maximum parent selection probability must be in (0, 1]")
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,6 +45,7 @@ class ParentCandidate:
     archive: bool = False
     incumbent: bool = False
     lineage_root_id: str | None = None
+    lineage_ids: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.candidate_id or self.generation < 0 or self.parent_exposure_count < 0:
@@ -94,6 +98,19 @@ class ParentSelectionReceipt:
     random_seed: int
     random_draw: float
     policy_version: str
+    candidate_pool_size: int
+    eligible_parent_count: int
+    candidate_ids: tuple[str, ...]
+    candidate_scores: tuple[float | None, ...]
+    candidate_lineages: tuple[tuple[str, ...], ...]
+    candidate_generations: tuple[int, ...]
+    candidate_exposure_counts: tuple[int, ...]
+    selection_weights: tuple[float, ...]
+    selection_probabilities: tuple[float, ...]
+    incumbent_id: str | None
+    selected_is_incumbent: bool
+    unique_eligible_lineages: int
+    unique_eligible_structural_roots: int | None
     created_at: str = field(default_factory=utc_now)
 
     @classmethod
@@ -116,6 +133,45 @@ class ParentSelectionReceipt:
             "random_seed": context.seed,
             "random_draw": random_draw,
             "policy_version": context.policy_version,
+            "candidate_pool_size": len(context.candidates),
+            "eligible_parent_count": len(components),
+            "candidate_ids": tuple(item.candidate_id for item in context.candidates),
+            "candidate_scores": tuple(item.fitness for item in context.candidates),
+            "candidate_lineages": tuple(item.lineage_ids for item in context.candidates),
+            "candidate_generations": tuple(item.generation for item in context.candidates),
+            "candidate_exposure_counts": tuple(
+                item.parent_exposure_count for item in context.candidates
+            ),
+            "selection_weights": tuple(item.unnormalized_weight for item in components),
+            "selection_probabilities": tuple(
+                item.selection_probability for item in components
+            ),
+            "incumbent_id": next(
+                (item.candidate_id for item in context.candidates if item.incumbent),
+                None,
+            ),
+            "selected_is_incumbent": next(
+                (item.incumbent for item in context.candidates if item.candidate_id == selected_parent_id),
+                False,
+            ),
+            "unique_eligible_lineages": len(
+                {item.lineage_ids for item in context.candidates if item.valid and item.fitness is not None}
+            ),
+            "unique_eligible_structural_roots": (
+                len(
+                    {
+                        item.lineage_root_id
+                        for item in context.candidates
+                        if item.valid and item.fitness is not None
+                    }
+                )
+                if all(
+                    item.lineage_root_id is not None
+                    for item in context.candidates
+                    if item.valid and item.fitness is not None
+                )
+                else None
+            ),
         }
         return cls(receipt_id=f"parent_{digest_json(identity)[:24]}", **identity)
 
@@ -175,7 +231,10 @@ class ShinkaWeightedParentSelectionPolicy:
             exploration = 1.0 / (1.0 + item.parent_exposure_count)
             raw.append((item, normalized, exploitation, exploration, exploitation * exploration))
         total = sum(item[4] for item in raw)
-        probabilities = [item[4] / total for item in raw]
+        probabilities = _cap_probabilities(
+            [item[4] / total for item in raw],
+            self.config.maximum_selection_probability,
+        )
         draw = random.Random(context.seed).random()
         cursor = 0.0
         selected = raw[-1][0]
@@ -274,6 +333,36 @@ def _stable_sigmoid(value: float) -> float:
         return 1.0 / (1.0 + z)
     z = math.exp(value)
     return z / (1.0 + z)
+
+
+def _cap_probabilities(probabilities: list[float], maximum: float) -> list[float]:
+    """Cap monopoly probability and redistribute mass without changing rank order."""
+    if len(probabilities) < 2 or maximum >= 1.0:
+        return probabilities
+    if maximum < 1.0 / len(probabilities):
+        raise ValueError("maximum selection probability is infeasible for this parent pool")
+    result = list(probabilities)
+    fixed: set[int] = set()
+    while True:
+        over = [index for index, value in enumerate(result) if value > maximum + 1e-15]
+        if not over:
+            break
+        for index in over:
+            result[index] = maximum
+            fixed.add(index)
+        remaining = 1.0 - sum(result[index] for index in fixed)
+        open_indices = [index for index in range(len(result)) if index not in fixed]
+        if not open_indices:
+            break
+        open_total = sum(probabilities[index] for index in open_indices)
+        if open_total <= 0:
+            share = remaining / len(open_indices)
+            for index in open_indices:
+                result[index] = share
+        else:
+            for index in open_indices:
+                result[index] = remaining * probabilities[index] / open_total
+    return result
 
 
 def _gini(values: tuple[int, ...]) -> float:

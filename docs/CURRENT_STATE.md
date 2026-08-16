@@ -12,6 +12,8 @@ CONTROLLER_BUDGET_REACHABILITY_REPAIRED
 SEARCH_VALUE_MVP0_FAIL
 DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
 DISCOVERYOS_PRODUCTION_NOT_READY
+SI1_PARENT_EFFECTIVENESS_REPAIRED
+SI1_NOVELTY_COST_REPAIRED
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -49,11 +51,12 @@ DISCOVERYOS_PRODUCTION_NOT_READY
 - 后续修复了 controller 在冻结预算下的 action reachability，并保持旧 manifest/report/receipts 不变。
 - 该修复只能说明 mechanics/预算可达性已修正，不能回写或升级旧 MVP-0 科学结果。
 
-## 正在进行、尚未形成正式结论
+## SI-1 / SI-1R development 结果
 
-- 工作树中正在集成 Shinka-style parent selection 与 novelty rejection，并准备 Strategy Integration SI-1 四臂 consumed-task development pilot。
-- SI-1 最大 mechanics verdict 是 `SHINKA_PARENT_NOVELTY_MECHANICS_READY`；pilot 最高只能给出 development signal，不能给出 `SEARCH_VALUE_ESTABLISHED` 或 `SHINKA_MECHANISM_ADMITTED`。
-- SI-1 的代码、测试和文档目前属于在研工作；在其独立提交、验证和冻结结果完成前，不把它列为已交付 admission。
+- SI-1 已将 Shinka-style parent selection 与 novelty rejection 原生接入统一 ledger/search loop，mechanics verdict 为 `SHINKA_PARENT_NOVELTY_MECHANICS_READY`；其正向 development signal 只来自避免重复 evaluation。
+- SI-1R 对冻结 SI-1 records 的 autopsy 证明：首步存在真实 pool starvation，但主要 parent 缺陷是多候选时的权重塌缩，不是 archive visibility 或 controller opportunity 缺失；novelty 高成本来自 rejection 后无条件昂贵 resample。
+- Parent 的单候选概率上限和完整 opportunity receipt 已在 deterministic fixture 与真实 consumed-task trace 中改变合法 parent 分布；novelty cheap-first cascade 与 affordability gate 将四次 avoided evaluation 的 resample generation overhead 降为零。
+- 有界 verdict 为 `SI1_PARENT_EFFECTIVENESS_REPAIRED` 与 `SI1_NOVELTY_COST_REPAIRED`。真实 pilot 没有提高最终 median、没有新 stepping-stone，且 parent arms 未超过 CORE aggregate diversity；因此仍是 development mechanics，不是 search-value admission。
 
 ## 明确尚未建立或尚未实现
 
@@ -66,8 +69,8 @@ DISCOVERYOS_PRODUCTION_NOT_READY
 
 ## 当前下一道门
 
-1. 完成 SI-1 mechanics 的针对性验证，冻结 provider/model/reasoning/budget 后，仅在已 consumed tasks 上运行 development pilot。
-2. 根据结果决定 parent/novelty 是否值得进入新的、预注册且未污染的 search-value admission；不得从 SI-1 直接晋升。
+1. SI-1R 已满足 repair stop rule；停止继续调参或增加 strategy。
+2. 如需继续，只能先讨论并预注册新的、未污染的 SI-1 fresh admission；不得从 SI-1R 直接晋升。
 3. 若设计新 admission，必须在任何候选模型调用前冻结 task provenance、matched-resource surface、replicates、gate 和 claim ceiling。
 4. 只有 search value 在冻结分布上成立后，才扩大到远端执行、更多策略或生产 blind isolation。
 
@@ -86,3 +89,4 @@ DISCOVERYOS_PRODUCTION_NOT_READY
 - Local Patch：[`LLM_LOCAL_PATCH_ADMISSION.md`](LLM_LOCAL_PATCH_ADMISSION.md)、[`LLM_LOCAL_PATCH_RELIABILITY.md`](LLM_LOCAL_PATCH_RELIABILITY.md)
 - MVP-0：[`SEARCH_VALUE_MVP0.md`](SEARCH_VALUE_MVP0.md)、[`MVP0_BUDGET_REACHABILITY_REPAIR.md`](MVP0_BUDGET_REACHABILITY_REPAIR.md)
 - SI-1：[`STRATEGY_INTEGRATION_SI1.md`](STRATEGY_INTEGRATION_SI1.md)、[`SHINKA_MECHANISM_MAPPING.md`](SHINKA_MECHANISM_MAPPING.md)
+- SI-1R：[`SI1_PARENT_NOVELTY_REPAIR.md`](SI1_PARENT_NOVELTY_REPAIR.md)

@@ -48,8 +48,11 @@ from discoveryos.util import digest_bytes, digest_json, jsonable
 
 
 PROTOCOL_ID = "DISCOVERYOS_STRATEGY_INTEGRATION_SI1_DEVELOPMENT_V1"
+REPAIR_PROTOCOL_ID = "DISCOVERYOS_SI1R_PARENT_NOVELTY_REPAIR_DEVELOPMENT_V1"
 MANIFEST_RECORD = "si1-development-manifest.json"
 REPORT_RECORD = "si1-development-report.json"
+REPAIR_MANIFEST_RECORD = "si1r-development-manifest.json"
+REPAIR_REPORT_RECORD = "si1r-development-report.json"
 SHINKA_PAPER = "arXiv:2509.19349v1"
 SHINKA_SOURCE_COMMIT = "2bf8cfeb6fd39c79555cd94a8f395d64e740aae8"
 DEFAULT_TASK_IDS = (
@@ -74,10 +77,14 @@ def run_strategy_integration_si1_pilot(
     task_ids: tuple[str, ...] = DEFAULT_TASK_IDS,
     max_workers: int = 3,
     progress: Callable[[str], None] | None = None,
+    repair_mode: bool = False,
 ) -> dict[str, Any]:
     workspace = workspace.resolve()
+    report_record = REPAIR_REPORT_RECORD if repair_mode else REPORT_RECORD
+    manifest_record = REPAIR_MANIFEST_RECORD if repair_mode else MANIFEST_RECORD
+    protocol_id = REPAIR_PROTOCOL_ID if repair_mode else PROTOCOL_ID
     if workspace.exists() and any(workspace.iterdir()):
-        report_path = workspace / "result-artifacts" / "records" / REPORT_RECORD
+        report_path = workspace / "result-artifacts" / "records" / report_record
         if report_path.is_file():
             return json.loads(report_path.read_text(encoding="utf-8"))
         raise RuntimeError("SI-1 development pilot requires an empty workspace")
@@ -115,7 +122,7 @@ def run_strategy_integration_si1_pilot(
         )
     source_root = Path(__file__).resolve().parents[1]
     manifest_payload = {
-        "protocol_id": PROTOCOL_ID,
+        "protocol_id": protocol_id,
         "status": "SEALED_DEVELOPMENT_PRE_MODEL",
         "claim_ceiling": "DEVELOPMENT_ONLY_NO_FRESH_ADMISSION",
         "model_calls_before_seal": 0,
@@ -160,13 +167,33 @@ def run_strategy_integration_si1_pilot(
             "local_settings_digest": local_provider.settings_digest,
             "structural_settings_digest": structural_provider.settings_digest,
         },
-        "novelty": jsonable(NoveltyConfig(max_novelty_attempts=2)),
-        "parent": jsonable(ParentSelectionConfig(selection_lambda=10.0, base_seed=170817)),
+        "novelty": jsonable(
+            NoveltyConfig(
+                policy_version="shinka_novelty_dos_v2_cheap_first_affordable",
+                max_novelty_attempts=2,
+                affordability_gate=True,
+            )
+            if repair_mode
+            else NoveltyConfig(max_novelty_attempts=2)
+        ),
+        "parent": jsonable(
+            ParentSelectionConfig(
+                policy_version="shinka_weighted_dos_v2_probability_cap",
+                selection_lambda=10.0,
+                base_seed=170817,
+                maximum_selection_probability=0.8,
+            )
+            if repair_mode
+            else ParentSelectionConfig(selection_lambda=10.0, base_seed=170817)
+        ),
+        "repair_scope": (
+            "SI1_PARENT_EFFECTIVENESS_AND_NOVELTY_COST_ONLY" if repair_mode else None
+        ),
         "fresh_scientific_corpus_consumed": False,
         "forbidden_claims": ["SEARCH_VALUE_ESTABLISHED", "SHINKA_MECHANISM_ADMITTED"],
     }
     manifest = {**manifest_payload, "manifest_digest": digest_json(manifest_payload)}
-    ArtifactStore(workspace / "protocol-artifacts").write_record(MANIFEST_RECORD, manifest)
+    ArtifactStore(workspace / "protocol-artifacts").write_record(manifest_record, manifest)
     results: dict[tuple[str, str], dict[str, Any]] = {}
     worker_count = max(1, min(max_workers, len(selected)))
     # One arm wave at a time avoids concurrent worktree mutation against the same
@@ -191,6 +218,7 @@ def run_strategy_integration_si1_pilot(
                         arm_name,
                         local_provider,
                         structural_provider,
+                        repair_mode=repair_mode,
                     ),
                 )
                 futures[future] = item.task.task_id
@@ -204,12 +232,14 @@ def run_strategy_integration_si1_pilot(
                 )
                 if progress:
                     progress(
-                        f"SI-1 completed {task_id}:{arm_name} "
+                        f"{'SI-1R' if repair_mode else 'SI-1'} completed {task_id}:{arm_name} "
                         f"improvement={result['metrics']['best_improvement']:.6f} "
                         f"tokens={result['actual_usage']['tokens']}"
                     )
     report = _aggregate(manifest, selected, results)
-    ArtifactStore(workspace / "result-artifacts").write_record(REPORT_RECORD, report)
+    if repair_mode:
+        report = _repair_verdicts(report)
+    ArtifactStore(workspace / "result-artifacts").write_record(report_record, report)
     return report
 
 
@@ -219,6 +249,8 @@ async def _run_arm(
     arm_name: str,
     local_provider: PatchProvider,
     structural_provider: PatchProvider,
+    *,
+    repair_mode: bool = False,
 ) -> dict[str, Any]:
     started = time.monotonic()
     await _evaluate_at(arm, arm.baseline, Fidelity.G1, seed=0, attempt="baseline")
@@ -226,16 +258,34 @@ async def _run_arm(
     novelty_enabled = "NOVELTY" in arm_name
     parent_config = (
         ParentSelectionConfig(
+            policy_version=(
+                "shinka_weighted_dos_v2_probability_cap"
+                if repair_mode
+                else "shinka_weighted_dos_v1"
+            ),
             selection_lambda=10.0,
             base_seed=170817 + int(digest_json(item.task.task_id)[:6], 16),
+            maximum_selection_probability=0.8 if repair_mode else 1.0,
         )
         if parent_enabled
         else None
     )
-    novelty_config = NoveltyConfig(max_novelty_attempts=2) if novelty_enabled else None
-    config = _controller_config(novelty_enabled)
+    novelty_config = (
+        NoveltyConfig(
+            policy_version=(
+                "shinka_novelty_dos_v2_cheap_first_affordable"
+                if repair_mode
+                else "shinka_novelty_dos_v1"
+            ),
+            max_novelty_attempts=2,
+            affordability_gate=repair_mode,
+        )
+        if novelty_enabled
+        else None
+    )
+    config = _controller_config(novelty_enabled, affordable_resampling=repair_mode)
     spec = SearchRunSpec(
-        run_id=f"si1-{item.task.task_id}-{arm_name.casefold()}",
+        run_id=f"{'si1r' if repair_mode else 'si1'}-{item.task.task_id}-{arm_name.casefold()}",
         contract_digest=arm.contract.digest,
         root_candidate_id=arm.baseline.candidate_id,
         branch_id="si1-active-frontier",
@@ -330,8 +380,16 @@ async def _run_arm(
     return report
 
 
-def _controller_config(novelty_enabled: bool) -> ActionControllerConfig:
-    retry = GENERATION_RESERVE if novelty_enabled else ResourceBudget()
+def _controller_config(
+    novelty_enabled: bool,
+    *,
+    affordable_resampling: bool = False,
+) -> ActionControllerConfig:
+    retry = (
+        GENERATION_RESERVE
+        if novelty_enabled and not affordable_resampling
+        else ResourceBudget()
+    )
     complete = _sum_budgets(
         GENERATION_RESERVE,
         retry,
@@ -619,6 +677,65 @@ def _aggregate(
             }
             for item in tasks
         ],
+    }
+
+
+def _repair_verdicts(report: dict[str, Any]) -> dict[str, Any]:
+    parent_arms = (
+        report["arm_summaries"]["CORE_PARENT"],
+        report["arm_summaries"]["CORE_PARENT_NOVELTY"],
+    )
+    novelty_arms = (
+        report["arm_summaries"]["CORE_NOVELTY"],
+        report["arm_summaries"]["CORE_PARENT_NOVELTY"],
+    )
+    non_incumbent = sum(
+        task["arms"][arm]["diagnostics"]["non_incumbent_parent_fraction"]
+        for task in report["task_results"]
+        for arm in ("CORE_PARENT", "CORE_PARENT_NOVELTY")
+    )
+    parent_repaired = (
+        any(item["unique_parent_count"] > 1 and item["effective_parent_count"] > 1 for item in parent_arms)
+        and non_incumbent > 0
+    )
+    avoided = sum(item["avoided_evaluations"] for item in novelty_arms)
+    extra_tokens = sum(item["resample_cost_tokens"] for item in novelty_arms)
+    extra_wall = sum(item["resample_cost_wall"] for item in novelty_arms)
+    novelty_repaired = avoided > 0 and extra_tokens < 41_386 and extra_wall < 67.89
+    return {
+        **report,
+        "repair_gates": {
+            "parent_selected_non_incumbent": non_incumbent > 0,
+            "parent_effective_count_above_one": any(
+                item["effective_parent_count"] > 1 for item in parent_arms
+            ),
+            "duplicate_evaluations_avoided": avoided,
+            "extra_generation_tokens": extra_tokens,
+            "extra_generation_wall": extra_wall,
+            "tokens_per_avoided_evaluation": extra_tokens / avoided if avoided else None,
+            "wall_per_avoided_evaluation": extra_wall / avoided if avoided else None,
+            "selected_but_unaffordable_action_count": sum(
+                item["selected_but_unaffordable_action_count"]
+                for item in report["arm_summaries"].values()
+            ),
+            "generation_budget_exceeded_count": sum(
+                task["arms"][arm]["diagnostics"]["generation_budget_exceeded_count"]
+                for task in report["task_results"]
+                for arm in ARM_NAMES
+            ),
+        },
+        "parent_repair_verdict": (
+            "SI1_PARENT_EFFECTIVENESS_REPAIRED"
+            if parent_repaired
+            else "SI1_PARENT_EFFECTIVENESS_NOT_DEMONSTRATED"
+        ),
+        "novelty_repair_verdict": (
+            "SI1_NOVELTY_COST_REPAIRED"
+            if novelty_repaired
+            else "SI1_NOVELTY_COST_NOT_REPAIRED"
+        ),
+        "scientific_verdict": "DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED",
+        "fresh_admission_performed": False,
     }
 
 

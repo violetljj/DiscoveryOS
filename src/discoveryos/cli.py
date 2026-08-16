@@ -107,6 +107,11 @@ def build_parser() -> argparse.ArgumentParser:
     si1.add_argument("--codex-command", default="codex")
     si1.add_argument("--reasoning-effort", required=True)
     si1.add_argument("--max-workers", type=int, default=3)
+    si1.add_argument(
+        "--repair",
+        action="store_true",
+        help="run SI-1R parent-effectiveness and novelty-cost repair semantics",
+    )
     return parser
 
 
@@ -210,6 +215,7 @@ def main(argv: list[str] | None = None) -> int:
                 local_provider=local_provider,
                 structural_provider=structural_provider,
                 max_workers=args.max_workers,
+                repair_mode=args.repair,
                 progress=lambda message: print(message, file=sys.stderr, flush=True),
             )
         else:

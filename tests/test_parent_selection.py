@@ -73,6 +73,42 @@ class ParentSelectionMechanicsTests(unittest.TestCase):
             diagnostics.incumbent_parent_fraction + diagnostics.non_incumbent_parent_fraction,
         )
 
+    def test_probability_cap_repairs_effective_parent_distribution(self) -> None:
+        uncapped = ShinkaWeightedParentSelectionPolicy(
+            ParentSelectionConfig(selection_lambda=10.0)
+        )
+        capped = ShinkaWeightedParentSelectionPolicy(
+            ParentSelectionConfig(
+                policy_version="shinka_weighted_dos_v2_probability_cap",
+                selection_lambda=10.0,
+                maximum_selection_probability=0.8,
+            )
+        )
+        contexts = tuple(self._context(seed=seed) for seed in range(8))
+        capped_contexts = tuple(
+            ParentSelectionContext(
+                run_id=context.run_id,
+                step=context.step,
+                metric_direction=context.metric_direction,
+                candidates=context.candidates,
+                seed=context.seed,
+                policy_version=capped.config.policy_version,
+            )
+            for context in contexts
+        )
+        uncapped_diagnostics = parent_selection_diagnostics(
+            tuple(uncapped.select(context) for context in contexts),
+            contexts,
+        )
+        capped_receipts = tuple(capped.select(context) for context in capped_contexts)
+        capped_diagnostics = parent_selection_diagnostics(capped_receipts, capped_contexts)
+        self.assertGreater(capped_diagnostics.unique_parent_count, 1)
+        self.assertGreater(capped_diagnostics.effective_parent_count, 1)
+        self.assertGreater(capped_diagnostics.parent_entropy, uncapped_diagnostics.parent_entropy)
+        self.assertTrue(any(not receipt.selected_is_incumbent for receipt in capped_receipts))
+        self.assertTrue(all(receipt.eligible_parent_count == 2 for receipt in capped_receipts))
+        self.assertTrue(all(max(receipt.selection_probabilities) <= 0.8 for receipt in capped_receipts))
+
     def _context(
         self,
         *,
