@@ -1,0 +1,268 @@
+from __future__ import annotations
+
+import json
+import sqlite3
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Iterator
+
+from discoveryos.contracts.codec import candidate_from_dict, evidence_from_dict, experiment_from_dict
+from discoveryos.contracts.models import CandidateSpec, EvidenceRecord, ExperimentSpec, ProblemContract, ResourceBudget
+from discoveryos.util import canonical_json, jsonable, utc_now
+
+
+class LedgerConflict(RuntimeError):
+    pass
+
+
+class BudgetExceeded(RuntimeError):
+    pass
+
+
+class EvidenceLedger:
+    def __init__(self, path: Path) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self.path = path
+        self._initialize()
+
+    @contextmanager
+    def connect(self) -> Iterator[sqlite3.Connection]:
+        connection = sqlite3.connect(self.path, timeout=30.0)
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA foreign_keys = ON")
+        try:
+            yield connection
+            connection.commit()
+        except BaseException:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
+
+    def _initialize(self) -> None:
+        with self.connect() as connection:
+            connection.execute("PRAGMA journal_mode = WAL")
+            connection.executescript(
+                """
+                CREATE TABLE IF NOT EXISTS contracts(
+                    contract_digest TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS candidates(
+                    candidate_id TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS experiments(
+                    experiment_id TEXT PRIMARY KEY, candidate_id TEXT NOT NULL, payload TEXT NOT NULL,
+                    created_at TEXT NOT NULL, FOREIGN KEY(candidate_id) REFERENCES candidates(candidate_id)
+                );
+                CREATE TABLE IF NOT EXISTS evidence(
+                    receipt_id TEXT PRIMARY KEY, experiment_id TEXT UNIQUE NOT NULL, candidate_id TEXT NOT NULL,
+                    fidelity TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL,
+                    FOREIGN KEY(experiment_id) REFERENCES experiments(experiment_id),
+                    FOREIGN KEY(candidate_id) REFERENCES candidates(candidate_id)
+                );
+                CREATE TABLE IF NOT EXISTS graph_nodes(
+                    node_id TEXT PRIMARY KEY, node_type TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS graph_edges(
+                    source_id TEXT NOT NULL, target_id TEXT NOT NULL, edge_type TEXT NOT NULL, payload TEXT NOT NULL,
+                    created_at TEXT NOT NULL, PRIMARY KEY(source_id, target_id, edge_type)
+                );
+                CREATE TABLE IF NOT EXISTS budget_reservations(
+                    reservation_id TEXT PRIMARY KEY, tokens REAL NOT NULL, cpu_seconds REAL NOT NULL,
+                    gpu_seconds REAL NOT NULL, device_seconds REAL NOT NULL, wall_seconds REAL NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS frozen_candidates(
+                    candidate_id TEXT PRIMARY KEY, contract_digest TEXT NOT NULL, reason TEXT NOT NULL,
+                    frozen_at TEXT NOT NULL, FOREIGN KEY(candidate_id) REFERENCES candidates(candidate_id)
+                );
+                CREATE TABLE IF NOT EXISTS semantic_deltas(
+                    delta_id TEXT PRIMARY KEY, candidate_id TEXT NOT NULL, text TEXT NOT NULL,
+                    confidence TEXT NOT NULL, tags TEXT NOT NULL, created_at TEXT NOT NULL,
+                    FOREIGN KEY(candidate_id) REFERENCES candidates(candidate_id)
+                );
+                CREATE TABLE IF NOT EXISTS events(
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT, event_type TEXT NOT NULL, payload TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                """
+            )
+
+    def _insert_once(self, table: str, key_column: str, key: str, columns: dict[str, Any]) -> bool:
+        payload_columns = {name: (canonical_json(value) if name == "payload" and not isinstance(value, str) else value) for name, value in columns.items()}
+        with self.connect() as connection:
+            existing = connection.execute(f"SELECT * FROM {table} WHERE {key_column} = ?", (key,)).fetchone()
+            if existing:
+                for name, value in payload_columns.items():
+                    if name.endswith("_at"):
+                        continue
+                    existing_value = existing[name]
+                    if name == "payload" and _payload_without_timestamp(str(existing_value)) == _payload_without_timestamp(str(value)):
+                        continue
+                    if str(existing_value) != str(value):
+                        raise LedgerConflict(f"{table} key collision for {key}")
+                return False
+            names = [key_column, *payload_columns]
+            placeholders = ",".join("?" for _ in names)
+            connection.execute(
+                f"INSERT INTO {table} ({','.join(names)}) VALUES ({placeholders})",
+                (key, *(payload_columns[name] for name in payload_columns)),
+            )
+            return True
+
+    def add_contract(self, contract: ProblemContract) -> bool:
+        return self._insert_once("contracts", "contract_digest", contract.digest, {"payload": jsonable(contract), "created_at": contract.created_at})
+
+    def add_candidate(self, candidate: CandidateSpec) -> bool:
+        added = self._insert_once("candidates", "candidate_id", candidate.candidate_id, {"payload": jsonable(candidate), "created_at": candidate.created_at})
+        self.add_node(candidate.candidate_id, "candidate", candidate)
+        for parent_id in candidate.parent_ids:
+            self.add_edge(parent_id, candidate.candidate_id, "DERIVED_FROM", {"operator_id": candidate.operator_id})
+        return added
+
+    def add_experiment(self, experiment: ExperimentSpec) -> bool:
+        added = self._insert_once(
+            "experiments",
+            "experiment_id",
+            experiment.experiment_id,
+            {"candidate_id": experiment.candidate_id, "payload": jsonable(experiment), "created_at": experiment.created_at},
+        )
+        self.add_node(experiment.experiment_id, "experiment", experiment)
+        self.add_edge(experiment.candidate_id, experiment.experiment_id, "EVALUATED_BY", {"fidelity": experiment.fidelity.value})
+        return added
+
+    def add_evidence(self, evidence: EvidenceRecord) -> bool:
+        added = self._insert_once(
+            "evidence",
+            "receipt_id",
+            evidence.receipt_id,
+            {
+                "experiment_id": evidence.experiment_id,
+                "candidate_id": evidence.candidate_id,
+                "fidelity": evidence.fidelity.value,
+                "payload": jsonable(evidence),
+                "created_at": evidence.created_at,
+            },
+        )
+        self.add_node(evidence.receipt_id, "evidence", evidence)
+        self.add_edge(evidence.experiment_id, evidence.receipt_id, "PRODUCED", {})
+        return added
+
+    def add_node(self, node_id: str, node_type: str, payload: Any) -> bool:
+        return self._insert_once("graph_nodes", "node_id", node_id, {"node_type": node_type, "payload": jsonable(payload), "created_at": utc_now()})
+
+    def add_edge(self, source_id: str, target_id: str, edge_type: str, payload: Any) -> bool:
+        with self.connect() as connection:
+            existing = connection.execute(
+                "SELECT payload FROM graph_edges WHERE source_id=? AND target_id=? AND edge_type=?",
+                (source_id, target_id, edge_type),
+            ).fetchone()
+            encoded = canonical_json(payload)
+            if existing:
+                if existing["payload"] != encoded:
+                    raise LedgerConflict(f"graph edge collision: {source_id}->{target_id}:{edge_type}")
+                return False
+            connection.execute(
+                "INSERT INTO graph_edges VALUES (?,?,?,?,?)",
+                (source_id, target_id, edge_type, encoded, utc_now()),
+            )
+            return True
+
+    def reserve_budget(self, reservation_id: str, requested: ResourceBudget, limit: ResourceBudget) -> bool:
+        requested_values = requested.as_dict()
+        limits = limit.as_dict()
+        with self.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            existing = connection.execute("SELECT * FROM budget_reservations WHERE reservation_id=?", (reservation_id,)).fetchone()
+            if existing:
+                if any(float(existing[name]) != value for name, value in requested_values.items()):
+                    raise LedgerConflict(f"budget reservation collision: {reservation_id}")
+                return False
+            totals = connection.execute(
+                "SELECT COALESCE(SUM(tokens),0) tokens, COALESCE(SUM(cpu_seconds),0) cpu_seconds, "
+                "COALESCE(SUM(gpu_seconds),0) gpu_seconds, COALESCE(SUM(device_seconds),0) device_seconds, "
+                "COALESCE(SUM(wall_seconds),0) wall_seconds FROM budget_reservations"
+            ).fetchone()
+            exceeded = [name for name, value in requested_values.items() if limits[name] > 0 and float(totals[name]) + value > limits[name]]
+            if exceeded:
+                raise BudgetExceeded("budget exceeded: " + ",".join(exceeded))
+            connection.execute(
+                "INSERT INTO budget_reservations VALUES (?,?,?,?,?,?,?)",
+                (
+                    reservation_id,
+                    requested.tokens,
+                    requested.cpu_seconds,
+                    requested.gpu_seconds,
+                    requested.device_seconds,
+                    requested.wall_seconds,
+                    utc_now(),
+                ),
+            )
+            return True
+
+    def freeze_candidate(self, candidate_id: str, contract_digest: str, reason: str) -> bool:
+        return self._insert_once(
+            "frozen_candidates",
+            "candidate_id",
+            candidate_id,
+            {"contract_digest": contract_digest, "reason": reason, "frozen_at": utc_now()},
+        )
+
+    def is_frozen(self, candidate_id: str, contract_digest: str) -> bool:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT 1 FROM frozen_candidates WHERE candidate_id=? AND contract_digest=?",
+                (candidate_id, contract_digest),
+            ).fetchone()
+        return row is not None
+
+    def get_candidate(self, candidate_id: str) -> CandidateSpec:
+        with self.connect() as connection:
+            row = connection.execute("SELECT payload FROM candidates WHERE candidate_id=?", (candidate_id,)).fetchone()
+        if not row:
+            raise KeyError(candidate_id)
+        return candidate_from_dict(json.loads(row["payload"]))
+
+    def evidence_payloads(self, *, fidelity: str | None = None) -> list[dict[str, Any]]:
+        query = "SELECT payload FROM evidence"
+        parameters: tuple[Any, ...] = ()
+        if fidelity:
+            query += " WHERE fidelity=?"
+            parameters = (fidelity,)
+        query += " ORDER BY created_at, receipt_id"
+        with self.connect() as connection:
+            return [json.loads(row["payload"]) for row in connection.execute(query, parameters)]
+
+    def get_evidence_for_experiment(self, experiment_id: str) -> EvidenceRecord | None:
+        with self.connect() as connection:
+            row = connection.execute("SELECT payload FROM evidence WHERE experiment_id=?", (experiment_id,)).fetchone()
+        return evidence_from_dict(json.loads(row["payload"])) if row else None
+
+    def get_experiment(self, experiment_id: str) -> ExperimentSpec:
+        with self.connect() as connection:
+            row = connection.execute("SELECT payload FROM experiments WHERE experiment_id=?", (experiment_id,)).fetchone()
+        if not row:
+            raise KeyError(experiment_id)
+        return experiment_from_dict(json.loads(row["payload"]))
+
+    def evidence_records(self) -> list[EvidenceRecord]:
+        return [evidence_from_dict(payload) for payload in self.evidence_payloads()]
+
+    def record_event(self, event_type: str, payload: Any) -> None:
+        with self.connect() as connection:
+            connection.execute("INSERT INTO events(event_type,payload,created_at) VALUES (?,?,?)", (event_type, canonical_json(payload), utc_now()))
+
+    def counts(self) -> dict[str, int]:
+        tables = ("contracts", "candidates", "experiments", "evidence", "graph_nodes", "graph_edges", "frozen_candidates")
+        with self.connect() as connection:
+            return {table: int(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]) for table in tables}
+
+
+def _payload_without_timestamp(payload: str) -> str:
+    try:
+        value = json.loads(payload)
+    except json.JSONDecodeError:
+        return payload
+    if isinstance(value, dict):
+        value.pop("created_at", None)
+    return canonical_json(value)
