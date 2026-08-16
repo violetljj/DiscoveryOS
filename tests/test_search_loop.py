@@ -278,7 +278,25 @@ class SearchLoopIntegrationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(5, len(trace_files))
             trace_payload = json.loads(trace_files[0].read_text(encoding="utf-8"))
             self.assertIn("budget_floor", trace_payload)
-            self.assertNotIn("budget_reserved", trace_payload)
+            self.assertIn("budget_reserved", trace_payload)
+            self.assertIn("reserved_downstream_budget", trace_payload)
+            with ledger.connect() as connection:
+                event_types = [
+                    row["event_type"]
+                    for row in connection.execute("SELECT event_type FROM events ORDER BY sequence")
+                ]
+            self.assertIn("ACTION_PLANNED", event_types)
+            self.assertIn("ACTION_STARTED", event_types)
+            self.assertIn("ACTION_EXECUTION_FAILED", event_types)
+            self.assertIn("CANDIDATE_EMITTED", event_types)
+            self.assertIn("CANDIDATE_VALID", event_types)
+            self.assertNotIn("CANDIDATE_INVALID", event_types)
+            self.assertFalse(
+                any(
+                    (record.failure_signature or "").startswith("GENERATION_BUDGET_EXCEEDED")
+                    for record in ledger.generation_records()
+                )
+            )
             state = projector.build()
             self.assertEqual("score", state.utility_metric_name)
             self.assertEqual(1, len(state.branches))

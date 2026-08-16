@@ -12,6 +12,7 @@ from discoveryos.contracts.models import (
     CandidateSpec,
     DataRole,
     EvidenceRecord,
+    EvidenceValidity,
     ExperimentSpec,
     Fidelity,
     GateDecision,
@@ -605,6 +606,8 @@ class UnifiedActionExecutor:
             raise ValueError("action decision is not bound to the current projected state")
         if decision.candidate_id is None:
             raise ValueError("executable search action requires a candidate")
+        if not decision.preflight_affordable:
+            raise ValueError("an action rejected by budget preflight cannot be executed")
         source = self.ledger.get_candidate(decision.candidate_id)
         result_candidate: CandidateSpec | None = source
         evidence: EvidenceRecord | None = None
@@ -615,6 +618,11 @@ class UnifiedActionExecutor:
             bundle = ExecutableCandidateBundle.from_artifact(self.artifacts, source.artifact_digest)
             build = _build_spec(bundle)
             mutable_files = _materialize_files(bundle, self.spec.mutable_file_paths)
+            generation_budget = (
+                decision.generation_reserve
+                if any(decision.generation_reserve.as_dict().values())
+                else decision.resource_floor
+            )
             if decision.action is SearchAction.LOCAL_PATCH:
                 generated = self.local_operator.propose(
                     parent=source,
@@ -624,7 +632,7 @@ class UnifiedActionExecutor:
                     if state.branches[0].failure_signatures
                     else None,
                     semantic_delta_memory=self.projector.semantic_memory(),
-                    remaining_budget=decision.resource_floor,
+                    remaining_budget=generation_budget,
                     build=build,
                 )
             else:
@@ -633,7 +641,7 @@ class UnifiedActionExecutor:
                     mutable_files=mutable_files,
                     development_evidence_summary=self.projector.evidence_summary(source.candidate_id),
                     semantic_delta_memory=self.projector.semantic_memory(),
-                    remaining_budget=decision.resource_floor,
+                    remaining_budget=generation_budget,
                     build=build,
                     brief=self.projector.basin_escape_brief(state, decision),
                 )
@@ -757,7 +765,22 @@ class SearchLoopRunner:
             replayed, issues = self.controller.replay(decision, before)
             if not replayed:
                 raise RuntimeError("controller decision failed replay: " + ",".join(issues))
+            self.executor.ledger.record_event("ACTION_PLANNED", jsonable(decision))
             if decision.action is SearchAction.STOP:
+                if decision.rejected_action is not None:
+                    self.executor.ledger.record_event(
+                        "ACTION_REJECTED_PREFLIGHT_BUDGET",
+                        {
+                            "run_id": before.run_id,
+                            "step": before.step,
+                            "decision_id": decision.decision_id,
+                            "rejected_action": decision.rejected_action.value,
+                            "remaining_budget": before.remaining_budget,
+                            "estimated_min_start_budget": decision.resource_floor,
+                            "reserved_downstream_budget": decision.reserved_downstream_budget,
+                            "budget_reserved": decision.budget_reserved,
+                        },
+                    )
                 self.executor.ledger.record_event(
                     "SEARCH_LOOP_STOPPED",
                     {
@@ -776,7 +799,18 @@ class SearchLoopRunner:
                     incumbent_utility=before.incumbent_utility,
                     trace_ids=tuple(trace_ids),
                 )
+            self.executor.ledger.record_event(
+                "ACTION_STARTED",
+                {
+                    "run_id": before.run_id,
+                    "step": before.step,
+                    "decision_id": decision.decision_id,
+                    "action": decision.action.value,
+                    "budget_reserved": decision.budget_reserved,
+                },
+            )
             settled = await self.executor.execute(decision, before)
+            self._record_execution_events(settled)
             after = self.projector.build()
             record = self.trace.record(
                 decision=decision,
@@ -785,6 +819,62 @@ class SearchLoopRunner:
                 actual_usage=settled.actual_usage,
             )
             trace_ids.append(record.trace_id)
+
+    def _record_execution_events(self, result: SearchActionResult) -> None:
+        emitted = result.action in GENERATIVE_ACTIONS and result.result_candidate_id is not None
+        execution_failed = False
+        evidence = next(
+            (
+                item
+                for item in self.executor.ledger.evidence_records()
+                if item.receipt_id == result.evidence_receipt_id
+            ),
+            None,
+        )
+        if emitted:
+            self.executor.ledger.record_event(
+                "CANDIDATE_EMITTED",
+                {
+                    "run_id": result.run_id,
+                    "step": result.step,
+                    "decision_id": result.decision_id,
+                    "candidate_id": result.result_candidate_id,
+                },
+            )
+            if evidence is None or evidence.validity is EvidenceValidity.NOT_EVALUABLE:
+                execution_failed = True
+            else:
+                valid = evidence.validity is EvidenceValidity.VALID
+                admitted = valid and self.executor.projector.gate.evaluate(
+                    self.executor.contract,
+                    evidence,
+                ).decision is GateDecision.FEASIBLE
+                self.executor.ledger.record_event(
+                    "CANDIDATE_VALID" if valid else "CANDIDATE_INVALID",
+                    {
+                        "run_id": result.run_id,
+                        "step": result.step,
+                        "decision_id": result.decision_id,
+                        "candidate_id": result.result_candidate_id,
+                        "evidence_receipt_id": result.evidence_receipt_id,
+                        "candidate_admitted": admitted,
+                        "failure_signature": result.failure_signature,
+                    },
+                )
+        execution_failed = execution_failed or (result.action in GENERATIVE_ACTIONS and not emitted) or (
+            result.evidence_receipt_id is None and result.action not in GENERATIVE_ACTIONS
+        )
+        if execution_failed:
+            self.executor.ledger.record_event(
+                "ACTION_EXECUTION_FAILED",
+                {
+                    "run_id": result.run_id,
+                    "step": result.step,
+                    "decision_id": result.decision_id,
+                    "action": result.action.value,
+                    "failure_signature": result.failure_signature or "ACTION_DID_NOT_COMPLETE",
+                },
+            )
 
 
 def _build_spec(bundle: ExecutableCandidateBundle) -> CandidateBuildSpec:

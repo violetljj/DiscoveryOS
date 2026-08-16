@@ -1,0 +1,227 @@
+{
+  "protocol_id": "DISCOVERYOS_MVP0_BUDGET_REACHABILITY_REPAIR_V1",
+  "claim_ceiling": "CONTROLLER_MECHANICS_ONLY",
+  "verdict": "CONTROLLER_BUDGET_REACHABILITY_REPAIRED",
+  "scientific_state": [
+    "SEARCH_VALUE_MVP0_FAIL",
+    "DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED"
+  ],
+  "new_llm_generations": 0,
+  "fresh_tasks_consumed": 0,
+  "arm_budget": {
+    "tokens": 60000,
+    "cpu_seconds": 300,
+    "gpu_seconds": 0.0,
+    "device_seconds": 0.0,
+    "wall_seconds": 1200
+  },
+  "arm_budget_increased": false,
+  "frozen_second_local_nearest_rank_p90_tokens": 22005,
+  "controller_config_digest": "8a9102a3ead5c78ab00007b59df9354cac740a1db45a029cb7c0102c36edb850",
+  "stagnation_horizon": 1,
+  "action_costs": [
+    {
+      "action": "LOCAL_PATCH",
+      "resource_floor": {
+        "tokens": 25000,
+        "cpu_seconds": 5.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 331
+      },
+      "generation_reserve": {
+        "tokens": 25000,
+        "cpu_seconds": 0.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 300
+      },
+      "evaluation_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 5,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 30
+      },
+      "settlement_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 0.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 1
+      },
+      "downstream_action_reserve": {
+        "tokens": 25000,
+        "cpu_seconds": 5.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 331
+      }
+    },
+    {
+      "action": "STRUCTURAL_ESCAPE",
+      "resource_floor": {
+        "tokens": 25000,
+        "cpu_seconds": 5.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 331
+      },
+      "generation_reserve": {
+        "tokens": 25000,
+        "cpu_seconds": 0.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 300
+      },
+      "evaluation_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 5,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 30
+      },
+      "settlement_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 0.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 1
+      },
+      "downstream_action_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 0.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 0.0
+      }
+    },
+    {
+      "action": "REPLICATE",
+      "resource_floor": {
+        "tokens": 0,
+        "cpu_seconds": 5.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 31
+      },
+      "generation_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 0.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 0.0
+      },
+      "evaluation_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 5,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 30
+      },
+      "settlement_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 0.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 1
+      },
+      "downstream_action_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 0.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 0.0
+      }
+    },
+    {
+      "action": "PROMOTE_FIDELITY",
+      "resource_floor": {
+        "tokens": 0,
+        "cpu_seconds": 10.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 61
+      },
+      "generation_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 0.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 0.0
+      },
+      "evaluation_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 10,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 60
+      },
+      "settlement_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 0.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 1
+      },
+      "downstream_action_reserve": {
+        "tokens": 0,
+        "cpu_seconds": 0.0,
+        "gpu_seconds": 0.0,
+        "device_seconds": 0.0,
+        "wall_seconds": 0.0
+      }
+    }
+  ],
+  "nominal_paths": [
+    [
+      "LOCAL_PATCH",
+      "STOP"
+    ],
+    [
+      "LOCAL_PATCH",
+      "STRUCTURAL_ESCAPE"
+    ],
+    [
+      "LOCAL_PATCH",
+      "REPLICATE"
+    ],
+    [
+      "LOCAL_PATCH",
+      "PROMOTE_FIDELITY"
+    ],
+    [
+      "LOCAL_PATCH",
+      "LOCAL_PATCH"
+    ]
+  ],
+  "admission": {
+    "selected_but_unaffordable_action_count": 0,
+    "generation_budget_exceeded_count": 0,
+    "all_action_types_reachable": true,
+    "budget_insufficient_stops_without_candidate": true,
+    "decision_replay_rate": 1.0,
+    "reservation_reconciliation_replayable": true,
+    "incumbent_monotonicity_cases_passed": [
+      "worse_candidate",
+      "invalid_candidate",
+      "budget_rejected_action",
+      "failed_evaluation",
+      "structural_candidate_failure"
+    ],
+    "frozen_workspace_tree_unchanged": true,
+    "complete_test_suite": {
+      "passed": 48,
+      "failed": 0,
+      "duration_seconds": 77.857
+    }
+  },
+  "frozen_evidence": {
+    "manifest_digest": "0928e6f243d91399ae8002456754850b32091adfe72af55da46df58c52d6c7c3",
+    "manifest_file_sha256": "9d8389050fe86dbce0725c1692bbf1910b1a6f5c8438c20caaf6ec3e5768aa0a",
+    "report_file_sha256": "65165720000269e2abfb07d0e5d220c928f61ef865d320f394d6aa223b295a15",
+    "workspace_tree_sha256": "52ceec6b69e77c46a9d582ff86f9c98428b792a18fd4423d7c6616f95a93d276",
+    "workspace_file_count": 1004,
+    "workspace_bytes": 3717295
+  }
+}

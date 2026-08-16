@@ -21,12 +21,23 @@ class SearchAction(str, Enum):
 class ActionCost:
     action: SearchAction
     resource_floor: ResourceBudget
+    generation_reserve: ResourceBudget = field(default_factory=ResourceBudget)
+    evaluation_reserve: ResourceBudget = field(default_factory=ResourceBudget)
+    settlement_reserve: ResourceBudget = field(default_factory=ResourceBudget)
+    downstream_action_reserve: ResourceBudget = field(default_factory=ResourceBudget)
 
     def __post_init__(self) -> None:
         if self.action is SearchAction.STOP:
             raise ValueError("STOP cannot reserve resources")
         if not any(self.resource_floor.as_dict().values()):
             raise ValueError("each executable action requires a non-zero resource floor")
+        accounted = _add_budgets(
+            self.generation_reserve,
+            self.evaluation_reserve,
+            self.settlement_reserve,
+        )
+        if not _affords(self.resource_floor, accounted):
+            raise ValueError("action component reserves cannot exceed the complete-action resource floor")
 
 
 @dataclass(frozen=True, slots=True)
@@ -146,6 +157,9 @@ class ActionControllerConfig:
             ResourceBudget(),
         )
 
+    def cost_for(self, action: SearchAction) -> ActionCost | None:
+        return next((item for item in self.costs if item.action is action), None)
+
     @property
     def digest(self) -> str:
         return digest_json(self)
@@ -165,6 +179,13 @@ class SearchDecision:
     fidelity: Fidelity | None
     reason_codes: tuple[str, ...]
     resource_floor: ResourceBudget
+    generation_reserve: ResourceBudget
+    evaluation_reserve: ResourceBudget
+    settlement_reserve: ResourceBudget
+    reserved_downstream_budget: ResourceBudget
+    budget_reserved: ResourceBudget
+    preflight_affordable: bool
+    rejected_action: SearchAction | None
     reusable_component_ids: tuple[str, ...] = ()
     created_at: str = field(default_factory=utc_now)
 
@@ -181,8 +202,20 @@ class SearchDecision:
         fidelity: Fidelity | None,
         reason_codes: tuple[str, ...],
         resource_floor: ResourceBudget,
+        generation_reserve: ResourceBudget | None = None,
+        evaluation_reserve: ResourceBudget | None = None,
+        settlement_reserve: ResourceBudget | None = None,
+        reserved_downstream_budget: ResourceBudget | None = None,
+        budget_reserved: ResourceBudget | None = None,
+        preflight_affordable: bool = True,
+        rejected_action: SearchAction | None = None,
         reusable_component_ids: tuple[str, ...] = (),
     ) -> "SearchDecision":
+        generation_reserve = generation_reserve or ResourceBudget()
+        evaluation_reserve = evaluation_reserve or ResourceBudget()
+        settlement_reserve = settlement_reserve or ResourceBudget()
+        reserved_downstream_budget = reserved_downstream_budget or ResourceBudget()
+        budget_reserved = budget_reserved or _add_budgets(resource_floor, reserved_downstream_budget)
         identity = {
             "run_id": state.run_id,
             "step": state.step,
@@ -195,6 +228,13 @@ class SearchDecision:
             "fidelity": fidelity,
             "reason_codes": reason_codes,
             "resource_floor": resource_floor,
+            "generation_reserve": generation_reserve,
+            "evaluation_reserve": evaluation_reserve,
+            "settlement_reserve": settlement_reserve,
+            "reserved_downstream_budget": reserved_downstream_budget,
+            "budget_reserved": budget_reserved,
+            "preflight_affordable": preflight_affordable,
+            "rejected_action": rejected_action,
             "reusable_component_ids": reusable_component_ids,
         }
         return cls(decision_id=f"decision_{digest_json(identity)[:24]}", **identity)
@@ -216,6 +256,8 @@ class AnytimeTraceRecord:
     reason_codes: tuple[str, ...]
     budget_before: ResourceBudget
     budget_floor: ResourceBudget
+    budget_reserved: ResourceBudget
+    reserved_downstream_budget: ResourceBudget
     budget_actual: ResourceUsage
     budget_after: ResourceBudget
     incumbent_before: str
@@ -322,6 +364,13 @@ class DeterministicActionController:
             "fidelity",
             "reason_codes",
             "resource_floor",
+            "generation_reserve",
+            "evaluation_reserve",
+            "settlement_reserve",
+            "reserved_downstream_budget",
+            "budget_reserved",
+            "preflight_affordable",
+            "rejected_action",
             "reusable_component_ids",
         )
         if any(getattr(decision, name) != getattr(reconstructed, name) for name in comparable_fields):
@@ -403,9 +452,27 @@ class DeterministicActionController:
         reason_codes: tuple[str, ...],
         reusable_component_ids: tuple[str, ...] = (),
     ) -> SearchDecision:
-        resource_floor = self.config.resource_floor_for(action)
-        if not _affords(state.remaining_budget, resource_floor):
-            return self._stop(state, f"INSUFFICIENT_BUDGET_FOR_{action.value}")
+        cost = self.config.cost_for(action)
+        if cost is None:
+            raise ValueError(f"missing frozen action cost: {action.value}")
+        downstream = cost.downstream_action_reserve
+        if action is SearchAction.LOCAL_PATCH:
+            branch = next((item for item in state.branches if item.branch_id == branch_id), None)
+            if branch is None or branch.structural_actions_remaining <= 0:
+                downstream = ResourceBudget()
+        reserved = _add_budgets(cost.resource_floor, downstream)
+        if not _affords(state.remaining_budget, reserved):
+            return self._stop(
+                state,
+                "STOP_BUDGET_INSUFFICIENT",
+                rejected_action=action,
+                resource_floor=cost.resource_floor,
+                generation_reserve=cost.generation_reserve,
+                evaluation_reserve=cost.evaluation_reserve,
+                settlement_reserve=cost.settlement_reserve,
+                downstream=downstream,
+                reserved=reserved,
+            )
         return SearchDecision.create(
             state=state,
             controller_digest=self.config.digest,
@@ -415,11 +482,33 @@ class DeterministicActionController:
             operator_id=operator_id,
             fidelity=fidelity,
             reason_codes=reason_codes,
-            resource_floor=resource_floor,
+            resource_floor=cost.resource_floor,
+            generation_reserve=cost.generation_reserve,
+            evaluation_reserve=cost.evaluation_reserve,
+            settlement_reserve=cost.settlement_reserve,
+            reserved_downstream_budget=downstream,
+            budget_reserved=reserved,
             reusable_component_ids=reusable_component_ids,
         )
 
-    def _stop(self, state: SearchState, reason: str) -> SearchDecision:
+    def _stop(
+        self,
+        state: SearchState,
+        reason: str,
+        *,
+        rejected_action: SearchAction | None = None,
+        resource_floor: ResourceBudget | None = None,
+        generation_reserve: ResourceBudget | None = None,
+        evaluation_reserve: ResourceBudget | None = None,
+        settlement_reserve: ResourceBudget | None = None,
+        downstream: ResourceBudget | None = None,
+        reserved: ResourceBudget | None = None,
+    ) -> SearchDecision:
+        rejected_reason = (
+            (reason, f"ACTION_REJECTED_PREFLIGHT_BUDGET:{rejected_action.value}")
+            if rejected_action is not None
+            else (reason,)
+        )
         return SearchDecision.create(
             state=state,
             controller_digest=self.config.digest,
@@ -428,8 +517,15 @@ class DeterministicActionController:
             branch_id=None,
             operator_id=self.operator_id,
             fidelity=None,
-            reason_codes=(reason,),
-            resource_floor=ResourceBudget(),
+            reason_codes=rejected_reason,
+            resource_floor=resource_floor or ResourceBudget(),
+            generation_reserve=generation_reserve,
+            evaluation_reserve=evaluation_reserve,
+            settlement_reserve=settlement_reserve,
+            reserved_downstream_budget=downstream,
+            budget_reserved=reserved,
+            preflight_affordable=rejected_action is None,
+            rejected_action=rejected_action,
         )
 
 
@@ -450,8 +546,22 @@ class AnytimeTraceRecorder:
             raise ValueError("trace states and decision must share a run")
         if decision.state_digest != state_before.digest:
             raise ValueError("decision is not bound to the before state")
+        if not decision.preflight_affordable or not _affords(
+            state_before.remaining_budget,
+            decision.budget_reserved,
+        ):
+            raise ValueError("only an affordable preflight reservation can be settled")
         if state_after.step != state_before.step + 1:
             raise ValueError("an action must advance the search state by exactly one step")
+        if state_after.metric_direction is not state_before.metric_direction:
+            raise ValueError("an action cannot change the frozen utility direction")
+        incumbent_regressed = (
+            state_after.incumbent_utility < state_before.incumbent_utility
+            if state_before.metric_direction is MetricDirection.MAXIMIZE
+            else state_after.incumbent_utility > state_before.incumbent_utility
+        )
+        if incumbent_regressed:
+            raise ValueError("settlement cannot regress a previously observed valid incumbent")
         expected_remaining = _consume(state_before.remaining_budget, actual_usage)
         if state_after.remaining_budget != expected_remaining:
             raise ValueError("after-state budget does not match actual resource usage")
@@ -483,6 +593,8 @@ class AnytimeTraceRecorder:
             reason_codes=decision.reason_codes,
             budget_before=state_before.remaining_budget,
             budget_floor=decision.resource_floor,
+            budget_reserved=decision.budget_reserved,
+            reserved_downstream_budget=decision.reserved_downstream_budget,
             budget_actual=actual_usage,
             budget_after=state_after.remaining_budget,
             incumbent_before=state_before.incumbent_candidate_id,
@@ -506,6 +618,17 @@ def _affords(remaining: ResourceBudget, requested: ResourceBudget) -> bool:
     return all(
         requested.as_dict()[dimension] <= available
         for dimension, available in remaining.as_dict().items()
+    )
+
+
+def _add_budgets(*budgets: ResourceBudget) -> ResourceBudget:
+    values = [budget.as_dict() for budget in budgets]
+    return ResourceBudget(
+        tokens=sum(budget.tokens for budget in budgets),
+        cpu_seconds=sum(item["cpu_seconds"] for item in values),
+        gpu_seconds=sum(item["gpu_seconds"] for item in values),
+        device_seconds=sum(item["device_seconds"] for item in values),
+        wall_seconds=sum(item["wall_seconds"] for item in values),
     )
 
 
