@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from discoveryos.contracts.models import EvidenceRecord, FailureKind, ProblemContract
+from discoveryos.contracts.models import EvaluationOutput, EvidenceRecord, EvidenceValidity, FailureKind, ProblemContract
 from discoveryos.evaluation.base import EvaluatorRegistry
 from discoveryos.evaluation.gates import GateEngine
 from discoveryos.runtime.artifacts import ArtifactStore
@@ -83,7 +83,22 @@ class ReplayEngine:
                 verified,
                 () if verified else ("BUDGET_RECEIPT_MISSING",),
             )
-        output = self.registry.get(experiment.evaluator_id).evaluate(candidate, experiment, data)
+        try:
+            output = self.registry.get(experiment.evaluator_id).evaluate(candidate, experiment, data)
+        except MemoryError:
+            output = EvaluationOutput.from_metrics(
+                {},
+                validity=EvidenceValidity.NOT_EVALUABLE,
+                failure_signature="OOM",
+                failure_kind=FailureKind.OOM,
+            )
+        except Exception as error:
+            output = EvaluationOutput.from_metrics(
+                {},
+                validity=EvidenceValidity.NOT_EVALUABLE,
+                failure_signature=f"EVALUATOR_EXCEPTION:{type(error).__name__}",
+                failure_kind=FailureKind.EVALUATOR_EXCEPTION,
+            )
         if evidence.evaluation_output_digest:
             reproduced = output.replay_digest == evidence.evaluation_output_digest
         else:

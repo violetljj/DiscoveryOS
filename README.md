@@ -16,6 +16,8 @@ DiscoveryOS 是一个“证据优先”的算法研究操作系统内核。当�
 - fidelity 到 evaluator id/digest 的冻结绑定，不再默认使用列表中的第一个 evaluator。
 - `ExecutableCandidateBundle`：冻结 base repository/commit、`patch.diff`、路径策略、entrypoint、环境锁和 build/test/evaluation 命令。
 - 临时 Git worktree runner：patch 校验、mutable/forbidden/touched path 检查、硬超时进程树终止、日志与 run receipt 固化。
+- 独立 `ASHAOperator`：异步 rung observation、冻结 promotion cap、Gate-feasible 排名、每 rung 最多一次机械 retry，以及 promotion/retry 决策重放。
+- deterministic ASHA admission：18→6→2 三 rung、`eta=3`、每 arm 实际 CPU 54 的多 seed `Random vs ASHA` 对照。
 - CPU/GPU/device 分池的异步执行底座与 backpressure。
 - G0 静态准入、G1 proxy、G2 development、G7 final blind。
 - 硬约束与多目标 Pareto 分离；冻结的字典序 winner rule。
@@ -34,6 +36,7 @@ python -m discoveryos demo-discovery --workspace runs/clearance-demo
 python -m discoveryos status --workspace runs/clearance-demo
 python -m discoveryos demo-certify --workspace runs/clearance-demo
 python -m discoveryos demo-replay --workspace runs/clearance-demo
+python -m discoveryos asha-admission --workspace runs/asha-admission --seeds 12
 ```
 
 也可以安装为本地命令：
@@ -99,4 +102,4 @@ Executable evaluation 命令必须把单个 JSON object 写到 stdout 的最后�
 
 runner 通过 `DISCOVERYOS_DATA_PATH`、`DISCOVERYOS_FIDELITY`、`DISCOVERYOS_SEED`、`DISCOVERYOS_TRIAL_ID` 和 `DISCOVERYOS_RUNG_ID` 提供冻结执行上下文。命令以 argv vector 直接启动，不经过 shell。
 
-当前仍未实现 ASHA、LLM Local Patch operator、RepairQueue、matched-budget benchmark、Meta-Strategy、qNEHVI 或生产级 final-blind 服务。下一阶段及正式扩展点见 [架构与路线图](docs/ARCHITECTURE.md)。
+R1.0-A synthetic admission 的冻结协议、结果与限制见 [ASHA admission 记录](docs/ASHA_ADMISSION.md)。当前仍未实现 LLM Local Patch operator、RepairQueue、BlindAssist fresh target 四臂赛马、Meta-Strategy、qNEHVI 或生产级 final-blind 服务。下一阶段及正式扩展点见 [架构与路线图](docs/ARCHITECTURE.md)。

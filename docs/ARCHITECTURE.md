@@ -43,9 +43,9 @@ ResourceReservation
 
 ## 下一批实现顺序
 
-1. **R1.0 Search-Value Admission**：在当前 trial/resource/bundle/runner 底座上实现 Random/ASHA/LLM Local Patch/Repair 四 arm 的 matched-budget benchmark。
+1. **R1.0-B Code Search Admission**：R1.0-A 已通过 synthetic-only ASHA admission；下一步实现 bounded LLM Local Patch 与一次机械 Repair，再做真实代码 admission。
 2. **R0.2 生产隔离**：final-blind 独立服务身份、一次性认证票据、shadow 聚合反馈与查询预算。
-3. **R1.1 搜索组合扩展**：仅在 R1.0 赛马证明组合价值后考虑 BOHB、Structural Rewrite 和更广 operator schema。
+3. **R1.1 搜索组合扩展**：仅在 BlindAssist fresh target 四臂赛马证明组合价值后考虑 BOHB、Structural Rewrite 和更广 operator schema。
 4. **R1.2 图搜索**：Hypothesis/Component effect ledger、分支预算、cross-branch transfer、自动消融、failure signature library。
 5. **R2 策略层**：contextual bandit、停滞检测、受限 Meta-Strategy admission。
 6. **R3 领域和计算**：BlindAssist domain pack、远端 GPU/device worker、checkpoint/cache、部署 parity。

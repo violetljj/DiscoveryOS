@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
+from discoveryos.benchmarks import run_asha_admission
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 
 
@@ -21,6 +22,9 @@ def build_parser() -> argparse.ArgumentParser:
     status.add_argument("--workspace", type=Path, default=Path("runs/clearance-demo"))
     replay = subparsers.add_parser("demo-replay", help="re-execute and compare every frozen demo evaluation receipt")
     replay.add_argument("--workspace", type=Path, default=Path("runs/clearance-demo"))
+    asha = subparsers.add_parser("asha-admission", help="run matched-budget deterministic Random vs ASHA admission")
+    asha.add_argument("--workspace", type=Path, default=Path("runs/asha-admission"))
+    asha.add_argument("--seeds", type=int, default=12)
     return parser
 
 
@@ -33,6 +37,8 @@ def main(argv: list[str] | None = None) -> int:
             result = run_demo_certification(args.workspace, seed=args.seed)
         elif args.command == "demo-replay":
             result = replay_demo(args.workspace)
+        elif args.command == "asha-admission":
+            result = run_asha_admission(args.workspace, seeds=args.seeds)
         else:
             result = demo_status(args.workspace)
     except (RuntimeError, ValueError, PermissionError) as error:
