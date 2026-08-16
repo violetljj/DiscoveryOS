@@ -8,6 +8,11 @@ from .search_policy_admission import (
     seal_search_policy_protocol,
     verify_search_policy_manifest,
 )
+from .search_value_mvp0 import (
+    STRUCTURAL_PATCH_SCHEMA,
+    run_search_value_mvp0,
+    seal_search_value_mvp0,
+)
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -21,4 +26,7 @@ __all__ = [
     "evaluate_task_admission",
     "seal_search_policy_protocol",
     "verify_search_policy_manifest",
+    "STRUCTURAL_PATCH_SCHEMA",
+    "run_search_value_mvp0",
+    "seal_search_value_mvp0",
 ]

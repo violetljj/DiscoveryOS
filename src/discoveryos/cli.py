@@ -9,10 +9,13 @@ from pathlib import Path
 from discoveryos.benchmarks import (
     audit_local_patch_invalids,
     replay_local_patch_mechanics,
+    run_search_value_mvp0,
     run_asha_admission,
     run_local_patch_admission,
     run_local_patch_readmission,
     seal_local_patch_readmission,
+    seal_search_value_mvp0,
+    STRUCTURAL_PATCH_SCHEMA,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
@@ -74,6 +77,26 @@ def build_parser() -> argparse.ArgumentParser:
     br_a_run.add_argument("--model", required=True, help="must match the sealed Codex model identifier")
     br_a_run.add_argument("--codex-command", default="codex", help="quoted command used to launch Codex CLI")
     br_a_run.add_argument("--reasoning-effort", default="medium")
+    mvp0_seal = subparsers.add_parser(
+        "search-value-mvp0-seal",
+        help="freeze the eight-task Vanilla vs DiscoveryOS MVP-0 protocol before model calls",
+    )
+    mvp0_seal.add_argument("--workspace", type=Path, default=Path("runs/search-value-mvp0-r1"))
+    mvp0_seal.add_argument("--model", required=True)
+    mvp0_seal.add_argument("--codex-command", default="codex")
+    mvp0_seal.add_argument("--reasoning-effort", default="medium")
+    mvp0_seal.add_argument("--token-ceiling", type=int, default=60000)
+    mvp0_seal.add_argument("--wall-ceiling", type=float, default=1200.0)
+    mvp0_seal.add_argument("--cpu-ceiling", type=float, default=300.0)
+    mvp0_run = subparsers.add_parser(
+        "search-value-mvp0-run",
+        help="execute the already sealed Vanilla vs DiscoveryOS MVP-0",
+    )
+    mvp0_run.add_argument("--workspace", type=Path, default=Path("runs/search-value-mvp0-r1"))
+    mvp0_run.add_argument("--manifest-digest", required=True)
+    mvp0_run.add_argument("--model", required=True)
+    mvp0_run.add_argument("--codex-command", default="codex")
+    mvp0_run.add_argument("--reasoning-effort", default="medium")
     return parser
 
 
@@ -129,6 +152,36 @@ def main(argv: list[str] | None = None) -> int:
                 manifest_digest=args.manifest_digest,
                 progress=lambda message: print(message, file=sys.stderr, flush=True),
             )
+        elif args.command in {"search-value-mvp0-seal", "search-value-mvp0-run"}:
+            command = tuple(shlex.split(args.codex_command, posix=False))
+            local_provider = CodexExecProvider(
+                command=command,
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+            )
+            structural_provider = CodexExecProvider(
+                command=command,
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+                output_schema=STRUCTURAL_PATCH_SCHEMA,
+            )
+            if args.command == "search-value-mvp0-seal":
+                result = seal_search_value_mvp0(
+                    args.workspace,
+                    local_provider=local_provider,
+                    structural_provider=structural_provider,
+                    token_ceiling=args.token_ceiling,
+                    wall_ceiling=args.wall_ceiling,
+                    cpu_ceiling=args.cpu_ceiling,
+                )
+            else:
+                result = run_search_value_mvp0(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    local_provider=local_provider,
+                    structural_provider=structural_provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
         else:
             result = demo_status(args.workspace)
     except (RuntimeError, ValueError, PermissionError) as error:

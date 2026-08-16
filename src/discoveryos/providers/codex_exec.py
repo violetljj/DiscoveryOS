@@ -73,6 +73,7 @@ class CodexExecProvider:
         model: str,
         timeout_seconds: float = 300.0,
         reasoning_effort: str | None = None,
+        output_schema: dict[str, Any] | None = None,
     ) -> None:
         if not command or not model:
             raise ValueError("Codex provider requires a command and frozen model")
@@ -80,6 +81,7 @@ class CodexExecProvider:
         self.model = model
         self.timeout_seconds = timeout_seconds
         self.reasoning_effort = reasoning_effort
+        self.output_schema = output_schema or PATCH_PROPOSAL_SCHEMA
         self._provider_version: str | None = None
 
     @property
@@ -93,7 +95,7 @@ class CodexExecProvider:
                 "ephemeral": True,
                 "ignore_user_config": True,
                 "ignore_rules": True,
-                "output_schema": PATCH_PROPOSAL_SCHEMA,
+                "output_schema": self.output_schema,
             }
         )
 
@@ -120,7 +122,7 @@ class CodexExecProvider:
             root = Path(temporary)
             schema_path = root / "patch-proposal.schema.json"
             response_path = root / "response.json"
-            schema_path.write_text(json.dumps(PATCH_PROPOSAL_SCHEMA, sort_keys=True), encoding="utf-8")
+            schema_path.write_text(json.dumps(self.output_schema, sort_keys=True), encoding="utf-8")
             arguments = [
                 *self.command,
                 "exec",
