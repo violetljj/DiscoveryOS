@@ -59,7 +59,7 @@ src/discoveryos/
 ├── contracts/     # frozen schemas, codecs, protocol admission
 ├── graph/         # hypothesis/component/strategy/claim nodes
 ├── evaluation/    # evaluator registry, hard gates, Pareto, replay
-├── operators/     # Random, ASHA, Local Patch, Structural Rewrite mechanisms
+├── operators/     # deterministic Action Controller + Random, ASHA, Local Patch, Structural Rewrite
 ├── memory/        # semantic delta and progressive context
 ├── runtime/       # artifacts, SQLite ledger, split vault, async scheduler
 └── domains/       # executable domain packs
@@ -86,7 +86,7 @@ ResourceReservation
 ## 下一批实现顺序
 
 1. **统一接口与 BR-A 封口**：candidate/evidence/artifact/budget/fidelity 接口已形成垂直切片；BR-A 保持 `LLM_LOCAL_PATCH_NOT_ADMITTED`，不再修 parser 或在 consumed corpus 上寻求翻案。
-2. **Search-Value MVP**：把已有 Local Patch、ASHA budget mechanism 与 Structural Rewrite / Basin-Jump mechanics 接入同一 action/state loop；补齐最小 Branch/Population Manager、component transfer 和 anytime trace。R1.0-SP-A 只作为 pre-model task-selection guard，不是独立产品阶段。
+2. **Search-Value MVP**：确定性的 `SearchState -> SearchDecision` acquisition controller 已接通 Local Patch、Structural Escape、Replicate、ASHA Promote 与 Stop，并为每笔结算写入 create-once anytime trace；下一步把真实 operator execution 接入该 loop 后立即运行 matched-resource Search-Value MVP。Controller v0 不调用 LLM，component transfer 只作为 Structural Escape 的冻结输入。R1.0-SP-A 只作为 pre-model task-selection guard，不是独立产品阶段。
 3. **远端并行计算**：在 MVP action/evidence contract 稳定后实现多进程与远端 CPU/GPU/device worker、heartbeat、retry、checkpoint/cache 和真实 resource measurement，避免先为错误 action model 建集群。
 4. **严格 matched-resource benchmark**：在多个预冻结 headroom task family 上，以 matched model/token/wall/compute/evaluator 比较 Random、Vanilla LLM、DiscoveryOS unified kernel，并通过隔离 adapters 加入 Official Ada/Shinka/EvoX challengers；外部状态不得回写 Discovery Mode。
 5. **Search value 成立后补生产隔离**：只有稳定优势成立后，才把 final-blind 独立服务身份、一次性票据、shadow 查询预算和 hostile-worker isolation 提升为最高优先级。
