@@ -12,16 +12,19 @@ from discoveryos.contracts.models import (
     EvidenceRecord,
     EvidenceValidity,
     ExperimentSpec,
+    FailureKind,
     Fidelity,
     GateDecision,
     ProblemContract,
     ResourceBudget,
+    ResourceUsage,
     RunMode,
 )
 from discoveryos.evaluation.base import EvaluatorRegistry
 from discoveryos.evaluation.gates import GateEngine, pareto_front, select_winner
 from discoveryos.runtime.artifacts import ArtifactStore, ImmutableWriteError
-from discoveryos.runtime.ledger import EvidenceLedger
+from discoveryos.runtime.ledger import BudgetExceeded, EvidenceLedger
+from discoveryos.runtime.processes import current_rss_bytes
 from discoveryos.runtime.vault import SplitVault
 from discoveryos.util import digest_bytes, jsonable
 
@@ -66,7 +69,35 @@ class ExperimentExecutor:
                 existing,
             )
             return existing
-        self.ledger.reserve_budget(experiment.experiment_id, experiment.resources, self.contract.budget)
+        reservation_id = f"reservation_{experiment.experiment_id}"
+        try:
+            reservation, _ = self.ledger.reserve_resources(
+                reservation_id=reservation_id,
+                experiment_id=experiment.experiment_id,
+                requested=experiment.resources,
+                limit=self.contract.budget,
+            )
+        except BudgetExceeded as error:
+            exceeded_dimensions = tuple(
+                dimension for dimension in str(error).removeprefix("budget exceeded: ").split(",") if dimension
+            )
+            self.ledger.record_resource_rejection(
+                reservation_id=reservation_id,
+                experiment_id=experiment.experiment_id,
+                requested=experiment.resources,
+                exceeded_dimensions=exceeded_dimensions,
+            )
+            output = EvaluationOutput.from_metrics(
+                {},
+                validity=EvidenceValidity.NOT_EVALUABLE,
+                failure_signature="BUDGET_EXHAUSTED:" + ",".join(exceeded_dimensions),
+                failure_kind=FailureKind.BUDGET_EXHAUSTED,
+            )
+            planned_data_digest = next(
+                (split.sha256 for split in self.contract.data_splits if split.split_id == experiment.split_id),
+                None,
+            )
+            return self._record(candidate, experiment, output, planned_data_digest, ResourceUsage())
         data: bytes | None = None
         data_digest: str | None = None
         if experiment.split_id:
@@ -82,29 +113,89 @@ class ExperimentExecutor:
         evaluator = self.registry.get(experiment.evaluator_id)
         pool = "device" if experiment.fidelity is Fidelity.G5 else "gpu" if experiment.resources.gpu_seconds else "cpu"
         started_wall = time.perf_counter()
-        started_cpu = time.process_time()
+        measured_cpu = 0.0
+        exit_code: int | None = 0
         try:
             self.artifacts.get_bytes(candidate.artifact_digest)
-            output = await self.fabric.run(pool, evaluator.evaluate, candidate, experiment, data)
-        except (FileNotFoundError, ImmutableWriteError):
+            evaluation = self.fabric.run(pool, _evaluate_with_cpu, evaluator, candidate, experiment, data)
+            if experiment.resources.wall_seconds > 0:
+                cleanup_grace = 5.0 if getattr(evaluator, "enforces_hard_timeout", False) else 0.0
+                output, measured_cpu = await asyncio.wait_for(
+                    evaluation,
+                    timeout=experiment.resources.wall_seconds + cleanup_grace,
+                )
+            else:
+                output, measured_cpu = await evaluation
+        except TimeoutError:
+            exit_code = None
             output = EvaluationOutput.from_metrics(
-                {}, validity=EvidenceValidity.INVALID_MECHANICS, failure_signature="CANDIDATE_ARTIFACT_INTEGRITY_FAILURE"
+                {},
+                validity=EvidenceValidity.NOT_EVALUABLE,
+                failure_signature="TIMEOUT",
+                failure_kind=FailureKind.TIMEOUT,
+            )
+        except (FileNotFoundError, ImmutableWriteError):
+            exit_code = 1
+            output = EvaluationOutput.from_metrics(
+                {},
+                validity=EvidenceValidity.INVALID_MECHANICS,
+                failure_signature="CANDIDATE_ARTIFACT_INTEGRITY_FAILURE",
+                failure_kind=FailureKind.CANDIDATE_ARTIFACT,
+            )
+        except MemoryError:
+            exit_code = 1
+            output = EvaluationOutput.from_metrics(
+                {}, validity=EvidenceValidity.NOT_EVALUABLE, failure_signature="OOM", failure_kind=FailureKind.OOM
             )
         except Exception as error:  # evaluator failures are evidence, never scientific negatives
+            exit_code = 1
             output = EvaluationOutput.from_metrics(
-                {}, validity=EvidenceValidity.NOT_EVALUABLE, failure_signature=f"EVALUATOR_EXCEPTION:{type(error).__name__}"
+                {},
+                validity=EvidenceValidity.NOT_EVALUABLE,
+                failure_signature=f"EVALUATOR_EXCEPTION:{type(error).__name__}",
+                failure_kind=FailureKind.EVALUATOR_EXCEPTION,
             )
         wall_seconds = time.perf_counter() - started_wall
-        cpu_seconds = time.process_time() - started_cpu
+        reported = output.reported_usage
+        usage = ResourceUsage(
+            llm_input_tokens=reported.llm_input_tokens,
+            llm_output_tokens=reported.llm_output_tokens,
+            llm_cache_tokens=reported.llm_cache_tokens,
+            cpu_seconds=max(measured_cpu, reported.cpu_seconds),
+            gpu_seconds=reported.gpu_seconds or (wall_seconds if experiment.resources.gpu_seconds else 0.0),
+            device_seconds=reported.device_seconds or (wall_seconds if experiment.resources.device_seconds else 0.0),
+            wall_seconds=wall_seconds,
+            peak_rss_bytes=max(current_rss_bytes(), reported.peak_rss_bytes),
+            exit_code=reported.exit_code if reported.exit_code is not None else exit_code,
+        )
+        reconciliation = self.ledger.reconcile_resources(reservation, usage, self.contract.budget)
+        if reconciliation.budget_exhausted:
+            prior = output.failure_signature
+            suffix = f":prior={prior}" if prior else ""
+            output = EvaluationOutput.from_metrics(
+                {},
+                validity=EvidenceValidity.NOT_EVALUABLE,
+                failure_signature="BUDGET_EXHAUSTED:" + ",".join(reconciliation.exceeded_dimensions) + suffix,
+                failure_kind=FailureKind.BUDGET_EXHAUSTED,
+                artifacts=output.artifacts,
+                reported_usage=output.reported_usage,
+            )
+        return self._record(candidate, experiment, output, data_digest, usage)
+
+    def _record(
+        self,
+        candidate: CandidateSpec,
+        experiment: ExperimentSpec,
+        output: EvaluationOutput,
+        data_digest: str | None,
+        usage: ResourceUsage,
+    ) -> EvidenceRecord:
         evidence = EvidenceRecord.create(
             experiment=experiment,
             evaluator_digest=self.registry.digest(experiment.evaluator_id),
             data_digest=data_digest,
             output=output,
-            cpu_seconds=cpu_seconds,
-            gpu_seconds=0.0,
-            device_seconds=0.0,
-            wall_seconds=wall_seconds,
+            resource_usage=usage,
         )
         self.artifacts.write_record(
             f"receipts/{candidate.candidate_id}/{experiment.fidelity.value}/{experiment.experiment_id}.json",
@@ -113,6 +204,12 @@ class ExperimentExecutor:
         self.ledger.add_evidence(evidence)
         self.ledger.record_event("EVIDENCE_RECORDED", {"receipt_id": evidence.receipt_id, "fidelity": evidence.fidelity.value})
         return evidence
+
+
+def _evaluate_with_cpu(evaluator, candidate: CandidateSpec, experiment: ExperimentSpec, data: bytes | None):
+    started_cpu = time.thread_time()
+    output = evaluator.evaluate(candidate, experiment, data)
+    return output, time.thread_time() - started_cpu
 
 
 @dataclass(frozen=True, slots=True)
@@ -245,7 +342,7 @@ class DiscoveryRunner:
         experiments = [
             ExperimentSpec.create(
                 candidate_id=candidate.candidate_id,
-                evaluator_id=self.contract.evaluator_ids[0],
+                evaluator_id=self.contract.evaluator_id_for(fidelity),
                 fidelity=fidelity,
                 split_id=split_id,
                 split_role=split_role,
@@ -253,6 +350,10 @@ class DiscoveryRunner:
                 resources=resources,
                 contract_digest=self.contract.digest,
                 mode=mode,
+                replicate_id=f"seed-{seed}",
+                rung_id=fidelity.value,
+                attempt_id="attempt-0",
+                promotion_reason="fixed G0-G2 safe racing" if fidelity is not Fidelity.G0 else None,
             )
             for candidate in candidates
         ]

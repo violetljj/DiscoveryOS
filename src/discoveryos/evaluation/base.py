@@ -35,7 +35,10 @@ class EvaluatorRegistry:
             source = inspect.getsource(type(evaluator))
         except (OSError, TypeError):
             source = type(evaluator).__qualname__
-        return digest_json({"id": evaluator.evaluator_id, "version": evaluator.version, "source": source})
+        material = {"id": evaluator.evaluator_id, "version": evaluator.version, "source": source}
+        if hasattr(evaluator, "digest_material"):
+            material["extra"] = evaluator.digest_material()
+        return digest_json(material)
 
     def contains(self, evaluator_id: str) -> bool:
         return evaluator_id in self._evaluators

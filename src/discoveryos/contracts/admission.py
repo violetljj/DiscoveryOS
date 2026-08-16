@@ -25,7 +25,15 @@ class ProtocolAdmission:
         issues = list(contract.validate())
         issues.extend(self.vault.verify_contract_splits(contract))
         evaluator_digests: list[tuple[str, str]] = []
-        for evaluator_id, expected_digest in contract.evaluator_bindings:
+        checked: set[tuple[str, str]] = set()
+        for fidelity in contract.fidelities:
+            try:
+                evaluator_id, expected_digest = contract.evaluator_binding_for(fidelity)
+            except ValueError:
+                continue
+            if (evaluator_id, expected_digest) in checked:
+                continue
+            checked.add((evaluator_id, expected_digest))
             if not self.registry.contains(evaluator_id):
                 issues.append(f"EVALUATOR_MISSING:{evaluator_id}")
             else:
@@ -38,7 +46,7 @@ class ProtocolAdmission:
         if not issues and contract.evaluator_ids:
             experiment = ExperimentSpec.create(
                 candidate_id=baseline.candidate_id,
-                evaluator_id=contract.evaluator_ids[0],
+                evaluator_id=contract.evaluator_id_for(Fidelity.G0),
                 fidelity=Fidelity.G0,
                 split_id=None,
                 split_role=None,

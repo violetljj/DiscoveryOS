@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from discoveryos.util import digest_json
+
 from .models import (
     CandidateSpec,
     ClaimCeiling,
@@ -11,12 +13,14 @@ from .models import (
     EvidenceRecord,
     EvidenceValidity,
     ExperimentSpec,
+    FailureKind,
     Fidelity,
     HardConstraint,
     MetricDefinition,
     MetricDirection,
     ProblemContract,
     ResourceBudget,
+    ResourceUsage,
     RunMode,
     WinnerRule,
 )
@@ -64,7 +68,7 @@ def contract_from_dict(value: dict[str, Any]) -> ProblemContract:
             metric_order=tuple(value["winner_rule"]["metric_order"]),
             require_fidelity=Fidelity(value["winner_rule"]["require_fidelity"]),
         ),
-        evaluator_bindings=tuple((item[0], item[1]) for item in value["evaluator_bindings"]),
+        evaluator_bindings=tuple(tuple(item) for item in value["evaluator_bindings"]),
         claim_ceiling=ClaimCeiling(value["claim_ceiling"]),
         created_at=value["created_at"],
     )
@@ -87,6 +91,16 @@ def candidate_from_dict(value: dict[str, Any]) -> CandidateSpec:
 
 
 def evidence_from_dict(value: dict[str, Any]) -> EvidenceRecord:
+    if "resource_usage" in value:
+        resource_usage = ResourceUsage(**value["resource_usage"])
+    else:
+        resource_usage = ResourceUsage(
+            cpu_seconds=float(value.get("cpu_seconds", 0.0)),
+            gpu_seconds=float(value.get("gpu_seconds", 0.0)),
+            device_seconds=float(value.get("device_seconds", 0.0)),
+            wall_seconds=float(value.get("wall_seconds", 0.0)),
+        )
+    failure_kind = FailureKind(value["failure_kind"]) if value.get("failure_kind") else None
     return EvidenceRecord(
         receipt_id=value["receipt_id"],
         experiment_id=value["experiment_id"],
@@ -101,16 +115,24 @@ def evidence_from_dict(value: dict[str, Any]) -> EvidenceRecord:
         metrics=tuple((item[0], float(item[1])) for item in value["metrics"]),
         validity=EvidenceValidity(value["validity"]),
         failure_signature=value.get("failure_signature"),
+        failure_kind=failure_kind,
         artifacts=tuple(value["artifacts"]),
-        cpu_seconds=float(value["cpu_seconds"]),
-        gpu_seconds=float(value["gpu_seconds"]),
-        device_seconds=float(value["device_seconds"]),
-        wall_seconds=float(value["wall_seconds"]),
+        resource_usage=resource_usage,
+        evaluation_output_digest=value.get(
+            "evaluation_output_digest",
+            "",
+        ),
         created_at=value["created_at"],
     )
 
 
 def experiment_from_dict(value: dict[str, Any]) -> ExperimentSpec:
+    resources = ResourceBudget(**value["resources"])
+    replicate_id = value.get("replicate_id", f"seed-{value['seed']}")
+    trial_id = value.get(
+        "trial_id",
+        f"trial_{digest_json({'candidate_id': value['candidate_id'], 'replicate_id': replicate_id, 'contract_digest': value['contract_digest'], 'mode': value['mode']})[:20]}",
+    )
     return ExperimentSpec(
         experiment_id=value["experiment_id"],
         candidate_id=value["candidate_id"],
@@ -119,8 +141,18 @@ def experiment_from_dict(value: dict[str, Any]) -> ExperimentSpec:
         split_id=value.get("split_id"),
         split_role=DataRole(value["split_role"]) if value.get("split_role") else None,
         seed=int(value["seed"]),
-        resources=ResourceBudget(**value["resources"]),
+        resources=resources,
         contract_digest=value["contract_digest"],
         mode=RunMode(value["mode"]),
+        trial_id=trial_id,
+        replicate_id=replicate_id,
+        rung_id=value.get("rung_id", value["fidelity"]),
+        resource_fingerprint=value.get(
+            "resource_fingerprint",
+            digest_json(resources),
+        ),
+        attempt_id=value.get("attempt_id", "attempt-0"),
+        parent_trial_id=value.get("parent_trial_id"),
+        promotion_reason=value.get("promotion_reason"),
         created_at=value["created_at"],
     )

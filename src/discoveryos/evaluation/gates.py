@@ -20,8 +20,11 @@ class GateEngine:
     def evaluate(self, contract: ProblemContract, evidence: EvidenceRecord) -> GateResult:
         if evidence.contract_digest != contract.digest:
             return GateResult(GateDecision.INVALID, ("CONTRACT_BINDING_MISMATCH",), ClaimCeiling.MECHANICS_ONLY)
-        expected_evaluators = dict(contract.evaluator_bindings)
-        if expected_evaluators.get(evidence.evaluator_id) != evidence.evaluator_digest:
+        try:
+            expected_evaluator_id, expected_evaluator_digest = contract.evaluator_binding_for(evidence.fidelity)
+        except ValueError:
+            return GateResult(GateDecision.INVALID, ("FIDELITY_EVALUATOR_BINDING_MISSING",), ClaimCeiling.MECHANICS_ONLY)
+        if evidence.evaluator_id != expected_evaluator_id or evidence.evaluator_digest != expected_evaluator_digest:
             return GateResult(GateDecision.INVALID, ("EVALUATOR_BINDING_MISMATCH",), ClaimCeiling.MECHANICS_ONLY)
         if evidence.fidelity is Fidelity.G0:
             if evidence.split_id is not None or evidence.data_digest is not None:

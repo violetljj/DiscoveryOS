@@ -7,7 +7,16 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from discoveryos.contracts.codec import candidate_from_dict, evidence_from_dict, experiment_from_dict
-from discoveryos.contracts.models import CandidateSpec, EvidenceRecord, ExperimentSpec, ProblemContract, ResourceBudget
+from discoveryos.contracts.models import (
+    CandidateSpec,
+    EvidenceRecord,
+    ExperimentSpec,
+    ProblemContract,
+    ResourceBudget,
+    ResourceReconciliation,
+    ResourceReservation,
+    ResourceUsage,
+)
 from discoveryos.util import canonical_json, jsonable, utc_now
 
 
@@ -71,6 +80,18 @@ class EvidenceLedger:
                     reservation_id TEXT PRIMARY KEY, tokens REAL NOT NULL, cpu_seconds REAL NOT NULL,
                     gpu_seconds REAL NOT NULL, device_seconds REAL NOT NULL, wall_seconds REAL NOT NULL,
                     created_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS resource_reservations(
+                    reservation_id TEXT PRIMARY KEY, experiment_id TEXT UNIQUE NOT NULL,
+                    tokens REAL NOT NULL, cpu_seconds REAL NOT NULL, gpu_seconds REAL NOT NULL,
+                    device_seconds REAL NOT NULL, wall_seconds REAL NOT NULL,
+                    actual_tokens REAL, actual_cpu_seconds REAL, actual_gpu_seconds REAL,
+                    actual_device_seconds REAL, actual_wall_seconds REAL,
+                    status TEXT NOT NULL, payload TEXT, created_at TEXT NOT NULL, reconciled_at TEXT
+                );
+                CREATE TABLE IF NOT EXISTS resource_reservation_rejections(
+                    reservation_id TEXT PRIMARY KEY, experiment_id TEXT UNIQUE NOT NULL,
+                    payload TEXT NOT NULL, created_at TEXT NOT NULL
                 );
                 CREATE TABLE IF NOT EXISTS frozen_candidates(
                     candidate_id TEXT PRIMARY KEY, contract_digest TEXT NOT NULL, reason TEXT NOT NULL,
@@ -200,6 +221,193 @@ class EvidenceLedger:
             )
             return True
 
+    def reserve_resources(
+        self,
+        *,
+        reservation_id: str,
+        experiment_id: str,
+        requested: ResourceBudget,
+        limit: ResourceBudget,
+    ) -> tuple[ResourceReservation, bool]:
+        requested_values = requested.as_dict()
+        limits = limit.as_dict()
+        with self.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            existing = connection.execute(
+                "SELECT * FROM resource_reservations WHERE reservation_id=?",
+                (reservation_id,),
+            ).fetchone()
+            if existing:
+                if existing["experiment_id"] != experiment_id or any(
+                    float(existing[name]) != value for name, value in requested_values.items()
+                ):
+                    raise LedgerConflict(f"resource reservation collision: {reservation_id}")
+                return (
+                    ResourceReservation(
+                        reservation_id=reservation_id,
+                        experiment_id=experiment_id,
+                        requested=requested,
+                        created_at=existing["created_at"],
+                    ),
+                    False,
+                )
+            totals = connection.execute(
+                "SELECT "
+                "COALESCE(SUM(CASE WHEN status='RECONCILED' THEN actual_tokens ELSE tokens END),0) tokens, "
+                "COALESCE(SUM(CASE WHEN status='RECONCILED' THEN actual_cpu_seconds ELSE cpu_seconds END),0) cpu_seconds, "
+                "COALESCE(SUM(CASE WHEN status='RECONCILED' THEN actual_gpu_seconds ELSE gpu_seconds END),0) gpu_seconds, "
+                "COALESCE(SUM(CASE WHEN status='RECONCILED' THEN actual_device_seconds ELSE device_seconds END),0) device_seconds, "
+                "COALESCE(SUM(CASE WHEN status='RECONCILED' THEN actual_wall_seconds ELSE wall_seconds END),0) wall_seconds "
+                "FROM resource_reservations"
+            ).fetchone()
+            exceeded = [
+                name
+                for name, value in requested_values.items()
+                if limits[name] > 0 and float(totals[name]) + value > limits[name]
+            ]
+            if exceeded:
+                raise BudgetExceeded("budget exceeded: " + ",".join(exceeded))
+            created_at = utc_now()
+            connection.execute(
+                "INSERT INTO resource_reservations("
+                "reservation_id,experiment_id,tokens,cpu_seconds,gpu_seconds,device_seconds,wall_seconds,"
+                "status,created_at) VALUES (?,?,?,?,?,?,?,?,?)",
+                (
+                    reservation_id,
+                    experiment_id,
+                    requested.tokens,
+                    requested.cpu_seconds,
+                    requested.gpu_seconds,
+                    requested.device_seconds,
+                    requested.wall_seconds,
+                    "RESERVED",
+                    created_at,
+                ),
+            )
+        return ResourceReservation(reservation_id, experiment_id, requested, created_at), True
+
+    def reconcile_resources(
+        self,
+        reservation: ResourceReservation,
+        actual: ResourceUsage,
+        limit: ResourceBudget,
+    ) -> ResourceReconciliation:
+        actual_values = actual.as_budget_dict()
+        requested_values = reservation.requested.as_dict()
+        limits = limit.as_dict()
+        with self.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT * FROM resource_reservations WHERE reservation_id=?",
+                (reservation.reservation_id,),
+            ).fetchone()
+            if not row or row["experiment_id"] != reservation.experiment_id:
+                raise LedgerConflict(f"unknown resource reservation: {reservation.reservation_id}")
+            if row["status"] == "RECONCILED":
+                stored = json.loads(row["payload"])
+                result = ResourceReconciliation(
+                    reservation_id=stored["reservation_id"],
+                    experiment_id=stored["experiment_id"],
+                    requested=ResourceBudget(**stored["requested"]),
+                    actual=ResourceUsage(**stored["actual"]),
+                    exceeded_dimensions=tuple(stored["exceeded_dimensions"]),
+                    reconciled_at=stored["reconciled_at"],
+                )
+                if result.actual != actual:
+                    raise LedgerConflict(f"resource reconciliation collision: {reservation.reservation_id}")
+                return result
+            totals = connection.execute(
+                "SELECT "
+                "COALESCE(SUM(CASE WHEN status='RECONCILED' THEN actual_tokens ELSE tokens END),0) tokens, "
+                "COALESCE(SUM(CASE WHEN status='RECONCILED' THEN actual_cpu_seconds ELSE cpu_seconds END),0) cpu_seconds, "
+                "COALESCE(SUM(CASE WHEN status='RECONCILED' THEN actual_gpu_seconds ELSE gpu_seconds END),0) gpu_seconds, "
+                "COALESCE(SUM(CASE WHEN status='RECONCILED' THEN actual_device_seconds ELSE device_seconds END),0) device_seconds, "
+                "COALESCE(SUM(CASE WHEN status='RECONCILED' THEN actual_wall_seconds ELSE wall_seconds END),0) wall_seconds "
+                "FROM resource_reservations WHERE reservation_id<>?",
+                (reservation.reservation_id,),
+            ).fetchone()
+            exceeded = {
+                name
+                for name, value in actual_values.items()
+                if value > requested_values[name]
+                or (limits[name] > 0 and float(totals[name]) + value > limits[name])
+            }
+            reconciled_at = utc_now()
+            result = ResourceReconciliation(
+                reservation_id=reservation.reservation_id,
+                experiment_id=reservation.experiment_id,
+                requested=reservation.requested,
+                actual=actual,
+                exceeded_dimensions=tuple(sorted(exceeded)),
+                reconciled_at=reconciled_at,
+            )
+            connection.execute(
+                "UPDATE resource_reservations SET actual_tokens=?,actual_cpu_seconds=?,actual_gpu_seconds=?,"
+                "actual_device_seconds=?,actual_wall_seconds=?,status='RECONCILED',payload=?,reconciled_at=? "
+                "WHERE reservation_id=?",
+                (
+                    actual_values["tokens"],
+                    actual_values["cpu_seconds"],
+                    actual_values["gpu_seconds"],
+                    actual_values["device_seconds"],
+                    actual_values["wall_seconds"],
+                    canonical_json(result),
+                    reconciled_at,
+                    reservation.reservation_id,
+                ),
+            )
+        return result
+
+    def resource_reconciliation(self, reservation_id: str) -> ResourceReconciliation | None:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT payload FROM resource_reservations WHERE reservation_id=? AND status='RECONCILED'",
+                (reservation_id,),
+            ).fetchone()
+        if not row:
+            return None
+        stored = json.loads(row["payload"])
+        return ResourceReconciliation(
+            reservation_id=stored["reservation_id"],
+            experiment_id=stored["experiment_id"],
+            requested=ResourceBudget(**stored["requested"]),
+            actual=ResourceUsage(**stored["actual"]),
+            exceeded_dimensions=tuple(stored["exceeded_dimensions"]),
+            reconciled_at=stored["reconciled_at"],
+        )
+
+    def record_resource_rejection(
+        self,
+        *,
+        reservation_id: str,
+        experiment_id: str,
+        requested: ResourceBudget,
+        exceeded_dimensions: tuple[str, ...],
+    ) -> bool:
+        return self._insert_once(
+            "resource_reservation_rejections",
+            "reservation_id",
+            reservation_id,
+            {
+                "experiment_id": experiment_id,
+                "payload": {
+                    "reservation_id": reservation_id,
+                    "experiment_id": experiment_id,
+                    "requested": requested,
+                    "exceeded_dimensions": tuple(sorted(exceeded_dimensions)),
+                },
+                "created_at": utc_now(),
+            },
+        )
+
+    def resource_rejection(self, reservation_id: str) -> dict[str, Any] | None:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT payload FROM resource_reservation_rejections WHERE reservation_id=?",
+                (reservation_id,),
+            ).fetchone()
+        return json.loads(row["payload"]) if row else None
+
     def freeze_candidate(self, candidate_id: str, contract_digest: str, reason: str) -> bool:
         return self._insert_once(
             "frozen_candidates",
@@ -253,7 +461,17 @@ class EvidenceLedger:
             connection.execute("INSERT INTO events(event_type,payload,created_at) VALUES (?,?,?)", (event_type, canonical_json(payload), utc_now()))
 
     def counts(self) -> dict[str, int]:
-        tables = ("contracts", "candidates", "experiments", "evidence", "graph_nodes", "graph_edges", "frozen_candidates")
+        tables = (
+            "contracts",
+            "candidates",
+            "experiments",
+            "evidence",
+            "graph_nodes",
+            "graph_edges",
+            "frozen_candidates",
+            "resource_reservations",
+            "resource_reservation_rejections",
+        )
         with self.connect() as connection:
             return {table: int(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]) for table in tables}
 

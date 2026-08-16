@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from discoveryos.contracts.models import EvidenceRecord, ProblemContract
+from discoveryos.contracts.models import EvidenceRecord, FailureKind, ProblemContract
 from discoveryos.evaluation.base import EvaluatorRegistry
 from discoveryos.evaluation.gates import GateEngine
 from discoveryos.runtime.artifacts import ArtifactStore
@@ -50,6 +50,11 @@ class ReplayEngine:
             self.artifacts.get_bytes(candidate.artifact_digest)
         except (FileNotFoundError, RuntimeError):
             issues.append("CANDIDATE_ARTIFACT_INTEGRITY_FAILURE")
+        for artifact_digest in evidence.artifacts:
+            try:
+                self.artifacts.get_bytes(artifact_digest)
+            except (FileNotFoundError, RuntimeError):
+                issues.append(f"EVIDENCE_ARTIFACT_INTEGRITY_FAILURE:{artifact_digest}")
         data: bytes | None = None
         if experiment.split_id:
             capability = self.vault.issue(
@@ -67,20 +72,34 @@ class ReplayEngine:
             issues.extend(gate.violations)
         if issues:
             return ReplayResult(evidence.receipt_id, False, False, tuple(dict.fromkeys(issues)))
+        if evidence.failure_kind is FailureKind.BUDGET_EXHAUSTED:
+            reservation_id = f"reservation_{experiment.experiment_id}"
+            reconciliation = self.ledger.resource_reconciliation(reservation_id)
+            rejection = self.ledger.resource_rejection(reservation_id)
+            verified = bool((reconciliation and reconciliation.budget_exhausted) or rejection)
+            return ReplayResult(
+                evidence.receipt_id,
+                True,
+                verified,
+                () if verified else ("BUDGET_RECEIPT_MISSING",),
+            )
         output = self.registry.get(experiment.evaluator_id).evaluate(candidate, experiment, data)
-        expected = {
-            "metrics": evidence.metrics,
-            "validity": evidence.validity,
-            "failure_signature": evidence.failure_signature,
-            "artifacts": evidence.artifacts,
-        }
-        actual = {
-            "metrics": output.metrics,
-            "validity": output.validity,
-            "failure_signature": output.failure_signature,
-            "artifacts": output.artifacts,
-        }
-        reproduced = digest_json(expected) == digest_json(actual)
+        if evidence.evaluation_output_digest:
+            reproduced = output.replay_digest == evidence.evaluation_output_digest
+        else:
+            expected = {
+                "metrics": evidence.metrics,
+                "validity": evidence.validity,
+                "failure_signature": evidence.failure_signature,
+                "artifacts": evidence.artifacts,
+            }
+            actual = {
+                "metrics": output.metrics,
+                "validity": output.validity,
+                "failure_signature": output.failure_signature,
+                "artifacts": output.artifacts,
+            }
+            reproduced = digest_json(expected) == digest_json(actual)
         return ReplayResult(evidence.receipt_id, True, reproduced, () if reproduced else ("EVALUATOR_OUTPUT_MISMATCH",))
 
     def replay_all(self) -> list[ReplayResult]:

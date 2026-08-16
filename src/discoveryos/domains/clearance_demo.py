@@ -177,7 +177,10 @@ def initialize_demo(workspace: Path) -> DemoContext:
                 metric_order=("false_block", "clearance_mae", "temporal_jitter", "latency_ms"),
                 require_fidelity=Fidelity.G2,
             ),
-            evaluator_bindings=((ClearanceEvaluator.evaluator_id, registry.digest(ClearanceEvaluator.evaluator_id)),),
+            evaluator_bindings=tuple(
+                (fidelity.value, ClearanceEvaluator.evaluator_id, registry.digest(ClearanceEvaluator.evaluator_id))
+                for fidelity in (Fidelity.G0, Fidelity.G1, Fidelity.G2, Fidelity.G7)
+            ),
             claim_ceiling=ClaimCeiling.CERTIFIED_BLIND,
         )
         report = ProtocolAdmission(registry, vault).check(contract, baseline)
