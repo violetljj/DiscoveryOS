@@ -14,8 +14,9 @@ DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
 DISCOVERYOS_PRODUCTION_NOT_READY
 SI1_PARENT_EFFECTIVENESS_REPAIRED
 SI1_NOVELTY_COST_REPAIRED
-SI2_PROTOCOL_IMPLEMENTED_PREFLIGHT_PASS
-SI2_EXECUTION_NOT_AUTHORIZED
+SI2_SEARCH_VALUE_NOT_ESTABLISHED
+SI2_VANILLA_WINNER_CONFIRMED_ON_WITHHELD_COHORT
+SI2_EXTERNAL_BASELINE_NOT_EVALUABLE
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -61,30 +62,30 @@ SI2_EXECUTION_NOT_AUTHORIZED
 - 有界 verdict 为 `SI1_PARENT_EFFECTIVENESS_REPAIRED` 与 `SI1_NOVELTY_COST_REPAIRED`。真实 pilot 没有提高最终 median、没有新 stepping-stone，且 parent arms 未超过 CORE aggregate diversity；因此仍是 development mechanics，不是 search-value admission。
 - SI-1R 已正式收口。其累计 `719,922` generation tokens 不再支持继续在 consumed pilot corpus 上调 parent、novelty 或 selection diagnostics；结果保持 `DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED`。
 
-## SI-2 在研状态
+## SI-2 正式结果
 
-- `SI-2 — Fresh Search-Value Trial` 的 V1 runner、9-task discovery / 3-task confirmation cohort、四臂路径、统计门和 manifest validator 已实现；当前为 `SI2_PROTOCOL_IMPLEMENTED_PREFLIGHT_PASS`，尚未 create-once seal，因此仍未授权模型执行。
-- 固定比较形状为 `CORE`、`CURRENT_DISCOVERYOS`、`VANILLA_STRONG_AGENT`、`EXTERNAL_STRONG_BASELINE`；Parent / Novelty 不再拆成 confirmatory ablation。
-- Primary 为 matched-token final best、Anytime AUC 和 fresh-task win rate；evaluator/generation/wall、valid rate 与冻结定义下的 structural/basin diversity 为 Secondary。
-- 在 SI-2 结果闭合前冻结搜索机制开发；只有会使协议无效或不可执行的 blocker 可以修复，且不得把策略调优包装成基础设施修复。
-- 外部 arm 已固定为官方 ShinkaEvolve commit `2bf8cfeb6fd39c79555cd94a8f395d64e740aae8`；本机 Headless Codex、相同 evaluator 和 baseline 的零模型调用 mechanics smoke 已通过。
-- V1 每 task/arm 为 3 次 generation、100,000 input+output tokens、1,800 秒 wall；内部 evaluator 另有 300 CPU 秒安全上限，但由于外部进程树无法同口径精确计量 CPU，它不属于跨臂 matched gate。9 个 discovery task 各 1 model replicate。该设计优先 task breadth，不能声明跨 model-seed 稳定性。
+- create-once manifest `c71c6b553778cbbe60dd4c683d5973ed6fa43e1c94e58a7903dfd626de37816d` 在 commit `b6c9c55` 上以 0 pre-seal model calls、0 pre-winner blind access 封存 9 个 discovery tasks、3 个 confirmation tasks、四臂、`gpt-5.6-sol / medium`、预算和统计门。
+- `CURRENT_DISCOVERYOS` 对 CORE 为 `0 win / 9 tie / 0 loss`，median final delta `0`、median token-AUC delta `-0.00058338`、exact sign `p=1.0`；对 Vanilla 同为 `0 / 9 / 0`，median final delta `0`、median token-AUC delta `-0.00068489`、`p=1.0`。Holm 两项均失败，正式 verdict 为 `SI2_SEARCH_VALUE_NOT_ESTABLISHED`。
+- 三条内部 arm 的 median final improvement 均为 `0.21951735`。冻结 winner rule 先比较 final、再比较 AUC，因此 Vanilla 以 median AUC `0.17699025` 排第一，CURRENT 为 `0.17630536`，CORE 为 `0.17508045`；这不是 CURRENT 的 search-value 证据。
+- Vanilla 在 winner freeze 后的 3/3 withheld tasks 均取得可分辨 improvement，median 为 `0.21749171`，资源门全部通过，verdict 为 `SI2_WINNER_CONFIRMED_ON_WITHHELD_COHORT`。Confirmation 只确认冻结 winner 的绝对改进能力，不构成 withheld 四臂 superiority 比较。
+- 官方 ShinkaEvolve 在 9/9 discovery tasks 的运行时 model-availability 检查中触发 Windows `spawn EINVAL`，均在 generation 前 fail closed 为 `EXTERNAL_BASELINE_NOT_EVALUABLE`；因此 external competitiveness 没有建立，也不能把这些 arm 记为科学负结果。
+- 原 discovery report 的 secondary arm token 汇总错误地只接受整数，而逐 task `ResourceUsage` 把整数 token 序列化为浮点数。原报告保持不可变；绑定其 SHA256 与全部 36 个 source-record hashes 的 correction `5ee6e699517ca2e66e993f1acbccbcc144f3ee98a91e83bd1a45ec084e1e0efe` 给出 CORE `555,104`、CURRENT `559,835`、Vanilla `553,395` tokens。该修正不重算 primary、winner 或 verdict。
 
 ## 明确尚未建立或尚未实现
 
 - 一般性 DiscoveryOS search value、跨任务/模型稳定优势。
 - BOHB/qNEHVI、正式 G3-G6 策略、multi-branch credit、完整 crossover/rollback、learned controller、Meta-Strategy Evolver 和 Advisor。
 - 远端 GPU/device worker、分布式队列、生产级 heartbeat/checkpoint/cache。
-- 外部 official challenger 的完整隔离 adapter 与公平 benchmark。
+- 可评估的 official external challenger 公平 benchmark；SI-2 的 Shinka adapter 已实现，但正式运行因 Windows Headless availability blocker 为 `NOT_EVALUABLE`。
 - 独立服务/OS identity 的 hostile-worker blind isolation。
 - 产品可用性、安全性、真实世界效果或生产 readiness。
 
 ## 当前下一道门
 
-1. 提交并验证 SI-2 V1 implementation；不得查看任何 task-arm outcome。
-2. 在任何候选模型调用前运行 `si2-seal`，把 task/confirmation repositories、provider/model/settings、matched-resource surface、metrics、统计 gate、winner rule、外部 source/tool digest 和 claim ceiling 写入 create-once manifest。
-3. 封存前状态只能是 `SI2_PROTOCOL_IMPLEMENTED_PREFLIGHT_PASS`；validator 通过后才可进入 `SI2_SEALED_PRE_MODEL` 并启动正式 discovery execution。
-4. 只有 search value 在冻结 fresh distribution 上成立后，才讨论更多策略、远端扩展或生产 blind isolation。
+1. SI-2 已 consumed，禁止在其 9+3 tasks 上调 parent、novelty、prompt、预算或阈值，也不得用同分布重跑改写 `SI2_SEARCH_VALUE_NOT_ESTABLISHED`。
+2. 如仍需 external competitiveness，先在 mechanics-only 环境修复 Windows Headless `spawn EINVAL`，再用新协议版本、新 fresh tasks 和新 create-once root；不得补跑 SI-2 外部空位。
+3. 任何下一代搜索设计必须解释为何三条内部系统在 9/9 tasks 上 final 完全持平，并用新鲜 cohort 证伪；不能把更复杂机制或 confirmation 的 Vanilla 绝对改进误写为 DiscoveryOS superiority。
+4. 在新的 search-value admission 成立前，不扩展远端计算、生产 blind isolation 或更多机制数量。
 
 ## 状态更新规则
 

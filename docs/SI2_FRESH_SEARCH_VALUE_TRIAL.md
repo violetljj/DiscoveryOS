@@ -3,9 +3,10 @@
 ## Stage status and question
 
 ```text
-SI2_PROTOCOL_IMPLEMENTED_PREFLIGHT_PASS
-SI2_NOT_SEALED
-SI2_EXECUTION_NOT_AUTHORIZED
+SI2_DISCOVERY_COMPLETE
+SI2_SEARCH_VALUE_NOT_ESTABLISHED
+SI2_VANILLA_WINNER_CONFIRMED_ON_WITHHELD_COHORT
+SI2_EXTERNAL_BASELINE_NOT_EVALUABLE
 DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
 ```
 
@@ -15,7 +16,7 @@ SI-2 is the first stage whose primary purpose is scientific search-value evidenc
 
 The stage transition closes SI-1R. The `719,922` generation tokens from its consumed-task pilot established only that parent selection changes real decisions and that novelty can avoid duplicate evaluation without extra generation. They do not enter SI-2 evidence, select SI-2 tasks, or raise the claim ceiling.
 
-The V1 protocol implementation, task suite, external mechanics adapter, metrics, and statistical gates are now defined in code and have passed zero-model-call preflight. This document still is not the sealed experiment manifest: the exact committed implementation SHA, provider settings digests, materialized task repositories, environment paths, and create-once manifest digest are bound only by `si2-seal`. No candidate-model call or task-arm outcome may be inspected before that seal succeeds.
+The V1 protocol implementation, task suite, external mechanics adapter, metrics, and statistical gates passed zero-model-call preflight and were then bound by the create-once manifest reported in Section 10. The manifest, not this prose summary, remains authoritative for the committed implementation SHA, provider settings digests, materialized task repositories, environment paths, budgets, and gates.
 
 ## 1. Fixed comparison shape
 
@@ -115,9 +116,9 @@ The only exception is a blocker that would make the trial invalid or non-executa
 4. receive mechanics-only regression coverage without opening fresh or confirmation outcomes;
 5. not improve search policy under the label of infrastructure repair.
 
-## 8. Seal prerequisites
+## 8. Seal prerequisites satisfied by V1
 
-SI-2 execution remains closed until one create-once manifest and its validator bind at least:
+SI-2 execution remained closed until one create-once manifest and its validator bound at least:
 
 - fresh discovery and confirmation rosters plus contamination receipts;
 - exact four arm definitions and implementation/source digests;
@@ -130,7 +131,7 @@ SI-2 execution remains closed until one create-once manifest and its validator b
 - claim ceilings and explicit final-blind access count of zero before winner freeze;
 - `model_calls_before_seal = 0` and a clean committed experiment revision.
 
-Only after the validator passes may the status move from `SI2_PROTOCOL_IMPLEMENTED_PREFLIGHT_PASS` to `SI2_SEALED_PRE_MODEL`.
+The validator passed with zero pre-seal model calls, moving V1 from `SI2_PROTOCOL_IMPLEMENTED_PREFLIGHT_PASS` to `SI2_SEALED_PRE_MODEL` before any discovery arm executed.
 
 ## 9. Implemented V1 protocol surface
 
@@ -153,3 +154,22 @@ Task freshness is checked against every consumed admission, BR-A, MVP-0, SI-1, a
 `CURRENT_DISCOVERYOS` must beat both `CORE` and `VANILLA_STRONG_AGENT`. For each comparison it requires wins greater than losses, strictly positive median final-score delta, strictly positive median Anytime-AUC delta, and a one-sided exact sign test. The two sign tests use Holm family-wise correction at alpha `0.10`. External competitiveness is a separate comparison at one-sided alpha `0.10`, with non-negative median final and AUC deltas.
 
 The single-replicate choice allocates the fixed run to nine independent fresh tasks rather than repeated stochastic samples. A V1 pass therefore supports task-distribution search value for the sealed model/configuration, but not model-seed stability. A later replication protocol would need a new unconsumed cohort or a preregistered confirmation extension; it cannot reuse V1 outcomes for tuning.
+
+## 10. Sealed V1 result
+
+The create-once manifest digest is `c71c6b553778cbbe60dd4c683d5973ed6fa43e1c94e58a7903dfd626de37816d`, sealed at experiment commit `b6c9c55ce35c699eefc161c569656a85c7293e0f` with zero pre-seal model calls and zero pre-winner blind access.
+
+| Frozen comparison | W / T / L | Median final delta | Median token-AUC delta | Exact sign p | Gate |
+|---|---:|---:|---:|---:|---|
+| CURRENT vs CORE | 0 / 9 / 0 | 0 | -0.00058338 | 1.0 | FAIL |
+| CURRENT vs Vanilla | 0 / 9 / 0 | 0 | -0.00068489 | 1.0 | FAIL |
+
+Both Holm-adjusted confirmatory comparisons fail. The official scientific verdict is `SI2_SEARCH_VALUE_NOT_ESTABLISHED`; `DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED` remains the project-level claim ceiling.
+
+All three internal arms have the same median final improvement, `0.21951735`. The frozen tie-break ranks `VANILLA_STRONG_AGENT` first on median token-AUC (`0.17699025`, versus CURRENT `0.17630536` and CORE `0.17508045`). On the three withheld confirmation tasks, that frozen Vanilla winner records 3/3 resolvable improvements, median improvement `0.21749171`, and all resource checks pass. The confirmation verdict is `SI2_WINNER_CONFIRMED_ON_WITHHELD_COHORT`; it confirms the winner without turning confirmation into a new comparative trial.
+
+The official ShinkaEvolve arm is `EXTERNAL_BASELINE_NOT_EVALUABLE` on all nine tasks because its runtime Headless model-availability check fails with Windows `spawn EINVAL` before generation. External competitiveness therefore remains not established. No replacement system or post-outcome rerun is admitted into V1.
+
+The immutable discovery report has a secondary aggregation defect: internal token values are integral floats, but its summary counted only integer-typed values. Per-task receipts and all primary/resource gates are correct. The create-once correction digest `5ee6e699517ca2e66e993f1acbccbcc144f3ee98a91e83bd1a45ec084e1e0efe`, bound to the original report SHA256 `4365e5b11868d3d2e2738e5fb82d4f3c1b9f4add106e868e259b80dbf33a2888` and all source-record hashes, reports CORE `555,104`, CURRENT `559,835`, and Vanilla `553,395` tokens. It explicitly does not recompute primary metrics, winner, or verdict.
+
+SI-2 and its confirmation cohort are consumed. Any external repair or new search design requires a new protocol version, new fresh tasks, and a new create-once experiment root.

@@ -85,3 +85,10 @@
 - **决定**：SI-2 V1 使用 9 个 fresh discovery tasks（3 个新算法族各 3 个隐藏确定性实例）和 3 个 winner-freeze 后才开放的 confirmation tasks。每个 task/arm 只做 1 个 model replicate、3 次 generation，跨臂匹配 100,000 input+output tokens / 1,800 wall seconds。内部 evaluator 另有 300 CPU 秒安全上限，但它不是跨臂 matched gate。外部 baseline 固定为官方 ShinkaEvolve commit `2bf8cfeb6fd39c79555cd94a8f395d64e740aae8`，通过本地 Headless Codex 使用相同模型和 reasoning effort。
 - **原因**：在可承受总调用量内，9 个独立 fresh tasks 比在少数任务上重复 seed 更直接检验 task-level search value；Shinka 有可审计 official runtime、Apache-2.0 license 和本机 Codex 路由，不需要切换 provider/API 权限面。Exact sign test 对小样本不过度依赖分布假设。
 - **后果**：`CURRENT_DISCOVERYOS` 对 CORE 与 Vanilla 的两个 confirmatory comparison 必须同时满足方向、median final/AUC 和 one-sided exact sign test，并用 Holm 控制 family-wise alpha `0.10`；至少 8/9 tasks evaluable。单 replicate 的通过只支持冻结 task distribution 和 model/config，不支持跨 model-seed 稳定性。外部 competitiveness 和 confirmation 继续单独裁决。
+
+## D-013：SI-2 以 search value 未建立收口，Vanilla winner confirmation 不升级 DiscoveryOS claim
+
+- **状态**：Accepted
+- **决定**：接受 SI-2 的冻结 verdict `SI2_SEARCH_VALUE_NOT_ESTABLISHED`。CURRENT 对 CORE 与 Vanilla 在 9/9 fresh tasks 的 final comparison 全部为 tie，两个 median final delta 均为零、median AUC delta 均为负、Holm sign gates 均失败。按预注册 tie-break 冻结的 `VANILLA_STRONG_AGENT` 在 3 个 withheld tasks 上通过 confirmation，但该结果只确认 winner 的绝对改进能力，不能改写为 DiscoveryOS superiority。Shinka 9/9 runtime failures 保持 `EXTERNAL_BASELINE_NOT_EVALUABLE`，不算科学 loss，也不补位重跑。
+- **原因**：完整 CURRENT stack 在相同 model/evaluator/预算下没有找到任何 CORE 或 Vanilla 未找到的 final discovery；小幅 AUC 差异还略偏向 Vanilla。Confirmation 没有重新比较四臂，外部 arm 又在 generation 前因 Windows Headless `spawn EINVAL` 失去可评估性，因此都不能救回 search-value 或 external-competitiveness claim。
+- **后果**：SI-2 的 9+3 tasks 全部 consumed，禁止用于策略调优或同分布翻案。原 discovery report 的 secondary token-summary 类型错误通过独立 create-once correction 修正，不改 primary、winner 或 verdict。如继续研究 external competitiveness 或新搜索设计，必须先在 mechanics-only 环境解决 blocker，再使用新协议、新 fresh cohort 和新实验根；在新 admission 前不扩大算力或机制面。
