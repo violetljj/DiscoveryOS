@@ -16,6 +16,8 @@ DISCOVERYOS_PRODUCTION_NOT_READY
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
 
+默认执行环境是当前本机。高资源任务应先探测实时 CPU、内存、GPU/显存、磁盘和负载，再以有界并行、缓存与断点续跑提高吞吐；远端或云端执行不是默认路径，需要单独授权或冻结协议要求。
+
 ## 已交付并有代码/测试支撑
 
 - 冻结 `ProblemContract`、候选/实验/证据 identity、evaluator/data/artifact digest binding。
