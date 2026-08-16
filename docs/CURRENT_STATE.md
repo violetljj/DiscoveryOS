@@ -14,7 +14,7 @@ DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
 DISCOVERYOS_PRODUCTION_NOT_READY
 SI1_PARENT_EFFECTIVENESS_REPAIRED
 SI1_NOVELTY_COST_REPAIRED
-SI2_PROTOCOL_DESIGN_OPEN
+SI2_PROTOCOL_IMPLEMENTED_PREFLIGHT_PASS
 SI2_EXECUTION_NOT_AUTHORIZED
 ```
 
@@ -63,10 +63,12 @@ SI2_EXECUTION_NOT_AUTHORIZED
 
 ## SI-2 在研状态
 
-- 下一阶段已定义为 `SI-2 — Fresh Search-Value Trial`，当前仅为 `SI2_PROTOCOL_DESIGN_OPEN`，尚未封存 task suite、external baseline、replicates、budgets 或统计门，也未授权执行。
+- `SI-2 — Fresh Search-Value Trial` 的 V1 runner、9-task discovery / 3-task confirmation cohort、四臂路径、统计门和 manifest validator 已实现；当前为 `SI2_PROTOCOL_IMPLEMENTED_PREFLIGHT_PASS`，尚未 create-once seal，因此仍未授权模型执行。
 - 固定比较形状为 `CORE`、`CURRENT_DISCOVERYOS`、`VANILLA_STRONG_AGENT`、`EXTERNAL_STRONG_BASELINE`；Parent / Novelty 不再拆成 confirmatory ablation。
 - Primary 为 matched-token final best、Anytime AUC 和 fresh-task win rate；evaluator/generation/wall、valid rate 与冻结定义下的 structural/basin diversity 为 Secondary。
 - 在 SI-2 结果闭合前冻结搜索机制开发；只有会使协议无效或不可执行的 blocker 可以修复，且不得把策略调优包装成基础设施修复。
+- 外部 arm 已固定为官方 ShinkaEvolve commit `2bf8cfeb6fd39c79555cd94a8f395d64e740aae8`；本机 Headless Codex、相同 evaluator 和 baseline 的零模型调用 mechanics smoke 已通过。
+- V1 每 task/arm 为 3 次 generation、100,000 input+output tokens、1,800 秒 wall；内部 evaluator 另有 300 CPU 秒安全上限，但由于外部进程树无法同口径精确计量 CPU，它不属于跨臂 matched gate。9 个 discovery task 各 1 model replicate。该设计优先 task breadth，不能声明跨 model-seed 稳定性。
 
 ## 明确尚未建立或尚未实现
 
@@ -79,9 +81,9 @@ SI2_EXECUTION_NOT_AUTHORIZED
 
 ## 当前下一道门
 
-1. 完成 SI-2 task freshness/contamination contract、四臂实现边界和外部 baseline mechanics preflight；不得查看 task outcome。
-2. 在任何候选模型调用前，冻结 task/confirmation roster、provider/model/settings、matched-resource surface、replicates、metrics、统计 gate、winner rule 和 claim ceiling，并由 validator fail closed。
-3. 封存前状态只能是 `SI2_PROTOCOL_DESIGN_OPEN`；通过 create-once manifest 验证后才可进入 `SI2_SEALED_PRE_MODEL` 并另行启动正式执行。
+1. 提交并验证 SI-2 V1 implementation；不得查看任何 task-arm outcome。
+2. 在任何候选模型调用前运行 `si2-seal`，把 task/confirmation repositories、provider/model/settings、matched-resource surface、metrics、统计 gate、winner rule、外部 source/tool digest 和 claim ceiling 写入 create-once manifest。
+3. 封存前状态只能是 `SI2_PROTOCOL_IMPLEMENTED_PREFLIGHT_PASS`；validator 通过后才可进入 `SI2_SEALED_PRE_MODEL` 并启动正式 discovery execution。
 4. 只有 search value 在冻结 fresh distribution 上成立后，才讨论更多策略、远端扩展或生产 blind isolation。
 
 ## 状态更新规则

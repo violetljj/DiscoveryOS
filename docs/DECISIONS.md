@@ -78,3 +78,10 @@
 - **决定**：SI-1R 作为 Search-Value Trial 前最后一次机制维修正式收口。下一阶段 SI-2 只做四个 system-level arms：`CORE`、`CURRENT_DISCOVERYOS`、`VANILLA_STRONG_AGENT` 和一个预先冻结的 `EXTERNAL_STRONG_BASELINE`；不再把 Parent、Novelty 或其他内部机制拆成 confirmatory ablation。SI-2 结果闭合前禁止新增或调优搜索机制，除非发现会使协议无效或不可执行的 blocker。
 - **原因**：SI-1R 已用 `719,922` generation tokens 证明 parent probability cap 改变真实选择、novelty cheap-first cascade 避免无效计算，但没有建立 outcome superiority。继续消费同一 pilot corpus 的边际证据价值低，并会放大事后调参风险。
 - **后果**：SI-2 必须在任何模型调用前冻结 fresh/confirmation cohorts、四臂实现、matched resources、replicates、指标、统计门、winner rule 和 claim ceiling。Search value、external competitiveness 与 confirmation 分开裁决；效率和 diversity 不能补偿 primary gate 失败。任何 blocker 修复如改变封存面，必须新建协议版本/实验根并使受影响 partial results 失效。
+
+## D-012：SI-2 V1 以 task breadth、官方 Shinka 和 exact sign gate 换取有界强证据
+
+- **状态**：Accepted
+- **决定**：SI-2 V1 使用 9 个 fresh discovery tasks（3 个新算法族各 3 个隐藏确定性实例）和 3 个 winner-freeze 后才开放的 confirmation tasks。每个 task/arm 只做 1 个 model replicate、3 次 generation，跨臂匹配 100,000 input+output tokens / 1,800 wall seconds。内部 evaluator 另有 300 CPU 秒安全上限，但它不是跨臂 matched gate。外部 baseline 固定为官方 ShinkaEvolve commit `2bf8cfeb6fd39c79555cd94a8f395d64e740aae8`，通过本地 Headless Codex 使用相同模型和 reasoning effort。
+- **原因**：在可承受总调用量内，9 个独立 fresh tasks 比在少数任务上重复 seed 更直接检验 task-level search value；Shinka 有可审计 official runtime、Apache-2.0 license 和本机 Codex 路由，不需要切换 provider/API 权限面。Exact sign test 对小样本不过度依赖分布假设。
+- **后果**：`CURRENT_DISCOVERYOS` 对 CORE 与 Vanilla 的两个 confirmatory comparison 必须同时满足方向、median final/AUC 和 one-sided exact sign test，并用 Holm 控制 family-wise alpha `0.10`；至少 8/9 tasks evaluable。单 replicate 的通过只支持冻结 task distribution 和 model/config，不支持跨 model-seed 稳定性。外部 competitiveness 和 confirmation 继续单独裁决。

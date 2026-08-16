@@ -17,6 +17,9 @@ from discoveryos.benchmarks import (
     seal_search_value_mvp0,
     STRUCTURAL_PATCH_SCHEMA,
     run_strategy_integration_si1_pilot,
+    run_si2_confirmation,
+    run_si2_discovery,
+    seal_si2_protocol,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
@@ -112,6 +115,32 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="run SI-1R parent-effectiveness and novelty-cost repair semantics",
     )
+    si2_seal = subparsers.add_parser(
+        "si2-seal",
+        help="seal the SI-2 fresh four-arm protocol before candidate-model calls",
+    )
+    si2_seal.add_argument("--workspace", type=Path, default=Path("runs/si2-fresh-search-value-r1"))
+    si2_seal.add_argument("--model", required=True)
+    si2_seal.add_argument("--codex-command", default="codex")
+    si2_seal.add_argument("--reasoning-effort", required=True)
+    si2_seal.add_argument("--shinka-checkout", type=Path, default=Path("runs/si2-external-preflight/ShinkaEvolve"))
+    si2_seal.add_argument("--shinka-python", type=Path, default=Path("runs/si2-external-preflight/.venv/Scripts/python.exe"))
+    si2_seal.add_argument(
+        "--headless-cli",
+        type=Path,
+        default=Path("runs/si2-external-preflight/headless/node_modules/@roberttlange/headless/dist/cli.js"),
+    )
+    si2_seal.add_argument("--node-executable", type=Path, default=Path("E:/codex-tools/tools/nodejs/node.exe"))
+    for name, help_text in (
+        ("si2-run-discovery", "execute the already-sealed SI-2 fresh discovery cohort"),
+        ("si2-confirm", "run the frozen SI-2 winner on the withheld confirmation cohort"),
+    ):
+        command_parser = subparsers.add_parser(name, help=help_text)
+        command_parser.add_argument("--workspace", type=Path, default=Path("runs/si2-fresh-search-value-r1"))
+        command_parser.add_argument("--manifest-digest", required=True)
+        command_parser.add_argument("--model", required=True)
+        command_parser.add_argument("--codex-command", default="codex")
+        command_parser.add_argument("--reasoning-effort", required=True)
     return parser
 
 
@@ -218,6 +247,45 @@ def main(argv: list[str] | None = None) -> int:
                 repair_mode=args.repair,
                 progress=lambda message: print(message, file=sys.stderr, flush=True),
             )
+        elif args.command in {"si2-seal", "si2-run-discovery", "si2-confirm"}:
+            command = tuple(shlex.split(args.codex_command, posix=False))
+            local_provider = CodexExecProvider(
+                command=command,
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+            )
+            structural_provider = CodexExecProvider(
+                command=command,
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+                output_schema=STRUCTURAL_PATCH_SCHEMA,
+            )
+            if args.command == "si2-seal":
+                result = seal_si2_protocol(
+                    args.workspace,
+                    local_provider=local_provider,
+                    structural_provider=structural_provider,
+                    shinka_checkout=args.shinka_checkout,
+                    shinka_python=args.shinka_python,
+                    headless_cli=args.headless_cli,
+                    node_executable=args.node_executable,
+                )
+            elif args.command == "si2-run-discovery":
+                result = run_si2_discovery(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    local_provider=local_provider,
+                    structural_provider=structural_provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+            else:
+                result = run_si2_confirmation(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    local_provider=local_provider,
+                    structural_provider=structural_provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
         else:
             result = demo_status(args.workspace)
     except (RuntimeError, ValueError, PermissionError) as error:

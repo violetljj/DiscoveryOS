@@ -3,7 +3,7 @@
 ## Stage status and question
 
 ```text
-SI2_PROTOCOL_DESIGN_OPEN
+SI2_PROTOCOL_IMPLEMENTED_PREFLIGHT_PASS
 SI2_NOT_SEALED
 SI2_EXECUTION_NOT_AUTHORIZED
 DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
@@ -15,7 +15,7 @@ SI-2 is the first stage whose primary purpose is scientific search-value evidenc
 
 The stage transition closes SI-1R. The `719,922` generation tokens from its consumed-task pilot established only that parent selection changes real decisions and that novelty can avoid duplicate evaluation without extra generation. They do not enter SI-2 evidence, select SI-2 tasks, or raise the claim ceiling.
 
-This document is a stage charter, not a sealed experiment manifest. No task suite, external challenger/version, provider snapshot, replicate count, budget, statistical threshold, or execution order is frozen yet. No candidate-model call or task outcome may be inspected until those fields and the implementation digests are sealed create-once.
+The V1 protocol implementation, task suite, external mechanics adapter, metrics, and statistical gates are now defined in code and have passed zero-model-call preflight. This document still is not the sealed experiment manifest: the exact committed implementation SHA, provider settings digests, materialized task repositories, environment paths, and create-once manifest digest are bound only by `si2-seal`. No candidate-model call or task-arm outcome may be inspected before that seal succeeds.
 
 ## 1. Fixed comparison shape
 
@@ -130,4 +130,26 @@ SI-2 execution remains closed until one create-once manifest and its validator b
 - claim ceilings and explicit final-blind access count of zero before winner freeze;
 - `model_calls_before_seal = 0` and a clean committed experiment revision.
 
-Only after the validator passes may the status move from `SI2_PROTOCOL_DESIGN_OPEN` to `SI2_SEALED_PRE_MODEL`.
+Only after the validator passes may the status move from `SI2_PROTOCOL_IMPLEMENTED_PREFLIGHT_PASS` to `SI2_SEALED_PRE_MODEL`.
+
+## 9. Implemented V1 protocol surface
+
+The committed implementation routes through `src/discoveryos/benchmarks/si2.py`, `si2_tasks.py`, and `si2_shinka_adapter.py`. Before the create-once seal, the exact V1 choices are:
+
+| Surface | V1 decision |
+|---|---|
+| Fresh discovery cohort | 9 tasks: three hidden deterministic instances in each of weighted coverage, capacitated assignment, and balanced graph cut |
+| Confirmation cohort | 3 separately seeded tasks, one per family, withheld from arm execution until winner freeze |
+| Replicates | 1 model replicate per discovery task/arm; task-level inference only, explicitly not cross-seed model-stability evidence |
+| Generation limit | 3 bounded candidate generations per arm |
+| Matched ceiling | 100,000 input+output tokens and 1,800 generation/total wall seconds per task/arm; the internal 300 CPU-second evaluator safety ceiling is not a cross-arm matched gate because external process-tree CPU is not measured on the same authority |
+| Execution order | Deterministically shuffled by seed `17081702` |
+| External system | Official `SakanaAI/ShinkaEvolve` commit `2bf8cfeb6fd39c79555cd94a8f395d64e740aae8`, Apache-2.0 |
+| External model path | Local Headless `@roberttlange/headless@0.6.1` → the same Codex executable, model, and reasoning effort; embeddings and pricing network refresh disabled |
+| Minimum coverage | At least 8 of 9 discovery tasks evaluable |
+
+Task freshness is checked against every consumed admission, BR-A, MVP-0, SI-1, and SI-1R task by task id, category, baseline source digest, payload digest, and deterministic generator lineage. The task APIs and hidden cases are new to DiscoveryOS. Semantic absence from model pretraining is not claimed.
+
+`CURRENT_DISCOVERYOS` must beat both `CORE` and `VANILLA_STRONG_AGENT`. For each comparison it requires wins greater than losses, strictly positive median final-score delta, strictly positive median Anytime-AUC delta, and a one-sided exact sign test. The two sign tests use Holm family-wise correction at alpha `0.10`. External competitiveness is a separate comparison at one-sided alpha `0.10`, with non-negative median final and AUC deltas.
+
+The single-replicate choice allocates the fixed run to nine independent fresh tasks rather than repeated stochastic samples. A V1 pass therefore supports task-distribution search value for the sealed model/configuration, but not model-seed stability. A later replication protocol would need a new unconsumed cohort or a preregistered confirmation extension; it cannot reuse V1 outcomes for tuning.

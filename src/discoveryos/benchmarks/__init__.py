@@ -14,6 +14,7 @@ from .search_value_mvp0 import (
     seal_search_value_mvp0,
 )
 from .strategy_integration_si1 import run_strategy_integration_si1_pilot
+from .si2 import run_si2_confirmation, run_si2_discovery, seal_si2_protocol
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -31,4 +32,7 @@ __all__ = [
     "run_search_value_mvp0",
     "seal_search_value_mvp0",
     "run_strategy_integration_si1_pilot",
+    "seal_si2_protocol",
+    "run_si2_discovery",
+    "run_si2_confirmation",
 ]
