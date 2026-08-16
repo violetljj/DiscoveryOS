@@ -34,6 +34,11 @@ from discoveryos.operators.action_controller import (
 )
 from discoveryos.operators.asha import RungDefinition
 from discoveryos.operators.local_patch import LocalPatchOperator
+from discoveryos.operators.novelty import NoveltyConfig, ShinkaStyleNoveltyPolicy
+from discoveryos.operators.parent_selection import (
+    ParentSelectionConfig,
+    ShinkaWeightedParentSelectionPolicy,
+)
 from discoveryos.operators.structural_rewrite import StructuralRewriteOperator
 from discoveryos.runtime.artifacts import ArtifactStore
 from discoveryos.runtime.ledger import EvidenceLedger
@@ -76,6 +81,17 @@ class _LoopEvaluator:
             return EvaluationOutput.from_metrics({"score": 2.0})
         score = 1.5 if experiment.fidelity is Fidelity.G1 else 1.0 if candidate.operator_id == "structural_rewrite_basin_jump_v1" else 0.0
         return EvaluationOutput.from_metrics({"score": score})
+
+
+class _PositiveEvaluator:
+    evaluator_id = "positive_eval"
+    version = "1"
+
+    def evaluate(self, candidate, experiment, data):
+        del experiment, data
+        return EvaluationOutput.from_metrics(
+            {"score": 2.0 if candidate.operator_id == "bounded_llm_local_patch_v1" else 1.0}
+        )
 
 
 class SearchLoopIntegrationTests(unittest.IsolatedAsyncioTestCase):
@@ -300,6 +316,236 @@ class SearchLoopIntegrationTests(unittest.IsolatedAsyncioTestCase):
             state = projector.build()
             self.assertEqual("score", state.utility_metric_name)
             self.assertEqual(1, len(state.branches))
+
+    async def test_parent_local_novelty_resample_evaluate_settle_closes_the_loop(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository, base_commit = self._repository(root / "repository")
+            artifacts = ArtifactStore(root / "artifacts")
+            ledger = EvidenceLedger(root / "ledger.sqlite3")
+            baseline_patch = self._patch("return value", "return value + 0")
+            bundle = ExecutableCandidateBundle(
+                base_repository=str(repository.resolve()),
+                base_commit=base_commit,
+                patch_diff=baseline_patch,
+                mutable_paths=("algorithm.py",),
+                forbidden_paths=("public_tests.py", "evaluate.py"),
+                touched_paths=("algorithm.py",),
+                entrypoint="algorithm.py",
+                environment_lock=EnvironmentLock(
+                    "requirements.lock",
+                    digest_bytes((repository / "requirements.lock").read_bytes()),
+                ),
+                build_command=CommandSpec((sys.executable, "-m", "py_compile", "algorithm.py")),
+                test_command=CommandSpec((sys.executable, "public_tests.py")),
+                evaluation_command=CommandSpec((sys.executable, "evaluate.py")),
+                patch_stack=(baseline_patch,),
+                patch_apply_policy="recount_hunks",
+                format_version="executable-candidate-v3",
+            )
+            baseline = CandidateSpec.create(
+                artifact_digest=bundle.store(artifacts),
+                operator_id="baseline",
+                strategy_id="baseline",
+                parameters={"algorithm_family": "linear_offset"},
+                semantic_delta="baseline",
+                environment_digest=bundle.environment_lock.sha256,
+            )
+            registry = EvaluatorRegistry()
+            registry.register(_PositiveEvaluator())
+            evaluator_digest = registry.digest("positive_eval")
+            development_data = b"development"
+            contract = ProblemContract(
+                contract_id="strategy-integration-test",
+                version="1",
+                question="Exercise parent and novelty integration.",
+                baseline_candidate_id=baseline.candidate_id,
+                mutable_paths=("algorithm.py",),
+                forbidden_paths=("public_tests.py", "evaluate.py"),
+                data_splits=(DataSplit("dev", DataRole.DEVELOPMENT, "dev.bin", digest_bytes(development_data)),),
+                fidelities=(Fidelity.G0, Fidelity.G1),
+                metrics=(MetricDefinition("score", MetricDirection.MAXIMIZE, available_from=Fidelity.G0),),
+                hard_constraints=(),
+                budget=ResourceBudget(tokens=100, cpu_seconds=20, wall_seconds=100),
+                winner_rule=WinnerRule(metric_order=("score",), require_fidelity=Fidelity.G1),
+                evaluator_bindings=(
+                    (Fidelity.G0.value, "positive_eval", evaluator_digest),
+                    (Fidelity.G1.value, "positive_eval", evaluator_digest),
+                ),
+                claim_ceiling=ClaimCeiling.MECHANICS_ONLY,
+            )
+            ledger.add_contract(contract)
+            ledger.add_candidate(baseline)
+            vault = SplitVault(root / "vault", ledger)
+            vault.put_split(DataRole.DEVELOPMENT, "dev.bin", development_data)
+            experiment_executor = ExperimentExecutor(
+                contract=contract,
+                ledger=ledger,
+                artifacts=artifacts,
+                vault=vault,
+                registry=registry,
+                fabric=ComputeFabric(cpu_workers=1),
+            )
+            from discoveryos.contracts.models import ExperimentSpec, RunMode
+
+            initial_experiment = ExperimentSpec.create(
+                candidate_id=baseline.candidate_id,
+                evaluator_id="positive_eval",
+                fidelity=Fidelity.G0,
+                split_id=None,
+                split_role=None,
+                seed=0,
+                resources=ResourceBudget(cpu_seconds=1, wall_seconds=5),
+                contract_digest=contract.digest,
+                mode=RunMode.DISCOVERY,
+                rung_id="g0",
+            )
+            initial_evidence = await experiment_executor.execute(baseline, initial_experiment)
+            frozen_initial_payload = next(
+                payload for payload in ledger.evidence_payloads() if payload["receipt_id"] == initial_evidence.receipt_id
+            )
+            generation = ResourceBudget(tokens=10, wall_seconds=3)
+            retry = ResourceBudget(tokens=10, wall_seconds=3)
+            evaluation = ResourceBudget(cpu_seconds=1, wall_seconds=5)
+            complete = ResourceBudget(tokens=20, cpu_seconds=1, wall_seconds=11)
+            controller_config = ActionControllerConfig(
+                stagnation_generations=2,
+                minimum_replicates=1,
+                structural_similarity_threshold=0.0,
+                costs=(
+                    ActionCost(
+                        SearchAction.LOCAL_PATCH,
+                        complete,
+                        generation_reserve=generation,
+                        evaluation_reserve=evaluation,
+                        novelty_resample_reserve=retry,
+                    ),
+                    ActionCost(
+                        SearchAction.STRUCTURAL_ESCAPE,
+                        complete,
+                        generation_reserve=generation,
+                        evaluation_reserve=evaluation,
+                        novelty_resample_reserve=retry,
+                    ),
+                    ActionCost(SearchAction.REPLICATE, evaluation),
+                    ActionCost(SearchAction.PROMOTE_FIDELITY, evaluation),
+                ),
+            )
+            parent_config = ParentSelectionConfig(base_seed=13, selection_lambda=2.0)
+            novelty_config = NoveltyConfig(
+                max_novelty_attempts=2,
+                similarity_threshold=0.9,
+                semantic_difference_threshold=0.2,
+            )
+            spec = SearchRunSpec(
+                run_id="parent-novelty-integration",
+                contract_digest=contract.digest,
+                root_candidate_id=baseline.candidate_id,
+                branch_id="branch",
+                initial_algorithm_family="linear_offset",
+                metric_name="score",
+                metric_direction=MetricDirection.MAXIMIZE,
+                initial_fidelity=Fidelity.G0,
+                budget=ResourceBudget(tokens=40, cpu_seconds=3, wall_seconds=40),
+                rungs=(
+                    RungDefinition("g0", Fidelity.G0, evaluation),
+                    RungDefinition("g1", Fidelity.G1, evaluation),
+                ),
+                eta=2,
+                initial_trials=2,
+                local_action_limit=2,
+                structural_action_limit=0,
+                max_steps=2,
+                mutable_file_paths=("algorithm.py",),
+                seeds=(0, 1),
+                parent_selection=parent_config,
+                novelty=novelty_config,
+            )
+            duplicate_patch = (
+                "diff --git a/algorithm.py b/algorithm.py\n"
+                "--- a/algorithm.py\n"
+                "+++ b/algorithm.py\n"
+                "@@ -1,2 +1,3 @@\n"
+                " def improve(value):\n"
+                "+    # duplicate formatting-only proposal\n"
+                "     return value + 0\n"
+            )
+            local = LocalPatchOperator(
+                provider=_Provider(
+                    [
+                        self._local_response(self._patch("return missing", "return value + 9")),
+                        self._local_response(duplicate_patch),
+                        self._local_response(self._patch("return value + 0", "return value + 1")),
+                    ]
+                ),
+                artifacts=artifacts,
+                ledger=ledger,
+                contract=contract,
+            )
+            structural = StructuralRewriteOperator(
+                provider=_Provider([]),
+                artifacts=artifacts,
+                ledger=ledger,
+                contract=contract,
+            )
+            projector = LedgerBackedSearchStateProjector(
+                spec=spec,
+                contract=contract,
+                controller_config=controller_config,
+                ledger=ledger,
+                artifacts=artifacts,
+            )
+            parent_policy = ShinkaWeightedParentSelectionPolicy(parent_config)
+            novelty_policy = ShinkaStyleNoveltyPolicy(novelty_config)
+            result = await SearchLoopRunner(
+                controller=DeterministicActionController(controller_config, parent_policy),
+                projector=projector,
+                executor=UnifiedActionExecutor(
+                    spec=spec,
+                    contract=contract,
+                    ledger=ledger,
+                    artifacts=artifacts,
+                    projector=projector,
+                    local_operator=local,
+                    structural_operator=structural,
+                    experiment_executor=experiment_executor,
+                    novelty_policy=novelty_policy,
+                ),
+                trace=AnytimeTraceRecorder(artifacts, ledger),
+            ).run()
+            actions = ledger.search_action_payloads(spec.run_id)
+            failed_action, action = actions
+            novelty_receipts = ledger.novelty_receipt_payloads(spec.run_id)
+            self.assertIsNone(failed_action["result_candidate_id"])
+            self.assertTrue(
+                failed_action["failure_signature"].startswith(
+                    "NOVELTY_PROPOSAL_MATERIALIZATION_FAILED"
+                )
+            )
+            self.assertEqual(1, len(failed_action["generation_ids"]))
+            self.assertEqual(
+                2,
+                failed_action["actual_usage"]["llm_input_tokens"]
+                + failed_action["actual_usage"]["llm_output_tokens"],
+            )
+            self.assertEqual("LOCAL_PATCH", action["action"])
+            self.assertEqual(2, len(action["generation_ids"]))
+            self.assertEqual(4, action["actual_usage"]["llm_input_tokens"] + action["actual_usage"]["llm_output_tokens"])
+            self.assertEqual(2, len(novelty_receipts))
+            self.assertEqual("REJECT_RESAMPLE", novelty_receipts[0]["assessment"]["decision"])
+            self.assertEqual("ACCEPT", novelty_receipts[1]["assessment"]["decision"])
+            self.assertEqual(2, len(ledger.parent_selection_receipt_payloads(spec.run_id)))
+            self.assertEqual(2, len(ledger.evidence_records()))
+            self.assertEqual(2, result.settled_steps)
+            self.assertEqual(2.0, result.incumbent_utility)
+            self.assertEqual(
+                frozen_initial_payload,
+                next(
+                    payload
+                    for payload in ledger.evidence_payloads()
+                    if payload["receipt_id"] == initial_evidence.receipt_id
+                ),
+            )
 
     @staticmethod
     def _repository(path: Path) -> tuple[Path, str]:

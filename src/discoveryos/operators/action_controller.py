@@ -7,6 +7,11 @@ from discoveryos.contracts.models import Fidelity, MetricDirection, ResourceBudg
 from discoveryos.runtime.artifacts import ArtifactStore
 from discoveryos.runtime.ledger import EvidenceLedger
 from discoveryos.util import digest_json, jsonable, utc_now
+from discoveryos.operators.parent_selection import (
+    ParentSelectionContext,
+    ParentSelectionReceipt,
+    ShinkaWeightedParentSelectionPolicy,
+)
 
 
 class SearchAction(str, Enum):
@@ -24,6 +29,7 @@ class ActionCost:
     generation_reserve: ResourceBudget = field(default_factory=ResourceBudget)
     evaluation_reserve: ResourceBudget = field(default_factory=ResourceBudget)
     settlement_reserve: ResourceBudget = field(default_factory=ResourceBudget)
+    novelty_resample_reserve: ResourceBudget = field(default_factory=ResourceBudget)
     downstream_action_reserve: ResourceBudget = field(default_factory=ResourceBudget)
 
     def __post_init__(self) -> None:
@@ -35,6 +41,7 @@ class ActionCost:
             self.generation_reserve,
             self.evaluation_reserve,
             self.settlement_reserve,
+            self.novelty_resample_reserve,
         )
         if not _affords(self.resource_floor, accounted):
             raise ValueError("action component reserves cannot exceed the complete-action resource floor")
@@ -105,6 +112,7 @@ class SearchState:
     reusable_component_ids: tuple[str, ...]
     remaining_budget: ResourceBudget
     elapsed_usage: ResourceUsage = field(default_factory=ResourceUsage)
+    parent_selection_context: ParentSelectionContext | None = None
 
     def __post_init__(self) -> None:
         if not self.run_id or not self.incumbent_candidate_id or not self.utility_metric_name:
@@ -182,10 +190,12 @@ class SearchDecision:
     generation_reserve: ResourceBudget
     evaluation_reserve: ResourceBudget
     settlement_reserve: ResourceBudget
+    novelty_resample_reserve: ResourceBudget
     reserved_downstream_budget: ResourceBudget
     budget_reserved: ResourceBudget
     preflight_affordable: bool
     rejected_action: SearchAction | None
+    parent_selection_receipt: ParentSelectionReceipt | None = None
     reusable_component_ids: tuple[str, ...] = ()
     created_at: str = field(default_factory=utc_now)
 
@@ -205,15 +215,18 @@ class SearchDecision:
         generation_reserve: ResourceBudget | None = None,
         evaluation_reserve: ResourceBudget | None = None,
         settlement_reserve: ResourceBudget | None = None,
+        novelty_resample_reserve: ResourceBudget | None = None,
         reserved_downstream_budget: ResourceBudget | None = None,
         budget_reserved: ResourceBudget | None = None,
         preflight_affordable: bool = True,
         rejected_action: SearchAction | None = None,
+        parent_selection_receipt: ParentSelectionReceipt | None = None,
         reusable_component_ids: tuple[str, ...] = (),
     ) -> "SearchDecision":
         generation_reserve = generation_reserve or ResourceBudget()
         evaluation_reserve = evaluation_reserve or ResourceBudget()
         settlement_reserve = settlement_reserve or ResourceBudget()
+        novelty_resample_reserve = novelty_resample_reserve or ResourceBudget()
         reserved_downstream_budget = reserved_downstream_budget or ResourceBudget()
         budget_reserved = budget_reserved or _add_budgets(resource_floor, reserved_downstream_budget)
         identity = {
@@ -231,13 +244,21 @@ class SearchDecision:
             "generation_reserve": generation_reserve,
             "evaluation_reserve": evaluation_reserve,
             "settlement_reserve": settlement_reserve,
+            "novelty_resample_reserve": novelty_resample_reserve,
             "reserved_downstream_budget": reserved_downstream_budget,
             "budget_reserved": budget_reserved,
             "preflight_affordable": preflight_affordable,
             "rejected_action": rejected_action,
+            "parent_selection_receipt": parent_selection_receipt,
             "reusable_component_ids": reusable_component_ids,
         }
-        return cls(decision_id=f"decision_{digest_json(identity)[:24]}", **identity)
+        digest_identity = {
+            **identity,
+            "parent_selection_receipt": (
+                parent_selection_receipt.receipt_id if parent_selection_receipt is not None else None
+            ),
+        }
+        return cls(decision_id=f"decision_{digest_json(digest_identity)[:24]}", **identity)
 
 
 @dataclass(frozen=True, slots=True)
@@ -275,8 +296,21 @@ class DeterministicActionController:
 
     operator_id = "deterministic_action_controller_v0"
 
-    def __init__(self, config: ActionControllerConfig) -> None:
+    def __init__(
+        self,
+        config: ActionControllerConfig,
+        parent_policy: ShinkaWeightedParentSelectionPolicy | None = None,
+    ) -> None:
         self.config = config
+        self.parent_policy = parent_policy
+
+    @property
+    def digest(self) -> str:
+        if self.parent_policy is None:
+            return self.config.digest
+        return digest_json(
+            {"controller": self.config, "parent_policy": self.parent_policy.config}
+        )
 
     def decide(self, state: SearchState) -> SearchDecision:
         candidates = tuple(candidate for candidate in state.candidates if candidate.active)
@@ -324,27 +358,31 @@ class DeterministicActionController:
                 return self._stop(state, "LOCAL_DELTAS_NOT_CONVERGED")
             if branch.structural_actions_remaining <= 0:
                 return self._stop(state, "STRUCTURAL_BUDGET_EXHAUSTED")
+            selected_parent, parent_receipt = self._parent_for_generative_action(state, parent)
             return self._decision_or_stop(
                 state,
                 action=SearchAction.STRUCTURAL_ESCAPE,
-                candidate=parent,
+                candidate=selected_parent,
                 branch_id=branch.branch_id,
                 operator_id="structural_rewrite_basin_jump_v1",
-                fidelity=parent.fidelity,
+                fidelity=selected_parent.fidelity,
                 reason_codes=("LOCAL_STAGNATION", "SIMILAR_LOCAL_DELTAS", "LINEAGE_EVIDENCE_BOUND"),
                 reusable_component_ids=tuple(sorted(set(state.reusable_component_ids))),
+                parent_selection_receipt=parent_receipt,
             )
         if branch.local_actions_remaining <= 0:
             return self._stop(state, "LOCAL_BUDGET_EXHAUSTED")
         reason = "RECENT_IMPROVEMENT" if self._branch_is_improving(branch) else "LOCAL_SEARCH_NOT_YET_STAGNANT"
+        selected_parent, parent_receipt = self._parent_for_generative_action(state, parent)
         return self._decision_or_stop(
             state,
             action=SearchAction.LOCAL_PATCH,
-            candidate=parent,
+            candidate=selected_parent,
             branch_id=branch.branch_id,
             operator_id="bounded_llm_local_patch_v1",
             fidelity=parent.fidelity,
             reason_codes=(reason,),
+            parent_selection_receipt=parent_receipt,
         )
 
     def replay(self, decision: SearchDecision, state: SearchState) -> tuple[bool, tuple[str, ...]]:
@@ -367,6 +405,7 @@ class DeterministicActionController:
             "generation_reserve",
             "evaluation_reserve",
             "settlement_reserve",
+            "novelty_resample_reserve",
             "reserved_downstream_budget",
             "budget_reserved",
             "preflight_affordable",
@@ -375,6 +414,18 @@ class DeterministicActionController:
         )
         if any(getattr(decision, name) != getattr(reconstructed, name) for name in comparable_fields):
             issues.append("DECISION_REPLAY_MISMATCH")
+        decision_parent_id = (
+            decision.parent_selection_receipt.receipt_id
+            if decision.parent_selection_receipt is not None
+            else None
+        )
+        reconstructed_parent_id = (
+            reconstructed.parent_selection_receipt.receipt_id
+            if reconstructed.parent_selection_receipt is not None
+            else None
+        )
+        if decision_parent_id != reconstructed_parent_id:
+            issues.append("PARENT_SELECTION_RECEIPT_REPLAY_MISMATCH")
         return not issues, tuple(issues)
 
     def _replication_candidate(
@@ -440,6 +491,26 @@ class DeterministicActionController:
     def _branch_is_improving(self, branch: BranchSearchState) -> bool:
         return bool(branch.recent_improvements) and branch.recent_improvements[-1] > self.config.improvement_epsilon
 
+    def _parent_for_generative_action(
+        self,
+        state: SearchState,
+        fallback: CandidateSearchState,
+    ) -> tuple[CandidateSearchState, ParentSelectionReceipt | None]:
+        if self.parent_policy is None:
+            return fallback, None
+        context = state.parent_selection_context
+        if context is None:
+            raise ValueError("enabled parent policy requires a projected parent selection context")
+        receipt = self.parent_policy.select(context)
+        selected_id = receipt.selected_parent_ids[0]
+        selected = next(
+            (item for item in state.candidates if item.candidate_id == selected_id),
+            None,
+        )
+        if selected is None or not selected.feasible:
+            raise ValueError("parent policy selected an ineligible candidate")
+        return selected, receipt
+
     def _decision_or_stop(
         self,
         state: SearchState,
@@ -451,6 +522,7 @@ class DeterministicActionController:
         fidelity: Fidelity | None,
         reason_codes: tuple[str, ...],
         reusable_component_ids: tuple[str, ...] = (),
+        parent_selection_receipt: ParentSelectionReceipt | None = None,
     ) -> SearchDecision:
         cost = self.config.cost_for(action)
         if cost is None:
@@ -470,12 +542,14 @@ class DeterministicActionController:
                 generation_reserve=cost.generation_reserve,
                 evaluation_reserve=cost.evaluation_reserve,
                 settlement_reserve=cost.settlement_reserve,
+                novelty_resample_reserve=cost.novelty_resample_reserve,
                 downstream=downstream,
                 reserved=reserved,
+                parent_selection_receipt=parent_selection_receipt,
             )
         return SearchDecision.create(
             state=state,
-            controller_digest=self.config.digest,
+            controller_digest=self.digest,
             action=action,
             candidate_id=candidate.candidate_id,
             branch_id=branch_id,
@@ -486,9 +560,11 @@ class DeterministicActionController:
             generation_reserve=cost.generation_reserve,
             evaluation_reserve=cost.evaluation_reserve,
             settlement_reserve=cost.settlement_reserve,
+            novelty_resample_reserve=cost.novelty_resample_reserve,
             reserved_downstream_budget=downstream,
             budget_reserved=reserved,
             reusable_component_ids=reusable_component_ids,
+            parent_selection_receipt=parent_selection_receipt,
         )
 
     def _stop(
@@ -501,8 +577,10 @@ class DeterministicActionController:
         generation_reserve: ResourceBudget | None = None,
         evaluation_reserve: ResourceBudget | None = None,
         settlement_reserve: ResourceBudget | None = None,
+        novelty_resample_reserve: ResourceBudget | None = None,
         downstream: ResourceBudget | None = None,
         reserved: ResourceBudget | None = None,
+        parent_selection_receipt: ParentSelectionReceipt | None = None,
     ) -> SearchDecision:
         rejected_reason = (
             (reason, f"ACTION_REJECTED_PREFLIGHT_BUDGET:{rejected_action.value}")
@@ -511,7 +589,7 @@ class DeterministicActionController:
         )
         return SearchDecision.create(
             state=state,
-            controller_digest=self.config.digest,
+            controller_digest=self.digest,
             action=SearchAction.STOP,
             candidate_id=None,
             branch_id=None,
@@ -522,10 +600,12 @@ class DeterministicActionController:
             generation_reserve=generation_reserve,
             evaluation_reserve=evaluation_reserve,
             settlement_reserve=settlement_reserve,
+            novelty_resample_reserve=novelty_resample_reserve,
             reserved_downstream_budget=downstream,
             budget_reserved=reserved,
             preflight_affordable=rejected_action is None,
             rejected_action=rejected_action,
+            parent_selection_receipt=parent_selection_receipt,
         )
 
 

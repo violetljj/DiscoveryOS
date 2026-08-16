@@ -129,6 +129,7 @@ class LocalPatchOperator:
         semantic_delta_memory: tuple[str, ...],
         remaining_budget: ResourceBudget,
         build: CandidateBuildSpec,
+        request_nonce: str | None = None,
     ) -> LocalPatchResult:
         context = self._context(
             parent=parent,
@@ -138,6 +139,7 @@ class LocalPatchOperator:
             semantic_delta_memory=semantic_delta_memory,
             remaining_budget=remaining_budget,
             mechanical_diagnostic=None,
+            request_nonce=request_nonce,
         )
         return self._generate(
             kind=GenerationKind.PROPOSAL,
@@ -192,6 +194,7 @@ class LocalPatchOperator:
         semantic_delta_memory: tuple[str, ...],
         remaining_budget: ResourceBudget,
         mechanical_diagnostic: MechanicalDiagnostic | None,
+        request_nonce: str | None = None,
     ) -> GenerationContext:
         if not mutable_files:
             raise ContractError("local patch context requires mutable file contents")
@@ -226,6 +229,7 @@ class LocalPatchOperator:
             semantic_delta_memory=semantic_delta_memory,
             remaining_budget=remaining_budget,
             mechanical_diagnostic=mechanical_diagnostic,
+            request_nonce=request_nonce,
         )
 
     def _generate(

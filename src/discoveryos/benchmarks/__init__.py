@@ -13,6 +13,7 @@ from .search_value_mvp0 import (
     run_search_value_mvp0,
     seal_search_value_mvp0,
 )
+from .strategy_integration_si1 import run_strategy_integration_si1_pilot
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -29,4 +30,5 @@ __all__ = [
     "STRUCTURAL_PATCH_SCHEMA",
     "run_search_value_mvp0",
     "seal_search_value_mvp0",
+    "run_strategy_integration_si1_pilot",
 ]

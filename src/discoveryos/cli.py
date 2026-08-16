@@ -16,6 +16,7 @@ from discoveryos.benchmarks import (
     seal_local_patch_readmission,
     seal_search_value_mvp0,
     STRUCTURAL_PATCH_SCHEMA,
+    run_strategy_integration_si1_pilot,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
@@ -97,6 +98,15 @@ def build_parser() -> argparse.ArgumentParser:
     mvp0_run.add_argument("--model", required=True)
     mvp0_run.add_argument("--codex-command", default="codex")
     mvp0_run.add_argument("--reasoning-effort", default="medium")
+    si1 = subparsers.add_parser(
+        "strategy-integration-si1",
+        help="run the four-arm consumed-task Shinka parent/novelty development pilot",
+    )
+    si1.add_argument("--workspace", type=Path, default=Path("runs/strategy-integration-si1"))
+    si1.add_argument("--model", required=True)
+    si1.add_argument("--codex-command", default="codex")
+    si1.add_argument("--reasoning-effort", required=True)
+    si1.add_argument("--max-workers", type=int, default=3)
     return parser
 
 
@@ -182,6 +192,26 @@ def main(argv: list[str] | None = None) -> int:
                     structural_provider=structural_provider,
                     progress=lambda message: print(message, file=sys.stderr, flush=True),
                 )
+        elif args.command == "strategy-integration-si1":
+            command = tuple(shlex.split(args.codex_command, posix=False))
+            local_provider = CodexExecProvider(
+                command=command,
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+            )
+            structural_provider = CodexExecProvider(
+                command=command,
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+                output_schema=STRUCTURAL_PATCH_SCHEMA,
+            )
+            result = run_strategy_integration_si1_pilot(
+                args.workspace,
+                local_provider=local_provider,
+                structural_provider=structural_provider,
+                max_workers=args.max_workers,
+                progress=lambda message: print(message, file=sys.stderr, flush=True),
+            )
         else:
             result = demo_status(args.workspace)
     except (RuntimeError, ValueError, PermissionError) as error:

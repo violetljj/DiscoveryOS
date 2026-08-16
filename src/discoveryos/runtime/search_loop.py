@@ -4,6 +4,7 @@ import math
 import statistics
 import subprocess
 import tempfile
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -35,6 +36,19 @@ from discoveryos.operators.action_controller import (
 )
 from discoveryos.operators.asha import ASHAOperator, RungDefinition
 from discoveryos.operators.local_patch import CandidateBuildSpec, LocalPatchOperator
+from discoveryos.operators.novelty import (
+    NoveltyComparison,
+    NoveltyConfig,
+    NoveltyDecision,
+    NoveltyExhaustion,
+    NoveltyReceipt,
+    ShinkaStyleNoveltyPolicy,
+)
+from discoveryos.operators.parent_selection import (
+    ParentCandidate,
+    ParentSelectionConfig,
+    ParentSelectionContext,
+)
 from discoveryos.operators.structural_rewrite import (
     BasinEscapeBrief,
     LineageSnapshot,
@@ -73,6 +87,8 @@ class SearchRunSpec:
     seeds: tuple[int, ...]
     initial_population_candidate_ids: tuple[str, ...] = ()
     reusable_components: tuple[ReusableComponentReference, ...] = ()
+    parent_selection: ParentSelectionConfig | None = None
+    novelty: NoveltyConfig | None = None
     mode: RunMode = RunMode.DISCOVERY
     created_at: str = field(default_factory=utc_now)
 
@@ -142,6 +158,21 @@ class SearchRunSpec:
                 ReusableComponentReference.from_dict(dict(item))
                 for item in payload.get("reusable_components", ())
             ),
+            parent_selection=(
+                ParentSelectionConfig(**dict(payload["parent_selection"]))
+                if payload.get("parent_selection")
+                else None
+            ),
+            novelty=(
+                NoveltyConfig(
+                    **{
+                        **dict(payload["novelty"]),
+                        "exhaustion": NoveltyExhaustion(str(dict(payload["novelty"])["exhaustion"])),
+                    }
+                )
+                if payload.get("novelty")
+                else None
+            ),
             mode=RunMode(str(payload["mode"])),
             created_at=str(payload["created_at"]),
         )
@@ -160,6 +191,8 @@ class SearchActionResult:
     generation_id: str | None
     actual_usage: ResourceUsage
     failure_signature: str | None = None
+    generation_ids: tuple[str, ...] = ()
+    novelty_receipt_ids: tuple[str, ...] = ()
     completed_at: str = field(default_factory=utc_now)
 
     @classmethod
@@ -176,6 +209,8 @@ class SearchActionResult:
             generation_id=str(payload["generation_id"]) if payload.get("generation_id") else None,
             actual_usage=ResourceUsage(**dict(payload["actual_usage"])),
             failure_signature=str(payload["failure_signature"]) if payload.get("failure_signature") else None,
+            generation_ids=tuple(str(item) for item in payload.get("generation_ids", ())),
+            novelty_receipt_ids=tuple(str(item) for item in payload.get("novelty_receipt_ids", ())),
             completed_at=str(payload["completed_at"]),
         )
 
@@ -306,7 +341,130 @@ class LedgerBackedSearchStateProjector:
             reusable_component_ids=tuple(component.component_id for component in self.spec.reusable_components),
             remaining_budget=remaining,
             elapsed_usage=elapsed,
+            parent_selection_context=self._parent_selection_context(
+                facts,
+                tuple(candidate_states),
+                incumbent_id,
+            ),
         )
+
+    def _parent_selection_context(
+        self,
+        facts: _ProjectionFacts,
+        states: tuple[CandidateSearchState, ...],
+        incumbent_id: str,
+    ) -> ParentSelectionContext | None:
+        config = self.spec.parent_selection
+        if config is None:
+            return None
+        exposures: dict[str, int] = {}
+        for payload in self.ledger.parent_selection_receipt_payloads(self.spec.run_id):
+            for candidate_id in payload.get("selected_parent_ids", ()):
+                exposures[str(candidate_id)] = exposures.get(str(candidate_id), 0) + 1
+        state_by_id = {item.candidate_id: item for item in states}
+        improvements: dict[str, list[float]] = {candidate_id: [] for candidate_id in facts.candidates}
+        for result in facts.results:
+            if result.action not in GENERATIVE_ACTIONS or result.result_candidate_id is None:
+                continue
+            before = self._utility(facts.evidence_by_candidate.get(result.source_candidate_id, ()))
+            after = self._utility(facts.evidence_by_candidate.get(result.result_candidate_id, ()))
+            if before is None or after is None:
+                delta = 0.0
+            elif self.spec.metric_direction is MetricDirection.MAXIMIZE:
+                delta = after - before
+            else:
+                delta = before - after
+            improvements.setdefault(result.source_candidate_id, []).append(delta)
+        return ParentSelectionContext(
+            run_id=self.spec.run_id,
+            step=len(facts.results),
+            metric_direction=self.spec.metric_direction,
+            candidates=tuple(
+                ParentCandidate(
+                    candidate_id=candidate_id,
+                    fitness=state_by_id[candidate_id].scheduling_utility,
+                    valid=state_by_id[candidate_id].feasible,
+                    generation=self._candidate_generation(facts, candidate_id),
+                    parent_exposure_count=exposures.get(candidate_id, 0),
+                    improvement_history=tuple(improvements.get(candidate_id, ())),
+                    archive=bool(facts.evidence_by_candidate.get(candidate_id)),
+                    incumbent=candidate_id == incumbent_id,
+                    lineage_root_id=None,
+                )
+                for candidate_id in facts.candidates
+            ),
+            seed=config.base_seed + len(facts.results),
+            policy_version=config.policy_version,
+        )
+
+    @staticmethod
+    def _candidate_generation(facts: _ProjectionFacts, candidate_id: str) -> int:
+        generation = 0
+        current = candidate_id
+        seen: set[str] = set()
+        while current != next(iter(facts.candidates)):
+            if current in seen:
+                raise ValueError("candidate lineage contains a cycle")
+            seen.add(current)
+            parent = next(
+                (item for item in facts.candidates[current].parent_ids if item in facts.candidates),
+                None,
+            )
+            if parent is None:
+                break
+            generation += 1
+            current = parent
+        return generation
+
+    def novelty_comparisons(
+        self,
+        state: SearchState,
+        selected_parent_id: str,
+    ) -> tuple[NoveltyComparison, ...]:
+        facts = self._facts()
+        recent_ids = tuple(
+            result.result_candidate_id
+            for result in facts.results[-5:]
+            if result.result_candidate_id is not None
+        )
+        comparisons: list[NoveltyComparison] = []
+        for candidate_id, candidate in facts.candidates.items():
+            scopes = {"archive"}
+            if candidate_id == selected_parent_id:
+                scopes.add("selected_parent")
+            if candidate_id == state.incumbent_candidate_id:
+                scopes.add("incumbent")
+            if candidate_id in recent_ids:
+                scopes.add("recent")
+            try:
+                code = self._candidate_mutable_code(candidate)
+            except RuntimeError as error:
+                self.ledger.record_event(
+                    "NOVELTY_COMPARISON_SKIPPED_UNMATERIALIZABLE",
+                    {
+                        "run_id": self.spec.run_id,
+                        "step": state.step,
+                        "candidate_id": candidate_id,
+                        "failure_signature": _materialization_failure_signature(
+                            "NOVELTY_COMPARISON_MATERIALIZATION_FAILED",
+                            error,
+                        ),
+                    },
+                )
+                continue
+            comparisons.append(
+                NoveltyComparison(
+                    candidate_id=candidate_id,
+                    scopes=tuple(sorted(scopes)),
+                    code=code,
+                )
+            )
+        return tuple(comparisons)
+
+    def _candidate_mutable_code(self, candidate: CandidateSpec) -> str:
+        bundle = ExecutableCandidateBundle.from_artifact(self.artifacts, candidate.artifact_digest)
+        files = _materialize_files(bundle, self.spec.mutable_file_paths)
+        return "\n".join(f"# FILE:{path}\n{files[path]}" for path in sorted(files))
 
     def evidence_summary(self, candidate_id: str) -> str:
         facts = self._facts()
@@ -391,16 +549,16 @@ class LedgerBackedSearchStateProjector:
         for index, result in enumerate(stored_results):
             if result.run_id != self.spec.run_id or result.step != index:
                 raise ValueError("search action history is not contiguous")
-            if result.source_candidate_id != current:
-                raise ValueError("search action source differs from the single active branch")
+            if result.source_candidate_id not in scoped_ids:
+                raise ValueError("search action source is outside the ledger-backed archive")
             if result.result_candidate_id is not None:
                 candidate = all_candidates.get(result.result_candidate_id)
                 if candidate is None:
                     raise ValueError("search action references an unknown result candidate")
                 if result.action in GENERATIVE_ACTIONS:
-                    if current not in candidate.parent_ids:
-                        raise ValueError("generated candidate is not derived from the active parent")
-                    family = family_by_candidate[current]
+                    if result.source_candidate_id not in candidate.parent_ids:
+                        raise ValueError("generated candidate is not derived from the selected parent")
+                    family = family_by_candidate[result.source_candidate_id]
                     if result.action is SearchAction.STRUCTURAL_ESCAPE:
                         family = str(candidate.parameter_dict().get("target_algorithm_family", "")).strip()
                         if not family:
@@ -516,13 +674,12 @@ class LedgerBackedSearchStateProjector:
 
     def _recent_improvements(self, facts: _ProjectionFacts) -> tuple[float, ...]:
         values: list[float] = []
-        previous_id = self.spec.root_candidate_id
         for result in facts.results:
             if result.action is SearchAction.STRUCTURAL_ESCAPE:
                 values.clear()
             if result.action not in GENERATIVE_ACTIONS or result.result_candidate_id is None:
                 continue
-            before = self._utility(facts.evidence_by_candidate.get(previous_id, ()))
+            before = self._utility(facts.evidence_by_candidate.get(result.source_candidate_id, ()))
             after = self._utility(facts.evidence_by_candidate.get(result.result_candidate_id, ()))
             if before is None or after is None:
                 improvement = 0.0
@@ -531,7 +688,6 @@ class LedgerBackedSearchStateProjector:
             else:
                 improvement = before - after
             values.append(improvement)
-            previous_id = result.result_candidate_id
         return tuple(values)
 
     def _recent_delta_similarity(self, facts: _ProjectionFacts) -> float:
@@ -589,6 +745,7 @@ class UnifiedActionExecutor:
         local_operator: LocalPatchOperator,
         structural_operator: StructuralRewriteOperator,
         experiment_executor: ExperimentExecutor,
+        novelty_policy: ShinkaStyleNoveltyPolicy | None = None,
     ) -> None:
         self.spec = spec
         self.contract = contract
@@ -598,6 +755,24 @@ class UnifiedActionExecutor:
         self.local_operator = local_operator
         self.structural_operator = structural_operator
         self.experiment_executor = experiment_executor
+        self.novelty_policy = novelty_policy
+        if (self.spec.novelty is None) != (self.novelty_policy is None):
+            raise ValueError("search spec and novelty policy enablement must match")
+        if self.novelty_policy is not None:
+            if self.novelty_policy.config != self.spec.novelty:
+                raise ValueError("novelty policy differs from the frozen search spec")
+            for action in GENERATIVE_ACTIONS:
+                cost = self.projector.controller_config.cost_for(action)
+                if cost is None:
+                    raise ValueError(f"missing novelty action cost: {action.value}")
+                required = _scale_budget(
+                    cost.generation_reserve,
+                    self.novelty_policy.config.max_novelty_attempts - 1,
+                )
+                if not _affords_budget(cost.novelty_resample_reserve, required):
+                    raise ValueError(
+                        f"{action.value} novelty retry reserve does not cover the frozen worst case"
+                    )
 
     async def execute(self, decision: SearchDecision, state: SearchState) -> SearchActionResult:
         if decision.action is SearchAction.STOP:
@@ -612,43 +787,175 @@ class UnifiedActionExecutor:
         result_candidate: CandidateSpec | None = source
         evidence: EvidenceRecord | None = None
         generation_id: str | None = None
-        generation_usage = ResourceUsage()
+        generation_usages: list[ResourceUsage] = []
+        novelty_usages: list[ResourceUsage] = []
+        generation_ids: list[str] = []
+        novelty_receipt_ids: list[str] = []
         failure_signature: str | None = None
+        if decision.parent_selection_receipt is not None:
+            receipt = decision.parent_selection_receipt
+            self.ledger.add_parent_selection_receipt(
+                receipt_id=receipt.receipt_id,
+                run_id=receipt.run_id,
+                step=receipt.step,
+                payload=jsonable(receipt),
+            )
         if decision.action in GENERATIVE_ACTIONS:
+            result_candidate = None
             bundle = ExecutableCandidateBundle.from_artifact(self.artifacts, source.artifact_digest)
             build = _build_spec(bundle)
-            mutable_files = _materialize_files(bundle, self.spec.mutable_file_paths)
+            try:
+                mutable_files = _materialize_files(bundle, self.spec.mutable_file_paths)
+            except RuntimeError as error:
+                failure_signature = _materialization_failure_signature(
+                    "SOURCE_CANDIDATE_MATERIALIZATION_FAILED",
+                    error,
+                )
+                result = SearchActionResult(
+                    decision_id=decision.decision_id,
+                    run_id=decision.run_id,
+                    step=decision.step,
+                    state_digest=decision.state_digest,
+                    action=decision.action,
+                    source_candidate_id=source.candidate_id,
+                    result_candidate_id=None,
+                    evidence_receipt_id=None,
+                    generation_id=None,
+                    actual_usage=ResourceUsage(),
+                    failure_signature=failure_signature,
+                )
+                self.ledger.add_search_action(
+                    decision_id=result.decision_id,
+                    run_id=result.run_id,
+                    step=result.step,
+                    payload=jsonable(result),
+                )
+                self.ledger.record_event("SEARCH_ACTION_EXECUTED", jsonable(result))
+                return result
             generation_budget = (
                 decision.generation_reserve
                 if any(decision.generation_reserve.as_dict().values())
                 else decision.resource_floor
             )
-            if decision.action is SearchAction.LOCAL_PATCH:
-                generated = self.local_operator.propose(
-                    parent=source,
-                    mutable_files=mutable_files,
-                    development_evidence_summary=self.projector.evidence_summary(source.candidate_id),
-                    failure_signature=state.branches[0].failure_signatures[-1]
-                    if state.branches[0].failure_signatures
-                    else None,
-                    semantic_delta_memory=self.projector.semantic_memory(),
-                    remaining_budget=generation_budget,
-                    build=build,
+            max_attempts = (
+                self.novelty_policy.config.max_novelty_attempts
+                if self.novelty_policy is not None
+                else 1
+            )
+            comparisons = (
+                self.projector.novelty_comparisons(state, source.candidate_id)
+                if self.novelty_policy is not None
+                else ()
+            )
+            novelty_feedback: list[str] = []
+            for attempt in range(1, max_attempts + 1):
+                memory = (*self.projector.semantic_memory(), *novelty_feedback)
+                if decision.action is SearchAction.LOCAL_PATCH:
+                    generated = self.local_operator.propose(
+                        parent=source,
+                        mutable_files=mutable_files,
+                        development_evidence_summary=self.projector.evidence_summary(source.candidate_id),
+                        failure_signature=state.branches[0].failure_signatures[-1]
+                        if state.branches[0].failure_signatures
+                        else None,
+                        semantic_delta_memory=memory,
+                        remaining_budget=generation_budget,
+                        build=build,
+                        request_nonce=f"{self.spec.run_id}:{state.step}:{attempt}",
+                    )
+                else:
+                    generated = self.structural_operator.propose(
+                        parent=source,
+                        mutable_files=mutable_files,
+                        development_evidence_summary=self.projector.evidence_summary(source.candidate_id),
+                        semantic_delta_memory=memory,
+                        remaining_budget=generation_budget,
+                        build=build,
+                        brief=self.projector.basin_escape_brief(state, decision),
+                        request_nonce=f"{self.spec.run_id}:{state.step}:{attempt}",
+                    )
+                generation_id = generated.record.generation_id
+                generation_ids.append(generation_id)
+                generation_usages.append(generated.record.usage)
+                failure_signature = generated.record.failure_signature
+                proposal = generated.candidate
+                if proposal is None or self.novelty_policy is None:
+                    result_candidate = proposal
+                    break
+                try:
+                    proposal_code = self.projector._candidate_mutable_code(proposal)
+                except RuntimeError as error:
+                    failure_signature = _materialization_failure_signature(
+                        "NOVELTY_PROPOSAL_MATERIALIZATION_FAILED",
+                        error,
+                    )
+                    self.ledger.record_event(
+                        "NOVELTY_PROPOSAL_MATERIALIZATION_FAILED",
+                        {
+                            "run_id": self.spec.run_id,
+                            "step": state.step,
+                            "attempt": attempt,
+                            "generation_id": generation_id,
+                            "proposal_candidate_id": proposal.candidate_id,
+                            "failure_signature": failure_signature,
+                        },
+                    )
+                    break
+                wall_start = time.perf_counter()
+                cpu_start = time.process_time()
+                assessment = self.novelty_policy.assess(
+                    proposal_code,
+                    comparisons,
+                    attempt=attempt,
                 )
-            else:
-                generated = self.structural_operator.propose(
-                    parent=source,
-                    mutable_files=mutable_files,
-                    development_evidence_summary=self.projector.evidence_summary(source.candidate_id),
-                    semantic_delta_memory=self.projector.semantic_memory(),
-                    remaining_budget=generation_budget,
-                    build=build,
-                    brief=self.projector.basin_escape_brief(state, decision),
+                novelty_usage = ResourceUsage(
+                    cpu_seconds=max(0.0, time.process_time() - cpu_start),
+                    wall_seconds=max(0.0, time.perf_counter() - wall_start),
                 )
-            generation_id = generated.record.generation_id
-            generation_usage = generated.record.usage
-            failure_signature = generated.record.failure_signature
-            result_candidate = generated.candidate
+                novelty_usages.append(novelty_usage)
+                novelty_receipt = NoveltyReceipt.create(
+                    run_id=self.spec.run_id,
+                    step=state.step,
+                    attempt=attempt,
+                    max_attempts=max_attempts,
+                    source_candidate_id=source.candidate_id,
+                    proposal_candidate_id=proposal.candidate_id,
+                    proposal_code=proposal_code,
+                    comparisons=comparisons,
+                    assessment=assessment,
+                    policy_version=self.novelty_policy.config.policy_version,
+                    usage=novelty_usage,
+                )
+                self.ledger.add_novelty_receipt(
+                    receipt_id=novelty_receipt.receipt_id,
+                    run_id=self.spec.run_id,
+                    step=state.step,
+                    attempt=attempt,
+                    payload=jsonable(novelty_receipt),
+                )
+                novelty_receipt_ids.append(novelty_receipt.receipt_id)
+                if assessment.decision is NoveltyDecision.ACCEPT:
+                    result_candidate = proposal
+                    break
+                failure_signature = (
+                    "NOVELTY_ATTEMPTS_EXHAUSTED"
+                    if assessment.decision is NoveltyDecision.REJECT_EXHAUSTED
+                    else "NOVELTY_DUPLICATE_REJECTED"
+                )
+                if assessment.decision is NoveltyDecision.REJECT_EXHAUSTED:
+                    break
+                novelty_feedback.append(
+                    f"NOVELTY_REJECTED_ATTEMPT_{attempt}: avoid repeating proposal "
+                    f"{proposal.candidate_id}; reasons={','.join(assessment.reason_codes)}"
+                )
+                comparisons = (
+                    *comparisons,
+                    NoveltyComparison(
+                        candidate_id=proposal.candidate_id,
+                        scopes=("rejected_in_action",),
+                        code=proposal_code,
+                    ),
+                )
         if result_candidate is not None:
             fidelity = decision.fidelity or self.spec.initial_fidelity
             evidence = await self._evaluate(
@@ -658,9 +965,11 @@ class UnifiedActionExecutor:
             )
             failure_signature = evidence.failure_signature or failure_signature
         actual_usage = _sum_usage(
-            item
-            for item in (generation_usage, evidence.resource_usage if evidence is not None else None)
-            if item is not None
+            (
+                *generation_usages,
+                *novelty_usages,
+                *((evidence.resource_usage,) if evidence is not None else ()),
+            )
         )
         result = SearchActionResult(
             decision_id=decision.decision_id,
@@ -674,6 +983,8 @@ class UnifiedActionExecutor:
             generation_id=generation_id,
             actual_usage=actual_usage,
             failure_signature=failure_signature,
+            generation_ids=tuple(generation_ids),
+            novelty_receipt_ids=tuple(novelty_receipt_ids),
         )
         self.ledger.add_search_action(
             decision_id=result.decision_id,
@@ -767,6 +1078,14 @@ class SearchLoopRunner:
                 raise RuntimeError("controller decision failed replay: " + ",".join(issues))
             self.executor.ledger.record_event("ACTION_PLANNED", jsonable(decision))
             if decision.action is SearchAction.STOP:
+                if decision.parent_selection_receipt is not None:
+                    receipt = decision.parent_selection_receipt
+                    self.executor.ledger.add_parent_selection_receipt(
+                        receipt_id=receipt.receipt_id,
+                        run_id=receipt.run_id,
+                        step=receipt.step,
+                        payload=jsonable(receipt),
+                    )
                 if decision.rejected_action is not None:
                     self.executor.ledger.record_event(
                         "ACTION_REJECTED_PREFLIGHT_BUDGET",
@@ -861,6 +1180,26 @@ class SearchLoopRunner:
                         "failure_signature": result.failure_signature,
                     },
                 )
+        for receipt_id in result.novelty_receipt_ids:
+            payload = next(
+                (
+                    item
+                    for item in self.executor.ledger.novelty_receipt_payloads(result.run_id)
+                    if item["receipt_id"] == receipt_id
+                ),
+                None,
+            )
+            if payload is not None:
+                self.executor.ledger.record_event(
+                    "NOVELTY_ASSESSED",
+                    {
+                        "run_id": result.run_id,
+                        "step": result.step,
+                        "receipt_id": receipt_id,
+                        "proposal_candidate_id": payload["proposal_candidate_id"],
+                        "decision": payload["assessment"]["decision"],
+                    },
+                )
         execution_failed = execution_failed or (result.action in GENERATIVE_ACTIONS and not emitted) or (
             result.evidence_receipt_id is None and result.action not in GENERATIVE_ACTIONS
         )
@@ -924,6 +1263,11 @@ def _materialize_files(bundle: ExecutableCandidateBundle, paths: tuple[str, ...]
                 stderr=subprocess.DEVNULL,
                 check=False,
             )
+
+
+def _materialization_failure_signature(prefix: str, error: RuntimeError) -> str:
+    detail = " ".join(str(error).split())
+    return f"{prefix}:{detail[:240]}"
 
 
 def _git(repository: Path, *arguments: str) -> str:
@@ -990,4 +1334,23 @@ def _consume(budget: ResourceBudget, usage: ResourceUsage) -> ResourceBudget:
         gpu_seconds=available["gpu_seconds"] - consumed["gpu_seconds"],
         device_seconds=available["device_seconds"] - consumed["device_seconds"],
         wall_seconds=available["wall_seconds"] - consumed["wall_seconds"],
+    )
+
+
+def _scale_budget(budget: ResourceBudget, multiplier: int) -> ResourceBudget:
+    if multiplier < 0:
+        raise ValueError("budget multiplier cannot be negative")
+    return ResourceBudget(
+        tokens=budget.tokens * multiplier,
+        cpu_seconds=budget.cpu_seconds * multiplier,
+        gpu_seconds=budget.gpu_seconds * multiplier,
+        device_seconds=budget.device_seconds * multiplier,
+        wall_seconds=budget.wall_seconds * multiplier,
+    )
+
+
+def _affords_budget(available: ResourceBudget, requested: ResourceBudget) -> bool:
+    return all(
+        requested.as_dict()[name] <= value
+        for name, value in available.as_dict().items()
     )

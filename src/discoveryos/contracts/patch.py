@@ -118,6 +118,7 @@ class GenerationContext:
     semantic_delta_memory: tuple[str, ...]
     remaining_budget: ResourceBudget
     mechanical_diagnostic: MechanicalDiagnostic | None = None
+    request_nonce: str | None = None
 
     @property
     def digest(self) -> str:

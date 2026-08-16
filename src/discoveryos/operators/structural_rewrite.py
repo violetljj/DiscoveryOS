@@ -247,6 +247,7 @@ class StructuralRewriteOperator(LocalPatchOperator):
         remaining_budget: ResourceBudget,
         build: CandidateBuildSpec,
         brief: BasinEscapeBrief,
+        request_nonce: str | None = None,
     ) -> LocalPatchResult:
         self._validate_brief(parent, build, brief)
         if not development_evidence_summary.strip():
@@ -260,6 +261,7 @@ class StructuralRewriteOperator(LocalPatchOperator):
             semantic_delta_memory=(*semantic_delta_memory, structural_context),
             remaining_budget=remaining_budget,
             mechanical_diagnostic=None,
+            request_nonce=request_nonce,
         )
         result = self._generate(
             kind=GenerationKind.PROPOSAL,

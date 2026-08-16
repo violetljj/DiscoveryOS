@@ -119,6 +119,18 @@ class EvidenceLedger:
                     FOREIGN KEY(run_id) REFERENCES search_runs(run_id),
                     UNIQUE(run_id, step)
                 );
+                CREATE TABLE IF NOT EXISTS parent_selection_receipts(
+                    receipt_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, step INTEGER NOT NULL,
+                    payload TEXT NOT NULL, created_at TEXT NOT NULL,
+                    FOREIGN KEY(run_id) REFERENCES search_runs(run_id),
+                    UNIQUE(run_id, step)
+                );
+                CREATE TABLE IF NOT EXISTS novelty_receipts(
+                    receipt_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, step INTEGER NOT NULL,
+                    attempt INTEGER NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL,
+                    FOREIGN KEY(run_id) REFERENCES search_runs(run_id),
+                    UNIQUE(run_id, step, attempt)
+                );
                 CREATE TABLE IF NOT EXISTS events(
                     sequence INTEGER PRIMARY KEY AUTOINCREMENT, event_type TEXT NOT NULL, payload TEXT NOT NULL,
                     created_at TEXT NOT NULL
@@ -563,6 +575,59 @@ class EvidenceLedger:
             ).fetchall()
         return [json.loads(row["payload"]) for row in rows]
 
+    def add_parent_selection_receipt(
+        self,
+        *,
+        receipt_id: str,
+        run_id: str,
+        step: int,
+        payload: Any,
+    ) -> bool:
+        return self._insert_once(
+            "parent_selection_receipts",
+            "receipt_id",
+            receipt_id,
+            {"run_id": run_id, "step": step, "payload": payload, "created_at": utc_now()},
+        )
+
+    def parent_selection_receipt_payloads(self, run_id: str) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT payload FROM parent_selection_receipts WHERE run_id=? ORDER BY step,receipt_id",
+                (run_id,),
+            ).fetchall()
+        return [json.loads(row["payload"]) for row in rows]
+
+    def add_novelty_receipt(
+        self,
+        *,
+        receipt_id: str,
+        run_id: str,
+        step: int,
+        attempt: int,
+        payload: Any,
+    ) -> bool:
+        return self._insert_once(
+            "novelty_receipts",
+            "receipt_id",
+            receipt_id,
+            {
+                "run_id": run_id,
+                "step": step,
+                "attempt": attempt,
+                "payload": payload,
+                "created_at": utc_now(),
+            },
+        )
+
+    def novelty_receipt_payloads(self, run_id: str) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT payload FROM novelty_receipts WHERE run_id=? ORDER BY step,attempt,receipt_id",
+                (run_id,),
+            ).fetchall()
+        return [json.loads(row["payload"]) for row in rows]
+
     def record_event(self, event_type: str, payload: Any) -> None:
         with self.connect() as connection:
             connection.execute("INSERT INTO events(event_type,payload,created_at) VALUES (?,?,?)", (event_type, canonical_json(payload), utc_now()))
@@ -581,6 +646,8 @@ class EvidenceLedger:
             "generation_records",
             "search_runs",
             "search_actions",
+            "parent_selection_receipts",
+            "novelty_receipts",
         )
         with self.connect() as connection:
             return {table: int(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]) for table in tables}

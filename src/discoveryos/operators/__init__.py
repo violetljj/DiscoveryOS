@@ -20,6 +20,20 @@ from .structural_rewrite import (
     StructuralRewriteOperator,
     StructuralRewriteProposal,
 )
+from .parent_selection import (
+    ParentCandidate,
+    ParentSelectionConfig,
+    ParentSelectionContext,
+    ParentSelectionReceipt,
+    ShinkaWeightedParentSelectionPolicy,
+)
+from .novelty import (
+    NoveltyAssessment,
+    NoveltyConfig,
+    NoveltyDecision,
+    NoveltyReceipt,
+    ShinkaStyleNoveltyPolicy,
+)
 
 __all__ = [
     "ActionControllerConfig",
@@ -46,4 +60,14 @@ __all__ = [
     "SearchState",
     "StructuralRewriteOperator",
     "StructuralRewriteProposal",
+    "ParentCandidate",
+    "ParentSelectionConfig",
+    "ParentSelectionContext",
+    "ParentSelectionReceipt",
+    "ShinkaWeightedParentSelectionPolicy",
+    "NoveltyAssessment",
+    "NoveltyConfig",
+    "NoveltyDecision",
+    "NoveltyReceipt",
+    "ShinkaStyleNoveltyPolicy",
 ]
