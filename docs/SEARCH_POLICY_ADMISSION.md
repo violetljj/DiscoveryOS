@@ -10,6 +10,8 @@ SEARCH_POLICY_PROTOCOL_ONLY
 
 它只是统一搜索内核里的局部 mechanism admission，不是完整的 DiscoveryOS search-kernel admission。它不授权任何 operator 进入 DiscoveryOS 搜索内核，也不授权 final-blind、产品、安全或一般性 superiority 声明。
 
+它在路线图中只承担 Search-Value MVP 的最小 benchmark guard：防止先看 One-shot/challenger 结果再换题，并冻结 matched-resource 比较面。它不是需要先于 operator implementation 完成的独立治理阶段。
+
 ## 与总体架构的关系
 
 DiscoveryOS 不把 AdaEvolve、ShinkaEvolve、EvoX、MLEvolve 等完整系统作为本协议的 arms。Discovery Mode 只使用它们被拆解、重构后的机制原语，并让这些原语共享统一 Research Graph、Evidence Model、Candidate Store、Budget/Fidelity Controller、Memory 和 Async Runtime。官方原版系统只在 Benchmark Mode 作为隔离 external challengers。

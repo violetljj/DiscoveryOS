@@ -59,7 +59,7 @@ src/discoveryos/
 ├── contracts/     # frozen schemas, codecs, protocol admission
 ├── graph/         # hypothesis/component/strategy/claim nodes
 ├── evaluation/    # evaluator registry, hard gates, Pareto, replay
-├── operators/     # bounded random-search operator; future portfolio hook
+├── operators/     # Random, ASHA, Local Patch, Structural Rewrite mechanisms
 ├── memory/        # semantic delta and progressive context
 ├── runtime/       # artifacts, SQLite ledger, split vault, async scheduler
 └── domains/       # executable domain packs
@@ -85,13 +85,12 @@ ResourceReservation
 
 ## 下一批实现顺序
 
-1. **BR-A 封口**：fresh reliability gate 已通过，但 One-shot 与 Iterative 在 8 个 task 上全部打平，verdict 保持 `LLM_LOCAL_PATCH_NOT_ADMITTED`。不再修 parser，不在 consumed corpus 上 replay 寻求翻案。
-2. **局部 residual-headroom mechanism admission**：使用 [R1.0-SP-A 协议](SEARCH_POLICY_ADMISSION.md)，在任何候选模型调用前用 policy-independent evidence 冻结真实 headroom task；以相同模型、总预算、evaluator 和初始状态比较 One-shot / Iterative Local / Lineage-preserving / Structural-escape。它只检验 Local Patch 邻域内的机制增量，不代表统一内核 admission。
-3. **统一 action/state 基础**：完善 Research Graph、component-effect ledger、Branch/Population Manager、统一 action acquisition、跨分支引用和 semantic-delta memory，使 parent/operator/budget policy 真正共享同一状态空间。
-4. **内部机制逐项 admission**：依次验证 novelty/parent selection、branch budget、safe racing、multi-fidelity、crossover/rollback、structural rewrite 与受限 Meta-Strategy；每项都使用独立 benchmark，不把 smoke 或单 seed 当算法证据。
-5. **Benchmark Mode external challengers**：实现隔离 adapters，冻结官方系统版本、任务、预算、evaluator contract 与收据归一化；对照不回写 Discovery Mode 状态。
-6. **R0.2 生产隔离**：final-blind 独立服务身份、一次性认证票据、shadow 聚合反馈与查询预算。
-7. **领域和计算**：BlindAssist domain pack、远端 GPU/device worker、checkpoint/cache、部署 parity。
-8. **学习型 Advisor**：只使用通过复验和消融晋升的轨迹训练 promotion/operator policy。
+1. **统一接口与 BR-A 封口**：candidate/evidence/artifact/budget/fidelity 接口已形成垂直切片；BR-A 保持 `LLM_LOCAL_PATCH_NOT_ADMITTED`，不再修 parser 或在 consumed corpus 上寻求翻案。
+2. **Search-Value MVP**：把已有 Local Patch、ASHA budget mechanism 与 Structural Rewrite / Basin-Jump mechanics 接入同一 action/state loop；补齐最小 Branch/Population Manager、component transfer 和 anytime trace。R1.0-SP-A 只作为 pre-model task-selection guard，不是独立产品阶段。
+3. **远端并行计算**：在 MVP action/evidence contract 稳定后实现多进程与远端 CPU/GPU/device worker、heartbeat、retry、checkpoint/cache 和真实 resource measurement，避免先为错误 action model 建集群。
+4. **严格 matched-resource benchmark**：在多个预冻结 headroom task family 上，以 matched model/token/wall/compute/evaluator 比较 Random、Vanilla LLM、DiscoveryOS unified kernel，并通过隔离 adapters 加入 Official Ada/Shinka/EvoX challengers；外部状态不得回写 Discovery Mode。
+5. **Search value 成立后补生产隔离**：只有稳定优势成立后，才把 final-blind 独立服务身份、一次性票据、shadow 查询预算和 hostile-worker isolation 提升为最高优先级。
+6. **后续内部机制**：逐项 admission novelty/parent selection、branch credit、crossover/rollback、BOHB/qNEHVI 和更强 multi-fidelity；不把 mechanics smoke、单 seed 或 development improvement 当算法证据。
+7. **Meta-Strategy / Advisor**：只在基础 search value 成立后实现受限 Meta-Strategy evolution，并只用通过复验和消融晋升的轨迹训练 Advisor。
 
 每阶段都必须用独立 benchmark 证明增量价值；mechanics smoke、单 seed 或 development improvement 都不允许升级成算法优越性、安全性或产品结论。

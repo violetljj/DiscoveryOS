@@ -110,12 +110,14 @@ class LocalPatchOperator:
         ledger: EvidenceLedger,
         contract: ProblemContract,
         strategy_id: str = "iterative_local_patch",
+        prompt_template: str = LOCAL_PATCH_PROMPT_TEMPLATE,
     ) -> None:
         self.provider = provider
         self.artifacts = artifacts
         self.ledger = ledger
         self.contract = contract
         self.strategy_id = strategy_id
+        self.prompt_template = prompt_template
 
     def propose(
         self,
@@ -236,7 +238,7 @@ class LocalPatchOperator:
         remaining_budget: ResourceBudget,
         build: CandidateBuildSpec,
     ) -> LocalPatchResult:
-        prompt = LOCAL_PATCH_PROMPT_TEMPLATE.format(
+        prompt = self.prompt_template.format(
             generation_kind=kind.value,
             context_json=canonical_json(context),
         )
@@ -250,7 +252,7 @@ class LocalPatchOperator:
                 "settings_digest",
                 digest_json({"provider": self.provider.provider_name, "model": self.provider.model}),
             ),
-            prompt_template_digest=digest_bytes(LOCAL_PATCH_PROMPT_TEMPLATE.encode("utf-8")),
+            prompt_template_digest=digest_bytes(self.prompt_template.encode("utf-8")),
             context_digest=context.digest,
             prompt=prompt,
             token_ceiling=remaining_budget.tokens,
@@ -367,7 +369,7 @@ class LocalPatchOperator:
             payload = json.loads(generated.raw_response)
             if not isinstance(payload, dict):
                 raise ContractError("patch proposal response must be an object")
-            proposal = PatchProposal.from_dict(payload)
+            proposal = self._parse_proposal(payload, context)
             self._validate_proposal(proposal, context)
         except (json.JSONDecodeError, TypeError, ValueError, ContractError) as error:
             record = self._record_failure(
@@ -402,16 +404,11 @@ class LocalPatchOperator:
         candidate_artifact_digest = bundle.store(self.artifacts)
         candidate = CandidateSpec.create(
             artifact_digest=candidate_artifact_digest,
-            parent_ids=(parent.candidate_id,),
+            parent_ids=self._candidate_parent_ids(parent, proposal, context),
             operator_id=self.operator_id,
             strategy_id="mechanical_repair" if kind is GenerationKind.MECHANICAL_REPAIR else self.strategy_id,
             hypothesis_id=f"hyp_{digest_json(proposal.hypothesis)[:20]}",
-            parameters={
-                "generation_id": request.generation_id,
-                "generation_provenance_digest": provenance_digest,
-                "estimated_cost": jsonable(proposal.estimated_cost),
-                "risks": proposal.risks,
-            },
+            parameters=self._candidate_parameters(proposal, context, request, provenance_digest),
             semantic_delta=proposal.hypothesis,
             expected_effects=proposal.expected_effect_dict(),
             environment_digest=build.environment_lock.sha256,
@@ -436,6 +433,34 @@ class LocalPatchOperator:
         self.ledger.add_generation(record)
         self.ledger.record_event("LLM_GENERATION_RECORDED", jsonable(record))
         return LocalPatchResult(record, proposal, candidate)
+
+    def _parse_proposal(self, payload: dict[str, object], context: GenerationContext) -> PatchProposal:
+        del context
+        return PatchProposal.from_dict(payload)
+
+    def _candidate_parent_ids(
+        self,
+        parent: CandidateSpec,
+        proposal: PatchProposal,
+        context: GenerationContext,
+    ) -> tuple[str, ...]:
+        del proposal, context
+        return (parent.candidate_id,)
+
+    def _candidate_parameters(
+        self,
+        proposal: PatchProposal,
+        context: GenerationContext,
+        request: GenerationRequest,
+        provenance_digest: str,
+    ) -> dict[str, object]:
+        del context
+        return {
+            "generation_id": request.generation_id,
+            "generation_provenance_digest": provenance_digest,
+            "estimated_cost": jsonable(proposal.estimated_cost),
+            "risks": proposal.risks,
+        }
 
     def _validate_proposal(self, proposal: PatchProposal, context: GenerationContext) -> None:
         visible = {path for path, _ in context.mutable_files}

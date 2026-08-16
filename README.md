@@ -16,6 +16,7 @@ DiscoveryOS 是一个“证据优先”的统一算法研究内核。它把其�
 - fidelity 到 evaluator id/digest 的冻结绑定，不再默认使用列表中的第一个 evaluator。
 - `ExecutableCandidateBundle`：冻结 base repository/commit、`patch.diff`、路径策略、entrypoint、环境锁和 build/test/evaluation 命令。
 - bounded `PatchProposal`、不可变 generation request/response/provenance、Codex subscription provider 和每个 generation 最多一次的 mechanical repair。
+- bounded `StructuralRewriteOperator`：从已评估的非空 lineage 触发 family shift，绑定冻结 family label 与 evidence receipts，保留 parent patch stack，并把跨 lineage component reuse 写回统一 Research Graph。
 - 临时 Git worktree runner：patch 校验、mutable/forbidden/touched path 检查、硬超时进程树终止、日志与 run receipt 固化。
 - 独立 `ASHAOperator`：异步 rung observation、冻结 promotion cap、Gate-feasible 排名、每 rung 最多一次机械 retry，以及 promotion/retry 决策重放。
 - deterministic ASHA admission：18→6→2 三 rung、`eta=3`、每 arm 实际 CPU 54 的多 seed `Random vs ASHA` 对照。
@@ -83,7 +84,7 @@ flowchart LR
 
 ## 当前边界
 
-这是可信研究内核，不是整份远景设计已经全部完成。bounded LLM Local Patch 已实现但尚未通过算法准入；尚未实现或未获授权的主要能力包括 BOHB/qNEHVI、Structural Rewrite、Portfolio、跨分支组件迁移、G3–G6 的正式策略、shadow 查询预算、容器/独立 OS 账号级的 hostile-worker 隔离、远端 GPU/device worker、Meta-Strategy Evolver、外部 challenger adapter 和学习型 Advisor。
+这是可信研究内核，不是整份远景设计已经全部完成。bounded LLM Local Patch 已实现但尚未通过算法准入；Structural Rewrite / Basin-Jump 已有共享 CandidateBundle/ledger/runner 的 mechanics vertical slice，但尚无 fresh-task search-value evidence。尚未实现或未获授权的主要能力包括统一 action acquisition、BOHB/qNEHVI、Portfolio、component-effect credit、G3–G6 的正式策略、远端 GPU/device worker、外部 challenger adapter、生产级 blind isolation、Meta-Strategy Evolver 和学习型 Advisor。
 
 当前 `SplitVault` 是 fail-closed 的应用能力边界，能阻止正常 worker 通过系统 API 读取 blind；`IsolatedRepositoryRunner` 提供临时 worktree 和独立子进程，但它同样不是 hostile-code 安全沙箱。真实数据认证必须把 final-blind vault 部署为独立服务或独立系统身份，只向认证 worker 返回受控结果。
 
@@ -104,4 +105,4 @@ Executable evaluation 命令必须把单个 JSON object 写到 stdout 的最后�
 
 runner 通过 `DISCOVERYOS_DATA_PATH`、`DISCOVERYOS_FIDELITY`、`DISCOVERYOS_SEED`、`DISCOVERYOS_TRIAL_ID` 和 `DISCOVERYOS_RUNG_ID` 提供冻结执行上下文。命令以 argv vector 直接启动，不经过 shell。
 
-R1.0-A synthetic admission 的冻结协议、结果与限制见 [ASHA admission 记录](docs/ASHA_ADMISSION.md)。R1.0-B 已实现 bounded LLM Local Patch、一次 mechanical repair、generation provenance/token accounting 与 matched-token real-code benchmark；详见 [Local Patch admission 记录](docs/LLM_LOCAL_PATCH_ADMISSION.md)。[R1.0-BR-A fresh readmission](docs/LLM_LOCAL_PATCH_RELIABILITY.md) 已在 8 个冻结 task 上完成：reliability PASS，但 One-shot 与 Iterative 均为 8/8、paired 0 胜 8 平 0 负，search-value FAIL，因此正式 verdict 继续是 `LLM_LOCAL_PATCH_NOT_ADMITTED`。下一项局部证据工作是 [R1.0-SP-A residual-headroom mechanism admission](docs/SEARCH_POLICY_ADMISSION.md)：必须在任何候选模型调用前独立冻结有真实 headroom 的任务，再以相同模型、总预算、evaluator 和初始状态比较内部 policy mechanism；它目前仍是 `SEARCH_POLICY_PROTOCOL_ONLY`，不能代表 DiscoveryOS 统一搜索内核已获 admission。总体架构、内部机制与 external challenger 的边界见 [架构与路线图](docs/ARCHITECTURE.md)。
+R1.0-A synthetic admission 的冻结协议、结果与限制见 [ASHA admission 记录](docs/ASHA_ADMISSION.md)。R1.0-B 已实现 bounded LLM Local Patch、一次 mechanical repair、generation provenance/token accounting 与 matched-token real-code benchmark；详见 [Local Patch admission 记录](docs/LLM_LOCAL_PATCH_ADMISSION.md)。[R1.0-BR-A fresh readmission](docs/LLM_LOCAL_PATCH_RELIABILITY.md) 已在 8 个冻结 task 上完成：reliability PASS，但 One-shot 与 Iterative 均为 8/8、paired 0 胜 8 平 0 负，search-value FAIL，因此正式 verdict 继续是 `LLM_LOCAL_PATCH_NOT_ADMITTED`。当前实现优先级是把 Local Patch、Structural Rewrite / Basin-Jump 与已实现的 ASHA budget mechanism 接成第一个 Search-Value MVP，再做远端并行和严格 matched-resource benchmark。[R1.0-SP-A](docs/SEARCH_POLICY_ADMISSION.md) 只保留为防止任务筛选污染的最小 benchmark guard，不再作为独立产品阶段；它目前仍是 `SEARCH_POLICY_PROTOCOL_ONLY`。总体架构、内部机制与 external challenger 的边界见 [架构与路线图](docs/ARCHITECTURE.md)。
