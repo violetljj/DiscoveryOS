@@ -5,7 +5,8 @@
 1. `docs/PROJECT_CONTEXT.md`：项目目标、核心术语、架构和证据模型。
 2. `docs/CURRENT_STATE.md`：已交付能力、当前 verdict、在研工作和下一道门。
 3. `docs/DECISIONS.md`：已经确定、不得在无新证据时悄悄推翻的设计决策。
-4. 与任务直接相关的 admission、protocol 或 evidence 文档；不要无差别加载所有历史材料。
+4. `docs/LOCAL_ENVIRONMENT.md`：本机常用解释器、工具、硬件和可调用 Codex CLI 的已验证位置。
+5. 与任务直接相关的 admission、protocol 或 evidence 文档；不要无差别加载所有历史材料。
 
 如果代码、当前状态和旧文档冲突，先核查 Git 历史、测试及不可变收据，再修正文档；不得选择对预期结论最有利的一份材料。
 
@@ -29,6 +30,7 @@ DiscoveryOS 是证据优先的统一算法研究内核。它把外部算法发�
 ## 本地执行与性能
 
 - 默认在当前本机完成开发、测试、benchmark 和正式研究运行。除非用户明确授权，或冻结协议本身要求特定外部设备/环境，不使用云端、远端 worker 或外部计算服务。
+- 调用本机工具前先查 `docs/LOCAL_ENVIRONMENT.md`，并执行其中的轻量版本检查。路径清单是已验证快照，不替代运行时验证；尤其不要裸用解析到 WindowsApps 的 `codex`。
 - 长时间或高资源任务启动前，先只读探测可用逻辑 CPU、内存、GPU/显存、磁盘空间和当前负载，再选择并发度、batch size、worker pool 和输出位置；不要硬编码某台机器的瞬时配置。
 - 尽量利用本机性能：CPU-bound 独立单元优先采用有界多进程，I/O-bound 工作优先异步/流水化，GPU 工作在协议允许且数值语义不变时采用合适的 batch、预取和混合精度。独立 task/seed/arm 可并行，同一 Git worktree 的写操作和共享 create-once root 不并发。
 - 并发度以实测吞吐、内存/显存余量和系统可交互性为准，逐级提高并保留安全余量；避免无界并行、内存换页、GPU OOM、磁盘打满或让机器长期失去响应。失败后不得用盲目提高并发重复冲击资源。

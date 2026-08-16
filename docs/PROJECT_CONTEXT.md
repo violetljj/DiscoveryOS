@@ -106,6 +106,7 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 
 - 当前结论和下一步：`CURRENT_STATE.md`
 - 已确定的设计原因：`DECISIONS.md`
+- 本机依赖和工具位置：`LOCAL_ENVIRONMENT.md`
 - 总体架构路线：`ARCHITECTURE.md`
 - ASHA mechanics admission：`ASHA_ADMISSION.md`
 - Local Patch verdict：`LLM_LOCAL_PATCH_ADMISSION.md`、`LLM_LOCAL_PATCH_RELIABILITY.md`
