@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from discoveryos.benchmarks import (
+    audit_si2_secondary_usage,
     audit_local_patch_invalids,
     replay_local_patch_mechanics,
     run_search_value_mvp0,
@@ -131,6 +132,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path("runs/si2-external-preflight/headless/node_modules/@roberttlange/headless/dist/cli.js"),
     )
     si2_seal.add_argument("--node-executable", type=Path, default=Path("E:/codex-tools/tools/nodejs/node.exe"))
+    si2_audit = subparsers.add_parser(
+        "si2-audit-usage",
+        help="append a bound correction for SI-2 secondary usage totals without changing scientific results",
+    )
+    si2_audit.add_argument("--workspace", type=Path, default=Path("runs/si2-fresh-search-value-r1"))
+    si2_audit.add_argument("--manifest-digest", required=True)
     for name, help_text in (
         ("si2-run-discovery", "execute the already-sealed SI-2 fresh discovery cohort"),
         ("si2-confirm", "run the frozen SI-2 winner on the withheld confirmation cohort"),
@@ -247,6 +254,8 @@ def main(argv: list[str] | None = None) -> int:
                 repair_mode=args.repair,
                 progress=lambda message: print(message, file=sys.stderr, flush=True),
             )
+        elif args.command == "si2-audit-usage":
+            result = audit_si2_secondary_usage(args.workspace, manifest_digest=args.manifest_digest)
         elif args.command in {"si2-seal", "si2-run-discovery", "si2-confirm"}:
             command = tuple(shlex.split(args.codex_command, posix=False))
             local_provider = CodexExecProvider(

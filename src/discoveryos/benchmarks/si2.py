@@ -84,6 +84,7 @@ MANIFEST_RECORD = "si2-sealed-pre-model-manifest.json"
 DISCOVERY_REPORT_RECORD = "si2-discovery-report.json"
 WINNER_RECORD = "si2-frozen-system-winner.json"
 CONFIRMATION_REPORT_RECORD = "si2-confirmation-report.json"
+USAGE_CORRECTION_RECORD = "si2-secondary-usage-correction.json"
 ARM_NAMES = ("CORE", "CURRENT_DISCOVERYOS", "VANILLA_STRONG_AGENT", "EXTERNAL_STRONG_BASELINE")
 TOKEN_CEILING = 100_000
 WALL_CEILING = 1_800.0
@@ -429,6 +430,74 @@ def run_si2_confirmation(
     }
     ArtifactStore(workspace / "result-artifacts").write_record(CONFIRMATION_REPORT_RECORD, report)
     return report
+
+
+def audit_si2_secondary_usage(workspace: Path, *, manifest_digest: str) -> dict[str, Any]:
+    workspace = workspace.resolve()
+    manifest_path = workspace / "protocol-artifacts" / "records" / MANIFEST_RECORD
+    report_path = workspace / "result-artifacts" / "records" / DISCOVERY_REPORT_RECORD
+    if not manifest_path.is_file() or not report_path.is_file():
+        raise RuntimeError("SI-2 usage audit requires sealed manifest and discovery report")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    if manifest.get("manifest_digest") != manifest_digest or report.get("manifest_digest") != manifest_digest:
+        raise RuntimeError("SI-2 usage audit manifest binding mismatch")
+
+    summaries: dict[str, dict[str, Any]] = {}
+    source_records: list[dict[str, Any]] = []
+    records_root = workspace / "result-artifacts" / "records"
+    for arm in ARM_NAMES:
+        total = 0.0
+        accounted = 0
+        unavailable = 0
+        for task in manifest["cohorts"]["discovery"]:
+            task_id = task["task_id"]
+            path = records_root / "tasks" / task_id / f"{arm}.json"
+            if not path.is_file():
+                raise RuntimeError(f"SI-2 usage audit source record missing: {task_id}:{arm}")
+            raw = path.read_bytes()
+            result = json.loads(raw.decode("utf-8"))
+            if result.get("task_id") != task_id or result.get("arm") != arm:
+                raise RuntimeError(f"SI-2 usage audit source binding mismatch: {task_id}:{arm}")
+            value = result.get("actual_usage", {}).get("tokens")
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                unavailable += 1
+            else:
+                total += float(value)
+                accounted += 1
+            source_records.append(
+                {
+                    "task_id": task_id,
+                    "arm": arm,
+                    "record_sha256": digest_bytes(raw),
+                    "tokens": value,
+                }
+            )
+        summaries[arm] = {
+            "task_records": len(manifest["cohorts"]["discovery"]),
+            "usage_accounting_complete_tasks": accounted,
+            "usage_accounting_unavailable_tasks": unavailable,
+            "total_tokens": int(total) if total.is_integer() else total,
+        }
+
+    payload = {
+        "protocol_id": PROTOCOL_ID,
+        "manifest_digest": manifest_digest,
+        "status": "SI2_POST_RUN_SECONDARY_USAGE_CORRECTION",
+        "correction_scope": "arm-level total_tokens and usage_accounting_complete_tasks only",
+        "cause": "original aggregate accepted int tokens only while internal ResourceUsage serialized integral values as floats",
+        "original_discovery_report_sha256": digest_bytes(report_path.read_bytes()),
+        "original_discovery_report_digest": digest_json(report),
+        "search_value_verdict_unchanged": report["search_value_verdict"],
+        "external_competitiveness_verdict_unchanged": report["external_competitiveness_verdict"],
+        "winner_unchanged": report["winner"]["arm"],
+        "primary_metrics_recomputed": False,
+        "arm_usage_summaries": summaries,
+        "source_records": source_records,
+    }
+    correction = {**payload, "correction_digest": digest_json(payload)}
+    path = ArtifactStore(workspace / "result-artifacts").write_record(USAGE_CORRECTION_RECORD, correction)
+    return {**correction, "correction_path": str(path)}
 
 
 def _materialize_task_cohort(
@@ -1077,13 +1146,15 @@ def _aggregate_discovery(
             "total_tokens": sum(
                 value
                 for task in tasks
-                if isinstance(
-                    value := results[(task["task_id"], arm)]["actual_usage"]["tokens"],
-                    int,
+                if not isinstance(value := results[(task["task_id"], arm)]["actual_usage"]["tokens"], bool)
+                and isinstance(
+                    value,
+                    (int, float),
                 )
             ),
             "usage_accounting_complete_tasks": sum(
-                isinstance(results[(task["task_id"], arm)]["actual_usage"]["tokens"], int)
+                not isinstance(results[(task["task_id"], arm)]["actual_usage"]["tokens"], bool)
+                and isinstance(results[(task["task_id"], arm)]["actual_usage"]["tokens"], (int, float))
                 for task in tasks
             ),
             "total_evaluator_calls": sum(results[(task["task_id"], arm)].get("evaluator_calls", 0) for task in tasks),

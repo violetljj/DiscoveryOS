@@ -12,12 +12,14 @@ from pathlib import Path
 from discoveryos.benchmarks.search_policy_admission import evaluate_task_admission
 from discoveryos.benchmarks.search_value_mvp0 import _score_source
 from discoveryos.benchmarks.si2 import (
+    ARM_NAMES,
     _contamination_receipt,
     _holm_two,
     _one_sided_sign_p,
     _si2_headroom_evidence,
     _run_discoveryos_system_arm,
     _run_vanilla_strong_agent,
+    audit_si2_secondary_usage,
 )
 from discoveryos.benchmarks.local_patch_admission import _initialize_arm
 from discoveryos.benchmarks.si2_shinka_adapter import shinka_evaluator_source
@@ -26,6 +28,7 @@ from discoveryos.benchmarks.si2_tasks import (
     si2_confirmation_tasks,
     si2_discovery_tasks,
 )
+from discoveryos.runtime.artifacts import ArtifactStore
 from tests.test_strategy_integration_si1 import _CommentProvider
 
 
@@ -85,6 +88,38 @@ class Si2ProtocolTests(unittest.TestCase):
         self.assertEqual(1.0, _one_sided_sign_p(0, 0))
         self.assertEqual({"core": True, "vanilla": True}, _holm_two({"core": 0.02, "vanilla": 0.08}, 0.10))
         self.assertEqual({"core": False, "vanilla": False}, _holm_two({"core": 0.06, "vanilla": 0.07}, 0.10))
+
+    def test_secondary_usage_audit_corrects_float_totals_without_recomputing_primary(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            manifest_digest = "sealed-manifest"
+            ArtifactStore(workspace / "protocol-artifacts").write_record(
+                "si2-sealed-pre-model-manifest.json",
+                {"manifest_digest": manifest_digest, "cohorts": {"discovery": [{"task_id": "fresh-task"}]}},
+            )
+            ArtifactStore(workspace / "result-artifacts").write_record(
+                "si2-discovery-report.json",
+                {
+                    "manifest_digest": manifest_digest,
+                    "search_value_verdict": "SI2_SEARCH_VALUE_NOT_ESTABLISHED",
+                    "external_competitiveness_verdict": "DISCOVERYOS_EXTERNAL_COMPETITIVENESS_NOT_ESTABLISHED",
+                    "winner": {"arm": "CORE"},
+                },
+            )
+            for arm in ARM_NAMES:
+                ArtifactStore(workspace / "result-artifacts").write_record(
+                    f"tasks/fresh-task/{arm}.json",
+                    {
+                        "task_id": "fresh-task",
+                        "arm": arm,
+                        "actual_usage": {"tokens": None if arm == "EXTERNAL_STRONG_BASELINE" else 12.0},
+                    },
+                )
+            correction = audit_si2_secondary_usage(workspace, manifest_digest=manifest_digest)
+        self.assertFalse(correction["primary_metrics_recomputed"])
+        self.assertEqual(12, correction["arm_usage_summaries"]["CORE"]["total_tokens"])
+        self.assertEqual(1, correction["arm_usage_summaries"]["CORE"]["usage_accounting_complete_tasks"])
+        self.assertEqual(1, correction["arm_usage_summaries"]["EXTERNAL_STRONG_BASELINE"]["usage_accounting_unavailable_tasks"])
 
     def test_three_internal_arm_paths_emit_matched_resource_reports(self) -> None:
         item = si2_discovery_tasks()[0]
