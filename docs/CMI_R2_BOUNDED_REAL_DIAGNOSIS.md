@@ -3,9 +3,9 @@
 ## Protocol status
 
 ```text
-CMI_R2_BOUNDED_REAL_DIAGNOSIS_PROTOCOL_IMPLEMENTED
-CMI_R2_NOT_YET_SEALED
-NO_REAL_BOTTLENECK_ESTABLISHED
+CMI_R2_REAL_DIAGNOSIS_COMPLETE
+CMI_R2_FUNCTIONAL_BASIN_LOCK_SUPPORTED_ON_TWO_DEV_STATES
+CMI_R2_DEVELOPMENT_MECHANISM_BRIEF_AUTHORIZED
 NO_NEW_OPERATOR_AUTHORIZED
 ```
 
@@ -33,3 +33,11 @@ seal from clean commit
 ```
 
 The claim ceiling is `TWO_STATE_DEVELOPMENT_DIAGNOSIS_ONLY`. R2 cannot authorize a new Operator or fresh search-value budget even if one bottleneck is uniquely supported.
+
+## Result
+
+Manifest digest is `e7729e2d186ce60acd00bf56f61b783c4d8025a8c2babe67c9824da9226d2a0f`; the zero-model controls record SHA-256 is `7add4d0ec5aa490544b9a1e948b13b420a281b654a6599355b27018ae7ed7dad`; final report SHA-256 is `0dabc1d1fb9850266e5cbdb58a5868bffc45144c408d2d269df17504e47d3dfb`.
+
+All 6 calls were evaluable, valid, and below the inherited ceiling. Total usage was `116,729` tokens. Evaluator recovery was `1.0`, valid-source rate was `1.0`, and median within-state functional distance was `0.0`. All three independently generated sources in each state had distinct source SHA-256 values but exactly identical frozen functional signatures and evaluator scores within that state.
+
+The frozen diagnosis therefore refuted `H3_EVALUATOR_INSENSITIVITY` and `H4_IMPLEMENTATION_BOTTLENECK`, supported `H5_STRUCTURAL_BASIN_LOCK`, and terminated at `MECHANISM_BRIEF_ALLOWED`. This is evidence for functional basin lock on these two development states under the frozen Direct generation contract—not a universal representation-ceiling claim and not evidence that any particular escape Operator will work.

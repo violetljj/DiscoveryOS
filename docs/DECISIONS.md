@@ -260,3 +260,10 @@
 - **决定**：CMI-R2 在两个新 dev episodes 上各运行三个独立 Direct draws，总调用上限 6、并发上限 2、单调用沿用已验证的 `78,000` token ceiling。Provider 前必须重新通过两状态零模型 controls。冻结的竞争解释只有 evaluator insensitivity、implementation bottleneck 与 functional basin lock；阈值分别由 ranked recovery、valid-source rate 和 within-state functional distance 给出。
 - **原因**：CMI-R1 已证明 probe 对已知差异敏感，下一最小问题是现实 Direct generation 的失败形态。六次调用足以形成每状态三个 pairwise functional distances，同时避免在机制尚未诊断前投入 paired Operator experiment 的数十次调用。
 - **后果**：少于每状态三个 valid candidates 时 basin probe 为 `NOT_EVALUABLE`。只有一个 hypothesis supported 且其余全部 refuted 才允许 development Mechanism Brief；即使成立也不授权 Operator 实现、value trial 或 fresh search-value budget。
+
+## D-038：两状态 Direct generation 支持 functional basin lock 诊断
+
+- **日期**：2026-08-17
+- **决定**：接受 CMI-R2 的 two-state development diagnosis：evaluator insensitivity 与 implementation bottleneck 被反证，`H5_STRUCTURAL_BASIN_LOCK` 被唯一支持，允许另行冻结 development Mechanism Brief。
+- **原因**：六个独立 Direct calls 全部 evaluable/valid 且资源合规；evaluator recovery 与 valid-source rate 均为 `1.0`。每 state 的三个源码 hash 不同，但各自 evaluator score 与 functional signature 完全相同，六个预注册 pairwise distances 全为 `0`，低于支持阈值 `0.10`。因此差异停留在源码层，未进入冻结功能行为面。
+- **后果**：可以提出以 functional basin escape 为 causal target 的 Mechanism Brief，但不能从两状态诊断外推一般 representation ceiling，也不能直接实现 Operator、运行 value trial 或开放 fresh search-value budget。下一协议必须冻结 escape preconditions、required context、intervention fingerprint、null/positive controls 与 failure modes。
