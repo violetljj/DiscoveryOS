@@ -17,6 +17,8 @@ SI1_NOVELTY_COST_REPAIRED
 SI2_SEARCH_VALUE_NOT_ESTABLISHED
 SI2_VANILLA_WINNER_CONFIRMED_ON_WITHHELD_COHORT
 SI2_EXTERNAL_BASELINE_NOT_EVALUABLE
+SI2_SEARCH_CAUSALITY_AUTOPSY_COMPLETE
+NEXT_FRESH_SEARCH_TRIAL_NOT_ADMITTED
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -80,12 +82,20 @@ SI2_EXTERNAL_BASELINE_NOT_EVALUABLE
 - 独立服务/OS identity 的 hostile-worker blind isolation。
 - 产品可用性、安全性、真实世界效果或生产 readiness。
 
+## SI-2 Search Causality Autopsy
+
+- 对 SI-2 consumed discovery traces 的零模型、零 evaluator 诊断已完成；它不产生 superiority claim，也未写回 SI-2 create-once root。
+- 可重建候选在 exact-source 与 coarse Python-AST 结构层面跨臂没有重合，但三臂仍在 9/9 tasks 得到相同 final improvement；这支持“搜索路径分化没有转化为可分辨 outcome value”，不支持“候选或 algorithmic basin 完全相同”。
+- CURRENT 的 parent policy 调用 27 次，其中 18 次存在多 parent、6 次选择非 incumbent；novelty 检查 24 次、拒绝 2 次、resample 0 次。它们是直接 control-flow intervention，不是下游 counterfactual causal proof。
+- 当前 SI-2 instrumentation 不能识别 algorithmic root、跨臂 behavioral signature、统一 basin 或无干预反事实，因此下一阶段先补 causal admission，不开放 SI-3 fresh budget。完整边界见 [`SEARCH_CAUSALITY_AUTOPSY.md`](SEARCH_CAUSALITY_AUTOPSY.md)。
+
 ## 当前下一道门
 
 1. SI-2 已 consumed，禁止在其 9+3 tasks 上调 parent、novelty、prompt、预算或阈值，也不得用同分布重跑改写 `SI2_SEARCH_VALUE_NOT_ESTABLISHED`。
 2. 如仍需 external competitiveness，先在 mechanics-only 环境修复 Windows Headless `spawn EINVAL`，再用新协议版本、新 fresh tasks 和新 create-once root；不得补跑 SI-2 外部空位。
 3. 任何下一代搜索设计必须解释为何三条内部系统在 9/9 tasks 上 final 完全持平，并用新鲜 cohort 证伪；不能把更复杂机制或 confirmation 的 Vanilla 绝对改进误写为 DiscoveryOS superiority。
-4. 在新的 search-value admission 成立前，不扩展远端计算、生产 blind isolation 或更多机制数量。
+4. 新机制进入 fresh trial 前必须先在 mechanics-only sandbox 证明可审计的 intervention effect；先冻结 algorithmic-root/behavioral probes 和默认动作反事实面，再考虑 Adaptive Discovery admission。
+5. 在新的 search-value admission 成立前，不扩展远端计算、生产 blind isolation 或更多机制数量。
 
 ## 状态更新规则
 
@@ -104,3 +114,4 @@ SI2_EXTERNAL_BASELINE_NOT_EVALUABLE
 - SI-1：[`STRATEGY_INTEGRATION_SI1.md`](STRATEGY_INTEGRATION_SI1.md)、[`SHINKA_MECHANISM_MAPPING.md`](SHINKA_MECHANISM_MAPPING.md)
 - SI-1R：[`SI1_PARENT_NOVELTY_REPAIR.md`](SI1_PARENT_NOVELTY_REPAIR.md)
 - SI-2：[`SI2_FRESH_SEARCH_VALUE_TRIAL.md`](SI2_FRESH_SEARCH_VALUE_TRIAL.md)
+- SI-2 causal autopsy：[`SEARCH_CAUSALITY_AUTOPSY.md`](SEARCH_CAUSALITY_AUTOPSY.md)

@@ -15,6 +15,7 @@ from .search_value_mvp0 import (
 )
 from .strategy_integration_si1 import run_strategy_integration_si1_pilot
 from .si2 import audit_si2_secondary_usage, run_si2_confirmation, run_si2_discovery, seal_si2_protocol
+from .search_causality_autopsy import audit_si2_search_causality
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -36,4 +37,5 @@ __all__ = [
     "run_si2_discovery",
     "run_si2_confirmation",
     "audit_si2_secondary_usage",
+    "audit_si2_search_causality",
 ]

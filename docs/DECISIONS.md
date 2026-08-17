@@ -92,3 +92,10 @@
 - **决定**：接受 SI-2 的冻结 verdict `SI2_SEARCH_VALUE_NOT_ESTABLISHED`。CURRENT 对 CORE 与 Vanilla 在 9/9 fresh tasks 的 final comparison 全部为 tie，两个 median final delta 均为零、median AUC delta 均为负、Holm sign gates 均失败。按预注册 tie-break 冻结的 `VANILLA_STRONG_AGENT` 在 3 个 withheld tasks 上通过 confirmation，但该结果只确认 winner 的绝对改进能力，不能改写为 DiscoveryOS superiority。Shinka 9/9 runtime failures 保持 `EXTERNAL_BASELINE_NOT_EVALUABLE`，不算科学 loss，也不补位重跑。
 - **原因**：完整 CURRENT stack 在相同 model/evaluator/预算下没有找到任何 CORE 或 Vanilla 未找到的 final discovery；小幅 AUC 差异还略偏向 Vanilla。Confirmation 没有重新比较四臂，外部 arm 又在 generation 前因 Windows Headless `spawn EINVAL` 失去可评估性，因此都不能救回 search-value 或 external-competitiveness claim。
 - **后果**：SI-2 的 9+3 tasks 全部 consumed，禁止用于策略调优或同分布翻案。原 discovery report 的 secondary token-summary 类型错误通过独立 create-once correction 修正，不改 primary、winner 或 verdict。如继续研究 external competitiveness 或新搜索设计，必须先在 mechanics-only 环境解决 blocker，再使用新协议、新 fresh cohort 和新实验根；在新 admission 前不扩大算力或机制面。
+
+## D-014：停止按机制数量推进，以可识别 intervention 作为 fresh admission 前置门
+
+- **状态**：Accepted
+- **决定**：SI-2 后不再以增加 parent、novelty、branch、generation、prompt 或外部机制作为默认推进路线。每个新搜索机制必须先在不消耗 fresh search-value cohort 的 mechanics-only sandbox 中证明：它在可审计 receipt 中相对冻结默认动作改变了控制流，并通过预冻结的 algorithmic-root、behavioral-signature 或资源效用指标产生可识别差异。下一代 system-level 设计以 `STRONG_AGENT_DIRECT` 为默认一级 operator，只有预注册的 stagnation、uncertainty、basin collapse 或 multi-objective conflict 才升级重搜索。
+- **原因**：SI-2 autopsy 显示 CURRENT 的 parent 与 novelty 确实发生直接 intervention，三臂候选源码和粗 AST 结构也有分化，但 9/9 final improvement 仍完全相同。现有收据无法识别跨臂 algorithmic basin、behavioral signature 或 paired no-intervention counterfactual；继续加机制会扩大事后解释空间，而不能回答哪些干预真正改变搜索命运。
+- **后果**：SI-3 fresh budget 暂不开放。机制 admission receipt 必须绑定 policy invocation、冻结默认动作、实际动作、即时差异和资源成本；algorithmic-root/behavioral probes 必须在模型调用前冻结。Consumed SI-2 只用于诊断，不用于调参或 superiority claim。开发原则为 `Stop adding mechanisms. Start proving interventions.`

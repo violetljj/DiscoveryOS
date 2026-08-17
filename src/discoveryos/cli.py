@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from discoveryos.benchmarks import (
+    audit_si2_search_causality,
     audit_si2_secondary_usage,
     audit_local_patch_invalids,
     replay_local_patch_mechanics,
@@ -138,6 +139,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     si2_audit.add_argument("--workspace", type=Path, default=Path("runs/si2-fresh-search-value-r1"))
     si2_audit.add_argument("--manifest-digest", required=True)
+    si2_causality = subparsers.add_parser(
+        "si2-causality-autopsy",
+        help="audit consumed SI-2 search divergence and intervention identifiability without model calls",
+    )
+    si2_causality.add_argument("--workspace", type=Path, default=Path("runs/si2-fresh-search-value-r1"))
+    si2_causality.add_argument("--manifest-digest", required=True)
+    si2_causality.add_argument(
+        "--output-workspace", type=Path, default=Path("runs/si2-search-causality-autopsy-r3")
+    )
     for name, help_text in (
         ("si2-run-discovery", "execute the already-sealed SI-2 fresh discovery cohort"),
         ("si2-confirm", "run the frozen SI-2 winner on the withheld confirmation cohort"),
@@ -256,6 +266,12 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.command == "si2-audit-usage":
             result = audit_si2_secondary_usage(args.workspace, manifest_digest=args.manifest_digest)
+        elif args.command == "si2-causality-autopsy":
+            result = audit_si2_search_causality(
+                args.workspace,
+                manifest_digest=args.manifest_digest,
+                output_workspace=args.output_workspace,
+            )
         elif args.command in {"si2-seal", "si2-run-discovery", "si2-confirm"}:
             command = tuple(shlex.split(args.codex_command, posix=False))
             local_provider = CodexExecProvider(
