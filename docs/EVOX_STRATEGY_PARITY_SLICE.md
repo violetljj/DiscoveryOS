@@ -10,7 +10,8 @@ EVOX_RUNTIME_GENERATION_CONTEXT_TRANSMISSION_CONFIRMED_ZERO_MODEL
 EVOX_CANDIDATE_BEHAVIOR_VALUE_NOT_EVALUATED
 EVOX_SEARCH_VALUE_NOT_EVALUATED
 ADA_AND_EVOX_BOUNDED_PARITY_SLICES_MECHANICS_READY
-P2_REMAINS_FROZEN_PENDING_PROFILE_REVISION_AND_FAIRNESS_GATE
+P2_ZERO_MODEL_FACTORIAL_FAIRNESS_GATE_PASS
+P2_MODEL_PROTOCOL_NOT_SEALED
 ```
 
 This slice implements only the bounded EvoX closure frozen by
@@ -47,4 +48,4 @@ All providers in these tests are deterministic local fixtures. No external model
 
 ## Next gate
 
-The bounded Ada and EvoX slices now satisfy their zero-model mechanics/transmission gate. P2 is still frozen: the four comparison Profiles must next be revised to express `neither`, `Ada-only`, `EvoX-only` and shared `Ada+EvoX`, content-addressed again, and checked through one zero-model matched-resource fairness test. Only then may a separate frozen P2 development protocol authorize model calls.
+The bounded Ada and EvoX slices satisfy their zero-model mechanics/transmission gate. The four comparison Profiles have now been re-frozen as `neither`, `Ada-only`, `EvoX-only` and shared `Ada+EvoX` and passed the common zero-model fairness audit; see [`P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md`](P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md). P2 model calls remain unauthorized until a separate matched-resource development protocol is frozen.

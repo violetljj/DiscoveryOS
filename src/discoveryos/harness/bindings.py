@@ -20,6 +20,7 @@ _CODE_BUNDLE_PATHS = (
     "harness/bindings.py",
     "harness/context.py",
     "harness/evox_strategy.py",
+    "harness/fairness.py",
     "harness/plugins.py",
     "harness/runtime.py",
     "harness/strategies.py",

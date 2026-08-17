@@ -18,6 +18,13 @@ from .plugins import (
     ResearchProfile,
 )
 from .runtime import HarnessSearchRuntime
+from .fairness import (
+    P2FactorialProfileAudit,
+    P2ZeroModelFairnessAudit,
+    P2ZeroModelRuntimeSurface,
+    audit_p2_factorial_profiles,
+    audit_p2_zero_model_runtime_fairness,
+)
 from .ada_adaptation import (
     AdaLocalMode,
     AdaTrajectoryConfig,
@@ -55,6 +62,8 @@ from .strategies import (
     HarnessRoutingConfig,
     OperatorRegistry,
     StrategyDescriptor,
+    ada_evox_factorial_v2_profile,
+    ada_only_factorial_v2_profile,
     algorithm_discovery_v1_profile,
     build_root_research_context,
     standard_research_plugins,
@@ -64,6 +73,8 @@ from .strategies import (
     naive_parallel_structural_v1_profile,
     static_composition_profiles,
     structural_static_v1_profile,
+    evox_only_factorial_v2_profile,
+    neither_factorial_v2_profile,
 )
 
 __all__ = [
@@ -100,6 +111,9 @@ __all__ = [
     "SourceSnapshot",
     "MissingServiceError",
     "OperatorRegistry",
+    "P2FactorialProfileAudit",
+    "P2ZeroModelFairnessAudit",
+    "P2ZeroModelRuntimeSurface",
     "StrategyDescriptor",
     "PluginActivation",
     "PluginManifest",
@@ -111,6 +125,10 @@ __all__ = [
     "ResearchProfile",
     "ServiceKey",
     "algorithm_discovery_v1_profile",
+    "ada_evox_factorial_v2_profile",
+    "ada_only_factorial_v2_profile",
+    "audit_p2_factorial_profiles",
+    "audit_p2_zero_model_runtime_fairness",
     "build_root_research_context",
     "standard_research_plugins",
     "capture_git_source_snapshot",
@@ -120,6 +138,8 @@ __all__ = [
     "naive_parallel_lineage_v1_profile",
     "naive_parallel_structural_v1_profile",
     "replay_harness_run_binding",
+    "evox_only_factorial_v2_profile",
+    "neither_factorial_v2_profile",
     "static_composition_profiles",
     "structural_static_v1_profile",
 ]

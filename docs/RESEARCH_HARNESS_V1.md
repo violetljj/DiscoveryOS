@@ -5,7 +5,7 @@
 ```text
 RESEARCH_HARNESS_V1_EXECUTION_BACKBONE_MECHANICS_READY
 MANIFEST_BOUND_RESEARCH_PROFILE_READY
-P2_STATIC_COMPOSITION_PROFILES_READY
+P2_FACTORIAL_PROFILES_REFROZEN
 CAPABILITY_CONTRACT_ROUTING_V1_1_READY
 PROFILE_TO_SEARCH_RUN_REPLAY_BINDING_READY
 LIVE_BUDGET_EVALUATOR_AUTHORITY_BOUND
@@ -15,7 +15,7 @@ HISTORICAL_PROTOCOL_REPLAY_COMPATIBILITY_PRESERVED
 STATIC_HARNESS_COMPOSITION_VALUE_NOT_EVALUATED
 P2_DEVELOPMENT_PROTOCOL_NOT_SEALED
 MECHANISM_COMPLETE_PARITY_NOT_ESTABLISHED
-P2_PROTOCOL_PAUSED_PENDING_PROFILE_REVISION_AND_FAIRNESS_GATE
+P2_ZERO_MODEL_FACTORIAL_FAIRNESS_GATE_PASS
 ADA_TRAJECTORY_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
 EVOX_TYPED_STRATEGY_STATE_MACHINE_MECHANICS_READY
 EVOX_PARENT_AND_VARIATION_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
@@ -60,20 +60,20 @@ Every `PluginSelection` freezes the expected manifest digest. Profile boot fails
 
 The current source-role metadata is intentionally narrow. Ada/EvoX names still describe mechanism roles implemented inside DiscoveryOS; `UNSPECIFIED_REFERENCE_LICENSE_INTERNAL_IMPLEMENTATION` is not external-runtime admission and must be replaced by exact upstream license/source bindings before an official port claim.
 
-### First-class P2 static arms
+### Re-frozen P2 factorial arms
 
-V1 now exposes four frozen arm definitions through `static_composition_profiles()`:
+`static_composition_profiles()` now exposes four one-runtime, 2x2 factorial arms:
 
-- `lineage_static_v1`: Direct bootstrap followed by Ada-role local lineage refinement, with structural capability absent;
-- `structural_static_v1`: Direct bootstrap plus EvoX-role structural escape, with Ada capability absent;
-- `naive_parallel_v1`: two isolated child profiles, one lineage and one structural, both with cross-seeding disabled; a formal runner must split the total arm budget before either child starts and apply the frozen winner rule only after both settle;
-- `harness_static_v1`: Direct + Ada + EvoX in one shared research state with deterministic cross-strategy handoff.
+- `neither`: Direct plus the common Router, with both bounded parity slices absent;
+- `ada_only`: Direct plus trajectory-conditioned Ada local adaptation;
+- `evox_only`: Direct plus the typed same-run EvoX strategy state machine;
+- `ada_evox`: Direct plus both bounded slices in one shared research state.
 
-Every child profile boots through `HarnessSearchRuntime`; no baseline requires a compatibility-only direct `SearchLoopRunner` path. In the V1.1 closure, each operator plugin binds one or more typed roles from `BOOTSTRAP_PROPOSAL`, `LOCAL_REFINEMENT`, `STRUCTURAL_ESCAPE` and `META_STRATEGY` into both its manifest digest and strategy descriptor. `HarnessResearchController` resolves those roles without containing Direct/Ada/EvoX operator or strategy ids. Missing capabilities and multiple providers for the same capability fail closed; the router never silently substitutes a different action class. Cross-strategy handoff is also derived from the source and target capabilities rather than source-system names.
+Every arm is exactly one `HarnessSearchRuntime`; no baseline requires a compatibility-only direct `SearchLoopRunner` path and there is no child-budget settlement difference. Direct and Router selections, including `bootstrap_steps=1` and `allow_cross_seed=true`, are identical. The only permitted Profile differences are presence of the Ada and EvoX plugin selections. In the V1.1 closure, each operator plugin binds one or more typed roles from `BOOTSTRAP_PROPOSAL`, `LOCAL_REFINEMENT`, `STRUCTURAL_ESCAPE` and `META_STRATEGY` into both its manifest digest and strategy descriptor. `HarnessResearchController` resolves those roles without containing Direct/Ada/EvoX operator or strategy ids. Missing capabilities and multiple providers for the same capability fail closed; the router never silently substitutes a different action class. Cross-strategy handoff is also derived from the source and target capabilities rather than source-system names.
 
 This is a composition contract, not package discovery or a plugin marketplace. `standard_research_plugins()` remains the static built-in catalog, and a Profile currently admits at most one provider for each routed capability unless a future, separately versioned selection policy is frozen. Because capability declarations enter manifest digests, this closure creates new Profile identities; earlier run manifests and receipts remain bound to their original code/manifest identities and are not rewritten.
 
-This code defines the arms but does not yet seal a task wave or make model calls. In particular, the naive-parallel parent settlement and matched budget split remain responsibilities of the forthcoming frozen P2 protocol runner.
+The older lineage/structural/naive-parallel/static-Harness helper Profiles remain compatibility surfaces for earlier design history but are no longer returned as the current P2 comparison arms. This code does not seal a task wave or make model calls.
 
 ### Profile-to-run binding
 
@@ -117,7 +117,9 @@ Focused tests establish:
 - Direct/Ada/EvoX registry composition and deterministic routing;
 - a previously unknown operator id routes solely from its declared capability;
 - duplicate capability providers fail closed instead of depending on plugin names or load order;
-- all four P2 arm definitions, capability-aware subset routing, disabled naive handoff and matched reservation surfaces;
+- all four one-runtime P2 factorial Profiles, exact Ada/EvoX factor presence, and rejection of unauthorized Profile differences;
+- identical runtime, executor, evaluator, budget, reservation, provider and resource-envelope surfaces across the four arms;
+- one unified Ledger/Research Graph authority per arm, including all loaded operators and EvoX strategy state, with separate job-scoped physical ledgers across arms;
 - create-once Profile-to-Run binding and fail-closed replay under code-bundle drift;
 - Profile → Harness runtime → unified executor → evaluator/ledger settlement;
 - core CLI and benchmark-package imports do not load historical runners;
@@ -129,9 +131,9 @@ These tests establish only execution mechanics and dependency isolation. They do
 
 The source-bound [`ADA_EVOX_MECHANISM_PARITY_AUDIT.md`](ADA_EVOX_MECHANISM_PARITY_AUDIT.md) confirms that the current Ada/EvoX plugins are mechanism-role proxies, not mechanism-complete ports. Ada currently retains lineage-local refinement but not the official hierarchical adaptive loop. EvoX currently retains a stagnation-triggered structural solution rewrite but not the official evolution of parent-selection and variation strategy.
 
-P2 sealing is paused for a bounded, zero-model parity closure: trajectory-conditioned Ada local adaptation and a typed same-run EvoX strategy deployment/switch/rollback slice. The audit explicitly excludes wholesale runtime import, private archives or evaluators, unrestricted strategy-code generation, cross-task memory and fresh assets.
+P2 sealing was paused for a bounded, zero-model parity closure: trajectory-conditioned Ada local adaptation and a typed same-run EvoX strategy deployment/switch/rollback slice. That closure is complete. The audit continues to exclude wholesale runtime import, private archives or evaluators, unrestricted strategy-code generation, cross-task memory and fresh assets.
 
-Both bounded slices are implemented. [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md) records receipt-bound trajectory control and generation-context transmission. [`EVOX_STRATEGY_PARITY_SLICE.md`](EVOX_STRATEGY_PARITY_SLICE.md) records typed same-run strategy deployment, observation, scoring and retain/switch/rollback, including changes to parent selection and variation guidance. These zero-model tests establish mechanics/transmission only; they do not establish candidate behavior or value. No P2 Profile is scientifically unlocked until the comparison arms are revised, re-digested and pass the common fairness gate.
+Both bounded slices are implemented. [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md) records receipt-bound trajectory control and generation-context transmission. [`EVOX_STRATEGY_PARITY_SLICE.md`](EVOX_STRATEGY_PARITY_SLICE.md) records typed same-run strategy deployment, observation, scoring and retain/switch/rollback, including changes to parent selection and variation guidance. The comparison Profiles have now been revised, re-digested and passed the common zero-model fairness gate; see [`P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md`](P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md). These tests establish mechanics/transmission and execution fairness only; they do not establish candidate behavior or value.
 
 ## Remaining deliberate legacy boundary
 
@@ -141,4 +143,4 @@ Parent/Novelty/CMI and old protocol runners remain frozen regression/evidence as
 
 ## Next gate
 
-Next revise and re-digest four explicit comparison Profiles: `neither`, `Ada-only`, `EvoX-only` and shared `Ada+EvoX`. They must pass a zero-model check for the same executor, evaluator, ledger, total budget, reservation surface and resource envelope before sealing the matched-resource P2 protocol. That later protocol must freeze exact task instances, any child budget split and settlement, provider executable/version/settings, model calls, evaluator-call ceilings, wall/resource envelopes, statistics, winner rule and stop conditions. V1 mechanics do not authorize broader adaptive routing, cross-task memory, Harness evolution, fresh assets or stronger claims.
+The next gate is a separate matched-resource P2 development protocol seal. It must freeze exact L0-L2 task instances, provider executable/version/settings, model calls, evaluator-call ceilings, wall/resource envelopes, statistics, factorial main/interaction estimands, winner rule and stop conditions. The fairness pass does not itself authorize model calls, broader adaptive routing, cross-task memory, Harness evolution, fresh assets or stronger claims.

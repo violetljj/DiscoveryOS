@@ -539,17 +539,80 @@ def harness_static_v1_profile() -> ResearchProfile:
     )
 
 
+def neither_factorial_v2_profile() -> ResearchProfile:
+    return ResearchProfile(
+        name="p2-neither-factorial-v2",
+        plugins=(
+            PluginSelection.create("direct_llm", DirectLLMPlugin.manifest.digest),
+            PluginSelection.create(
+                "state_router",
+                StateRouterPlugin.manifest.digest,
+                {"bootstrap_steps": 1, "allow_cross_seed": True},
+            ),
+        ),
+    )
+
+
+def ada_only_factorial_v2_profile() -> ResearchProfile:
+    return ResearchProfile(
+        name="p2-ada-only-factorial-v2",
+        plugins=(
+            PluginSelection.create("direct_llm", DirectLLMPlugin.manifest.digest),
+            PluginSelection.create("ada_lineage", AdaLineagePlugin.manifest.digest),
+            PluginSelection.create(
+                "state_router",
+                StateRouterPlugin.manifest.digest,
+                {"bootstrap_steps": 1, "allow_cross_seed": True},
+            ),
+        ),
+        parent_profile_id=lineage_static_v1_profile().profile_id,
+        revision_reason="freeze the trajectory-conditioned Ada factor for the P2 factorial gate",
+    )
+
+
+def evox_only_factorial_v2_profile() -> ResearchProfile:
+    return ResearchProfile(
+        name="p2-evox-only-factorial-v2",
+        plugins=(
+            PluginSelection.create("direct_llm", DirectLLMPlugin.manifest.digest),
+            PluginSelection.create("evox_meta_strategy", EvoXMetaStrategyPlugin.manifest.digest),
+            PluginSelection.create(
+                "state_router",
+                StateRouterPlugin.manifest.digest,
+                {"bootstrap_steps": 1, "allow_cross_seed": True},
+            ),
+        ),
+        parent_profile_id=structural_static_v1_profile().profile_id,
+        revision_reason="freeze the online EvoX strategy factor for the P2 factorial gate",
+    )
+
+
+def ada_evox_factorial_v2_profile() -> ResearchProfile:
+    return ResearchProfile(
+        name="p2-ada-evox-factorial-v2",
+        plugins=(
+            PluginSelection.create("direct_llm", DirectLLMPlugin.manifest.digest),
+            PluginSelection.create("ada_lineage", AdaLineagePlugin.manifest.digest),
+            PluginSelection.create("evox_meta_strategy", EvoXMetaStrategyPlugin.manifest.digest),
+            PluginSelection.create(
+                "state_router",
+                StateRouterPlugin.manifest.digest,
+                {"bootstrap_steps": 1, "allow_cross_seed": True},
+            ),
+        ),
+        parent_profile_id=harness_static_v1_profile().profile_id,
+        revision_reason="freeze both bounded parity slices for the P2 factorial gate",
+    )
+
+
 def static_composition_profiles() -> dict[str, tuple[ResearchProfile, ...]]:
-    """Frozen P2 arms; naive parallel is two isolated child runs with split budget."""
+    """Re-frozen P2 2x2 factorial arms; every arm is one unified Harness runtime."""
 
     return {
-        "lineage_static_v1": (lineage_static_v1_profile(),),
-        "structural_static_v1": (structural_static_v1_profile(),),
-        "naive_parallel_v1": (
-            naive_parallel_lineage_v1_profile(),
-            naive_parallel_structural_v1_profile(),
-        ),
-        "harness_static_v1": (harness_static_v1_profile(),),
+        "neither": (neither_factorial_v2_profile(),),
+        "ada_only": (ada_only_factorial_v2_profile(),),
+        "evox_only": (evox_only_factorial_v2_profile(),),
+        "ada_evox": (ada_evox_factorial_v2_profile(),),
     }
 
 

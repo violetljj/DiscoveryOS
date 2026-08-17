@@ -11,7 +11,11 @@ from discoveryos.domains.clearance_demo import (
     run_demo_certification,
     run_demo_discovery,
 )
-from discoveryos.harness import algorithm_discovery_v1_profile, static_composition_profiles
+from discoveryos.harness import (
+    algorithm_discovery_v1_profile,
+    audit_p2_factorial_profiles,
+    static_composition_profiles,
+)
 from discoveryos.util import jsonable
 
 
@@ -100,8 +104,9 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "harness-profile-show":
             profile = algorithm_discovery_v1_profile()
             arms = static_composition_profiles()
+            profile_audit = audit_p2_factorial_profiles(arms)
             result = {
-                "status": "P2_STATIC_COMPOSITION_PROFILES_AVAILABLE",
+                "status": "P2_FACTORIAL_PROFILES_REFROZEN",
                 "profile_id": profile.profile_id,
                 "profile": jsonable(profile),
                 "static_composition_arms": {
@@ -110,6 +115,10 @@ def main(argv: list[str] | None = None) -> int:
                         for item in profiles
                     ]
                     for arm_id, profiles in arms.items()
+                },
+                "factorial_profile_audit": {
+                    "digest": profile_audit.digest,
+                    "record": jsonable(profile_audit),
                 },
                 "manifest_bound": True,
                 "claim_ceiling_changed": False,

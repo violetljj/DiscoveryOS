@@ -13,20 +13,20 @@ HARNESS_PROJECT_CONSTRAINTS_UPDATED
 RESEARCH_HARNESS_V0_MECHANICS_READY
 RESEARCH_HARNESS_V1_EXECUTION_BACKBONE_MECHANICS_READY
 MANIFEST_BOUND_RESEARCH_PROFILE_READY
-P2_STATIC_COMPOSITION_PROFILES_READY
+P2_FACTORIAL_PROFILES_REFROZEN
 CAPABILITY_CONTRACT_ROUTING_V1_1_READY
 PROFILE_TO_SEARCH_RUN_REPLAY_BINDING_READY
 P2_DEVELOPMENT_PROTOCOL_NOT_SEALED
 ADA_EVOX_MECHANISM_PARITY_AUDIT_COMPLETE
 MECHANISM_COMPLETE_PARITY_NOT_ESTABLISHED
-P2_PROTOCOL_PAUSED_PENDING_PROFILE_REVISION_AND_FAIRNESS_GATE
+P2_ZERO_MODEL_FACTORIAL_FAIRNESS_GATE_PASS
 ADA_TRAJECTORY_PARITY_SLICE_MECHANICS_READY
 ADA_TRAJECTORY_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
 ADA_SEARCH_VALUE_NOT_EVALUATED
 EVOX_TYPED_STRATEGY_STATE_MACHINE_MECHANICS_READY
 EVOX_PARENT_AND_VARIATION_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
 EVOX_SEARCH_VALUE_NOT_EVALUATED
-P2_REMAINS_FROZEN_PENDING_PROFILE_REVISION_AND_FAIRNESS_GATE
+P2_MODEL_PROTOCOL_REMAINS_UNSEALED
 CORE_CLI_ISOLATED_FROM_HISTORICAL_PROTOCOL_RUNNERS
 STATIC_ALGORITHM_DISCOVERY_PROFILE_AVAILABLE
 DIRECT_ADA_EVOX_PLUGIN_COMPOSITION_READY
@@ -149,7 +149,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 - 可执行代码 bundle、临时 Git worktree runner、路径策略、超时进程树终止和 run receipts。
 - ASHA mechanics admission；bounded Local Patch、一次 mechanical repair 和 generation provenance。
 - Structural Rewrite mechanics、ledger-backed state projector、deterministic action controller、unified executor 和 anytime settlement。
-- Research Harness V1/V1.1：typed/scoped `ResearchContext`、manifest-bound `ResearchProfile`、不可覆盖的 authority services、真实 `ExperimentExecutor` 预算/评估权威、独立 local/structural provider、原子插件启动/逆序清理，以及 Profile → unified executor → ledger-backed search loop 的默认执行闭环。四个 P2 arm 已成为一等定义；插件 manifest 与 strategy descriptor 共同声明 `BOOTSTRAP_PROPOSAL`、`LOCAL_REFINEMENT`、`STRUCTURAL_ESCAPE`、`META_STRATEGY`，Router 不再包含 Direct/Ada/EvoX operator/strategy id，并对缺失或重复 capability provider fail closed。未知 operator id 可仅凭能力契约接入；naive parallel 仍由两个禁用 handoff 的隔离 child profile 表达。每次新运行必须以 create-once `HarnessRunManifest` 绑定 Profile、SearchRunSpec、传递代码 bundle、Git/source tree、provider、contract/evaluator/environment、预算、seed、winner rule 与 claim ceiling，并写入 `PROFILE_EXECUTED_SEARCH_RUN` 图边。内置 catalog 仍为静态注册，不声称 package discovery/plugin marketplace 已完成。V1.1 只建立组合 mechanics，未封存或运行 static composition search-value 比较，也未启用 Harness adaptation。
+- Research Harness V1/V1.1：typed/scoped `ResearchContext`、manifest-bound `ResearchProfile`、不可覆盖的 authority services、真实 `ExperimentExecutor` 预算/评估权威、独立 local/structural provider、原子插件启动/逆序清理，以及 Profile → unified executor → ledger-backed search loop 的默认执行闭环。P2 comparison 已重冻为单 runtime 的 `neither / Ada-only / EvoX-only / Ada+EvoX` 2x2 factorial Profiles；Direct 与 Router 绑定完全相同，唯一允许变化的是 Ada/EvoX plugin presence。零模型公平性审计验证同一 runtime/executor/evaluator/budget/reservation/provider/resource surface，以及每臂内部唯一 Ledger/Research Graph 权威和跨臂 job-scoped ledger 隔离。插件 manifest 与 strategy descriptor 共同声明 `BOOTSTRAP_PROPOSAL`、`LOCAL_REFINEMENT`、`STRUCTURAL_ESCAPE`、`META_STRATEGY`，Router 不再包含 Direct/Ada/EvoX operator/strategy id，并对缺失或重复 capability provider fail closed。每次新运行仍须以 create-once `HarnessRunManifest` 绑定全部运行与证据语义。内置 catalog 仍为静态注册；本轮只建立 factorial mechanics/fairness，未封存或运行 P2 search-value protocol，也未启用 Harness adaptation。
 - residual-headroom task admission 与 matched-resource Search-Value MVP 协议/runner。
 - Benchmark Bank v1 的 47-family commit-pinned registry、DEV/SHADOW/SEALED 生命周期门、统一 adapter contract，以及可执行的 consumed Assignment/Coverage development 物化切片。
 
@@ -232,9 +232,10 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 
 1. Ada trajectory slice 已通过零模型 control/generation-context transmission：productive/weak trajectory 会产生不同 receipt、mode、decision 与真实 Harness generation request，绑定漂移 fail closed。它不建立 candidate behavior 或 search value；完整边界见 [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md)。
 2. EvoX typed same-run strategy state machine 已通过零模型 mechanics/transmission：冻结策略可部署、观察、评分、retain/switch/rollback，并实际改变 parent mode 与 variation guidance；完整边界见 [`EVOX_STRATEGY_PARITY_SLICE.md`](EVOX_STRATEGY_PARITY_SLICE.md)。它不建立 candidate behavior 或 search value。
-3. 下一步只重新定义并冻结 `neither / Ada-only / EvoX-only / Ada+EvoX` 四臂 Profile，验证同一 Executor、Evaluator、Budget、Ledger 和资源预留表面的零模型公平性。通过后才能封存 P2 development protocol；不得在此阶段新增搜索机制或使用 fresh 题。
-4. 只有静态 Harness 相对强单策略和朴素组合取得正向、可重放结果，才允许设计 P3 adaptive profile；否则先诊断静态组合。
-5. P3 通过后才允许 P4 memory-conditioned comparison；P4 通过后才允许 P5 Harness evolution。当前不开放 fresh/SEALED 资产或 superiority/generalization claim。
+3. `neither / Ada-only / EvoX-only / Ada+EvoX` 四臂已重新冻结并通过零模型公平性门：四臂都使用一个统一 Harness runtime；Executor、Evaluator、Budget、reservation/reconciliation、provider/resource envelope 与 authority topology 一致，每臂使用独立物理 ledger 且 arm 内 candidate、strategy、lineage、evidence 和 budget 共享同一 Ledger/Research Graph 权威。完整边界见 [`P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md`](P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md)。
+4. 下一步只允许封存 matched-resource P2 development protocol，预声明 Ada 主效应、EvoX 主效应和二者交互效应，并冻结 L0-L2 task instances、provider、调用/evaluator budget、资源 envelope、统计、winner rule 与停止条件；当前仍未授权模型调用或 fresh 题。
+5. 只有 P2 静态 factorial comparison 取得正向、可重放结果，才允许设计 P3 adaptive profile；否则先诊断静态组合。
+6. P3 通过后才允许 P4 memory-conditioned comparison；P4 通过后才允许 P5 Harness evolution。当前不开放 fresh/SEALED 资产或 superiority/generalization claim。
 
 ## 历史阶段边界（继续有效，但不再是默认开发主线）
 
