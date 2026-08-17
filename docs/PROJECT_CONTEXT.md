@@ -131,4 +131,5 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - Functional basin escape Operator mechanics / CMI-R4：`CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md`
 - Consumed development causal value / CMI-R5：`CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md`
 - Consumed distribution replication / CMI-R6：`CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md`
+- Fresh-state causal replication / CMI-R7：`CMI_R7_FRESH_CAUSAL_REPLICATION.md`
 - 长期 Benchmark Bank、family/shard 生命周期与 adapter admission：`BENCHMARK_BANK_V1.md`

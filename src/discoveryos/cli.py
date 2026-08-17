@@ -67,6 +67,8 @@ from discoveryos.benchmarks import (
     seal_cmi_causal_value,
     run_cmi_replication_admission,
     seal_cmi_replication_admission,
+    run_cmi_fresh_causal_validation,
+    seal_cmi_fresh_causal_validation,
     load_benchmark_bank,
     materialize_bank_instance,
     validate_benchmark_bank,
@@ -280,6 +282,14 @@ def build_parser() -> argparse.ArgumentParser:
     cmi_r6_run = subparsers.add_parser("cmi-r6-run-replication", help="run the sealed consumed-distribution CMI replication admission")
     cmi_r6_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-r6-consumed-distribution-replication"))
     cmi_r6_run.add_argument("--manifest-digest", required=True)
+    cmi_r7_seal = subparsers.add_parser("cmi-r7-seal-fresh", help="seal the six-state paired fresh CMI causal replication")
+    cmi_r7_seal.add_argument("--workspace", type=Path, default=Path("runs/cmi-r7-fresh-causal-replication"))
+    cmi_r7_seal.add_argument("--cmi-r6-workspace", type=Path, default=Path("runs/cmi-r6-consumed-distribution-replication"))
+    cmi_r7_seal.add_argument("--cmi-r6-report-sha256", required=True)
+    cmi_r7_seal.add_argument("--bank-registry", type=Path, default=Path("benchmarks/bank/v1/registry.json"))
+    cmi_r7_run = subparsers.add_parser("cmi-r7-run-fresh", help="consume and evaluate the sealed six-state fresh CMI shard once")
+    cmi_r7_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-r7-fresh-causal-replication"))
+    cmi_r7_run.add_argument("--manifest-digest", required=True)
     bank_validate = subparsers.add_parser(
         "benchmark-bank-validate",
         help="validate the pinned Benchmark Bank v1 registry without consuming any shard",
@@ -618,6 +628,15 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.command == "cmi-r6-run-replication":
             result = run_cmi_replication_admission(args.workspace, manifest_digest=args.manifest_digest)
+        elif args.command == "cmi-r7-seal-fresh":
+            result = seal_cmi_fresh_causal_validation(
+                args.workspace,
+                cmi_r6_workspace=args.cmi_r6_workspace,
+                cmi_r6_report_sha256=args.cmi_r6_report_sha256,
+                bank_registry_path=args.bank_registry,
+            )
+        elif args.command == "cmi-r7-run-fresh":
+            result = run_cmi_fresh_causal_validation(args.workspace, manifest_digest=args.manifest_digest)
         elif args.command == "benchmark-bank-validate":
             result = validate_benchmark_bank(load_benchmark_bank(args.registry))
         elif args.command == "benchmark-bank-materialize-dev":

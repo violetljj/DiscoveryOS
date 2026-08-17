@@ -65,6 +65,7 @@ from .cmi_escape_brief import admit_cmi_escape_brief, seal_cmi_escape_brief
 from .cmi_escape_operator import run_cmi_escape_operator, seal_cmi_escape_operator
 from .cmi_causal_value import run_cmi_causal_value, seal_cmi_causal_value
 from .cmi_replication_admission import run_cmi_replication_admission, seal_cmi_replication_admission
+from .cmi_fresh_causal_validation import run_cmi_fresh_causal_validation, seal_cmi_fresh_causal_validation
 from .benchmark_bank import load_benchmark_bank, materialize_bank_instance, validate_benchmark_bank
 
 __all__ = [
@@ -133,6 +134,8 @@ __all__ = [
     "run_cmi_causal_value",
     "seal_cmi_replication_admission",
     "run_cmi_replication_admission",
+    "seal_cmi_fresh_causal_validation",
+    "run_cmi_fresh_causal_validation",
     "load_benchmark_bank",
     "materialize_bank_instance",
     "validate_benchmark_bank",

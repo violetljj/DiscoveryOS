@@ -80,6 +80,9 @@ CMI_R5_CAUSAL_VALUE_DETECTED_ON_TWO_CONSUMED_DEV_STATES
 CMI_R6_PROTOCOL_IMPLEMENTED
 CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION_PASSED
 CMI_FRESH_CAUSAL_VALIDATION_ADMISSION_READY
+CMI_R7_PROTOCOL_IMPLEMENTED
+CMI_R7_FRESH_SHARD_NOT_YET_SEALED
+CMI_R7_FRESH_EXECUTION_NOT_YET_RUN
 BENCHMARK_BANK_V1_REGISTRY_IMPLEMENTED
 BENCHMARK_BANK_V1_DEVELOPMENT_SLICE_EXECUTABLE
 BENCHMARK_BANK_V1_EXTERNAL_ADAPTERS_NOT_YET_ADMITTED
@@ -209,6 +212,7 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 30. CMI-R5 consumed-development paired causal-value 已在 commit `4465f0e` 上封存并通过。Manifest digest 为 `09260d9c235a22c4a6a348021a834079b9cbb742c040be9af9549d1b0d28ba5b`，report SHA-256 为 `6457625fcf02d9d720a143f62dbf10927adce445863eca8b7b08259070be7b0d`。Assignment/coverage final utility delta 为 `+0.20103693` / `+0.09768933`，two-allocation AUC delta 为 `+0.10051846` / `+0.04884466`；escape rate `0 -> 1`、replacement `0 -> 1`、breakthrough `0 -> 0.5`、两臂 validity 均为 `1`。模型、token 与 fresh tasks 均为零；treatment/control evaluator 总耗时约为 `1.118s` / `0.739s`。正式 verdict 为 `CMI_R5_CAUSAL_VALUE_DETECTED_ON_TWO_CONSUMED_DEV_STATES`，仅适用于该 deterministic escape Operator 相对 behavior-preserving local control 的两个 consumed states；无概率、显著性、一般 CMI value 或 fresh search-value claim，fresh budget 继续关闭。详见 [`CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md`](CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md)。
 31. CMI-R6 consumed-distribution replication 已在 commit `cd8e7f2` 上封存并通过。Manifest digest 为 `c4b0844fc3beae43f624194318611b3899865abe1199ad705e978294ff2ea876`，report SHA-256 为 `95213c5bb419cd995d2ddc588cc0d394698043da2a4c3fdceafcb10dcbae9dfe`。8/8 treatment 均 escape、utility 超过 state resolution 且 replacement，control 为 0/8；无 negative 或 tie，validity 两臂均为 `1`，breakthrough `0 -> 0.375`。Coverage/Assignment median utility delta 为 `0.08027348` / `0.18481032`，median AUC delta 为 `0.04013674` / `0.09240516`；aggregate/max-state evaluator runtime ratio 为 `0.99956x` / `1.25330x`，13 项 gate 全部通过。模型、token 与 fresh tasks 均为零。正式输出 `CMI_FRESH_CAUSAL_VALIDATION_ADMISSION_READY`，只授权另行预注册极小 fresh causal protocol，不授权执行。Task families 与历史 heuristic evidence 可见，因此这仍不是 blind independent replication，不建立概率、显著性、跨 family 泛化或 search value。详见 [`CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md`](CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md)。
 32. Benchmark Bank v1 已实现并验证 47-family registry：R0/R1/R2/R3/R4/R5 分别为 `8/8/10/6/5/10`，四个外部来源绑定审计时 commit。Assignment 与 Coverage 两个 consumed families 可物化并运行 public/evaluator；其余 45 个 external families 仅为 `CATALOGUED`，0 个 external adapter admitted。Registry validation 与物化测试不调用模型、不打开 SEALED shard、不消费 fresh instance，claim ceiling 为 bank infrastructure/catalog 与 consumed development。详见 [`BENCHMARK_BANK_V1.md`](BENCHMARK_BANK_V1.md)。
+33. CMI-R7 已实现但尚未封存或执行。协议一次性冻结 6 个 exact neighboring-hidden states（Assignment 3 + Coverage 3），seed 由协议 salt 与 family/state/case identity 无筛选派生。单一 primary endpoint 为 paired `utility_delta > state_resolution`；成功要求 `6/6` valid、`6/6` primary positive、`0 negative`、两 family 各 `3/3` positive，并通过既有 aggregate `2x` / per-state `3x` evaluator cost gate。Escape、replacement、AUC 与 breakthrough 只作机制支持指标。六个 state 是 instance-fresh，不是 distribution、task-family 或 evaluator-regime fresh；通过最多 admission 该 Operator 在冻结 Assignment/Coverage fresh states 上，并授权另行预注册 CMI-on/off search comparison，不建立 search value。详见 [`CMI_R7_FRESH_CAUSAL_REPLICATION.md`](CMI_R7_FRESH_CAUSAL_REPLICATION.md)。
 
 ## 状态更新规则
 
@@ -241,4 +245,5 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 - CMI-R4 functional basin escape Operator mechanics：[`CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md`](CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md)
 - CMI-R5 consumed development causal value：[`CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md`](CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md)
 - CMI-R6 consumed distribution replication：[`CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md`](CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md)
+- CMI-R7 fresh-state causal replication：[`CMI_R7_FRESH_CAUSAL_REPLICATION.md`](CMI_R7_FRESH_CAUSAL_REPLICATION.md)
 - Benchmark Bank v1：[`BENCHMARK_BANK_V1.md`](BENCHMARK_BANK_V1.md)
