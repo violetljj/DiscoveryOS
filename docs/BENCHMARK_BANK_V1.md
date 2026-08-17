@@ -5,13 +5,14 @@
 ```text
 BENCHMARK_BANK_V1_REGISTRY_IMPLEMENTED
 BENCHMARK_BANK_V1_DEVELOPMENT_SLICE_EXECUTABLE
-BENCHMARK_BANK_V1_EXTERNAL_ADAPTERS_NOT_YET_ADMITTED
+BENCHMARK_BANK_V1_SIX_ALGOTUNE_CONTRACT_DEV_FAMILIES_EXECUTABLE
+BENCHMARK_BANK_V1_EXTERNAL_SCIENTIFIC_ADMISSION_NOT_ESTABLISHED
 ZERO_FRESH_INSTANCES_CONSUMED
 ```
 
-Benchmark Bank v1 makes the problem family a durable research asset while treating a sealed instance or shard as the consumable scientific unit. It does not declare all listed benchmarks runnable. The registry currently contains 47 core families: two internal consumed families are `DEVELOPMENT_READY`; 45 external families are only `CATALOGUED`; zero external family is `ADMITTED`.
+Benchmark Bank v1 makes the problem family a durable research asset while treating a sealed instance or shard as the consumable scientific unit. It does not declare all listed benchmarks runnable. The registry currently contains 47 core families: two internal consumed families and six external contract-derived AlgoTune families are `DEVELOPMENT_READY`; 39 families remain `CATALOGUED`; zero external family is `ADMITTED`.
 
-The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../benchmarks/bank/v1/registry.json). Its initial validated digest is `b68ec31bea6ed3484d0204ad5ad4ec4ef71396a72ac1f2451d254eb2fbdce718`.
+The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../benchmarks/bank/v1/registry.json). The six-family development batch has registry digest `9fe45e27b802b7b07731265c66edcb31026189068b31f313a141c21726ca51bb`.
 
 ## Difficulty ladder
 
@@ -52,7 +53,7 @@ The bank gate controls corpus eligibility only. It cannot issue scientific verdi
 
 Moving an external family to `ADMITTED` requires all of: an exact upstream commit, license/data-use audit, deterministic instance identity, evaluator and environment digest, local executable preflight, resource envelope, DEV/SHADOW/SEALED split construction, contamination assessment, and replay coverage. Catalog presence or an upstream evaluator is not enough.
 
-## Executable v1 slice
+## Executable internal slice
 
 The first adapter exposes the existing consumed SI-2 Assignment and Coverage families. It materializes a registered instance into:
 
@@ -72,6 +73,33 @@ python -m discoveryos benchmark-bank-materialize-dev `
   --family-id assignment_consumed_dev `
   --instance-id capacitated_assignment_delta `
   --output-dir runs/benchmark-bank-dev/assignment-delta
+```
+
+## AlgoTune R0/R1 development batch
+
+The first external development batch exposes six task contracts from pinned AlgoTune commit `dff9914c10800c7a031c9e8c3d4d1c8cd1b38906`:
+
+| Tier | Family | Local DEV instances |
+|---|---|---:|
+| R0 | Connected Components | 2 |
+| R0 | Dijkstra From Indices | 2 |
+| R0 | 1D Convolution | 2 |
+| R1 | Convex Hull | 2 |
+| R1 | Cholesky Factorization | 2 |
+| R1 | Linear System Solver | 2 |
+
+The adapter is `discoveryos.algotune_contract_dev.v1`. It materializes `algorithm.py`, `public_tests.py`, `evaluate.py`, `task-contract.json`, and `bank-instance.json`. Every registry entry binds the exact upstream task and description hashes. The local evaluator regime is `DISCOVERYOS_STDLIB_ALGOTUNE_CONTRACT_DEV_V1`; it uses deterministic generated DEV cases, validates input immutability and task correctness, then records median local runtime and a higher-is-better development score.
+
+This is deliberately a standard-library contract-compatible development regime. It does not vendor or claim equivalence with AlgoTune's NumPy/SciPy/NetworkX evaluator/runtime, and it does not reproduce official performance results. Its claim ceiling is `EXTERNAL_CONTRACT_DERIVED_DEVELOPMENT_ONLY`. Promotion to `ADMITTED` still requires exact upstream environment execution, license receipt, resource envelope, partition construction and replay under a separately frozen protocol.
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m discoveryos benchmark-bank-materialize-dev `
+  --family-id dijkstra `
+  --instance-id dijkstra_dev_alpha `
+  --output-dir runs/benchmark-bank-dev/dijkstra-alpha
+python runs/benchmark-bank-dev/dijkstra-alpha/public_tests.py
+python runs/benchmark-bank-dev/dijkstra-alpha/evaluate.py
 ```
 
 ## External sources and exposure boundaries

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import subprocess
 import sys
 import tempfile
@@ -27,8 +28,8 @@ class BenchmarkBankTests(unittest.TestCase):
         report = validate_benchmark_bank(registry)
         self.assertEqual(47, report["family_count"])
         self.assertEqual({"R0": 8, "R1": 8, "R2": 10, "R3": 6, "R4": 5, "R5": 10}, report["tier_counts"])
-        self.assertEqual(2, report["development_ready_families"])
-        self.assertEqual(45, report["catalogued_families"])
+        self.assertEqual(8, report["development_ready_families"])
+        self.assertEqual(39, report["catalogued_families"])
         self.assertEqual(0, report["fresh_instances_consumed"])
 
     def test_catalogued_external_family_cannot_execute_or_open_sealed_shard(self) -> None:
@@ -93,6 +94,110 @@ class BenchmarkBankTests(unittest.TestCase):
                 )
                 self.assertEqual(0, evaluation.returncode, evaluation.stderr)
                 self.assertIn('"metrics"', evaluation.stdout)
+
+    def test_six_algotune_contract_families_materialize_and_execute_every_dev_instance(self) -> None:
+        registry = load_benchmark_bank(REGISTRY)
+        families = [
+            family
+            for family in registry["families"]
+            if family.get("adapter_id") == "discoveryos.algotune_contract_dev.v1"
+        ]
+        self.assertEqual(6, len(families))
+        with tempfile.TemporaryDirectory() as temp_dir:
+            for family in families:
+                self.assertEqual(2, len(family["instance_ids"]))
+                for instance_id in family["instance_ids"]:
+                    output = Path(temp_dir) / instance_id
+                    report = materialize_bank_instance(
+                        REGISTRY,
+                        family_id=family["family_id"],
+                        instance_id=instance_id,
+                        output_dir=output,
+                    )
+                    resolution = report["resolution"]
+                    self.assertEqual(
+                        "EXTERNAL_CONTRACT_DERIVED_DEVELOPMENT_ONLY",
+                        resolution["claim_ceiling"],
+                    )
+                    self.assertEqual(
+                        "DISCOVERYOS_STDLIB_ALGOTUNE_CONTRACT_DEV_V1",
+                        resolution["evaluator_regime"],
+                    )
+                    contract = json.loads((output / "task-contract.json").read_text(encoding="utf-8"))
+                    self.assertFalse(contract["upstream_evaluator_reused"])
+                    self.assertEqual("DEV", contract["partition_role"])
+                    public = subprocess.run(
+                        [sys.executable, "public_tests.py"],
+                        cwd=output,
+                        text=True,
+                        capture_output=True,
+                        check=False,
+                    )
+                    self.assertEqual(0, public.returncode, f"{instance_id}: {public.stderr}")
+                    evaluation = subprocess.run(
+                        [sys.executable, "evaluate.py"],
+                        cwd=output,
+                        text=True,
+                        capture_output=True,
+                        check=False,
+                    )
+                    self.assertEqual(0, evaluation.returncode, f"{instance_id}: {evaluation.stderr}")
+                    payload = json.loads(evaluation.stdout)
+                    self.assertEqual(1.0, payload["metrics"]["valid"], instance_id)
+                    self.assertGreater(payload["metrics"]["score"], 0.0, instance_id)
+                    self.assertGreater(payload["metrics"]["median_runtime_ms"], 0.0, instance_id)
+
+    def test_algotune_dev_binding_is_fail_closed(self) -> None:
+        registry = load_benchmark_bank(REGISTRY)
+        family = next(item for item in registry["families"] if item["family_id"] == "dijkstra")
+        family["development_binding"]["upstream_task_sha256"] = "not-a-digest"
+        with self.assertRaisesRegex(ValueError, "DEVELOPMENT_DIGEST_INVALID:dijkstra"):
+            validate_benchmark_bank(registry)
+        registry = load_benchmark_bank(REGISTRY)
+        family = next(item for item in registry["families"] if item["family_id"] == "dijkstra")
+        family["development_binding"]["upstream_task_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "DEVELOPMENT_DIGEST_BINDING_MISMATCH:dijkstra"):
+            validate_benchmark_bank(registry)
+
+    def test_algotune_dev_materialization_replays_and_invalid_candidate_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            first = Path(temp_dir) / "first"
+            second = Path(temp_dir) / "second"
+            report_a = materialize_bank_instance(
+                REGISTRY,
+                family_id="convolution_1d",
+                instance_id="convolution_1d_dev_alpha",
+                output_dir=first,
+            )
+            report_b = materialize_bank_instance(
+                REGISTRY,
+                family_id="convolution_1d",
+                instance_id="convolution_1d_dev_alpha",
+                output_dir=second,
+            )
+            self.assertEqual(
+                report_a["resolution"]["instance_digest"],
+                report_b["resolution"]["instance_digest"],
+            )
+            self.assertEqual(
+                report_a["resolution"]["evaluator_digest"],
+                report_b["resolution"]["evaluator_digest"],
+            )
+            (second / "algorithm.py").write_text(
+                "def solve(problem):\n    return []\n",
+                encoding="utf-8",
+            )
+            evaluation = subprocess.run(
+                [sys.executable, "evaluate.py"],
+                cwd=second,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(0, evaluation.returncode, evaluation.stderr)
+            payload = json.loads(evaluation.stdout)
+            self.assertEqual(0.0, payload["metrics"]["valid"])
+            self.assertEqual(0.0, payload["metrics"]["score"])
 
     def test_registry_rejects_duplicate_or_pretend_admitted_family(self) -> None:
         registry = load_benchmark_bank(REGISTRY)

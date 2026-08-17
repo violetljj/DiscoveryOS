@@ -7,6 +7,13 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Protocol
 
+from discoveryos.benchmarks.algotune_dev import (
+    ADAPTER_ID as ALGOTUNE_DEV_ADAPTER_ID,
+    EVALUATOR_REGIME as ALGOTUNE_DEV_EVALUATOR_REGIME,
+    UPSTREAM_BINDINGS as ALGOTUNE_DEV_UPSTREAM_BINDINGS,
+    UPSTREAM_REVISION as ALGOTUNE_DEV_UPSTREAM_REVISION,
+    materialize_algotune_dev,
+)
 from discoveryos.benchmarks.search_value_mvp0_tasks import normalized_source
 from discoveryos.benchmarks.si2_tasks import si2_confirmation_tasks, si2_discovery_tasks
 from discoveryos.util import digest_bytes, digest_json
@@ -46,6 +53,10 @@ class BenchmarkResolution:
     evaluator_digest: str
     instance_digest: str
     claim_ceiling: str
+    adapter_id: str
+    source_revision: str
+    evaluator_regime: str
+    task_contract_path: str | None = None
 
 
 class BenchmarkAdapter(Protocol):
@@ -115,8 +126,31 @@ def validate_benchmark_bank(registry: dict[str, Any]) -> dict[str, Any]:
             continue
         if status is IntegrationStatus.DEVELOPMENT_READY:
             development_ready += 1
-            if family.get("adapter_id") != InternalConsumedSi2Adapter.adapter_id or not family.get("instance_ids"):
+            adapter_id = family.get("adapter_id")
+            if adapter_id not in {InternalConsumedSi2Adapter.adapter_id, ALGOTUNE_DEV_ADAPTER_ID} or not family.get("instance_ids"):
                 failures.append(f"DEVELOPMENT_ADAPTER_BINDING_INCOMPLETE:{family_id}")
+            if adapter_id == ALGOTUNE_DEV_ADAPTER_ID:
+                binding = family.get("development_binding") or {}
+                required = (
+                    "upstream_task_sha256",
+                    "upstream_description_sha256",
+                    "evaluator_regime",
+                    "dependency_profile",
+                )
+                if any(not binding.get(key) for key in required):
+                    failures.append(f"DEVELOPMENT_PROVENANCE_BINDING_INCOMPLETE:{family_id}")
+                if binding.get("evaluator_regime") != ALGOTUNE_DEV_EVALUATOR_REGIME:
+                    failures.append(f"DEVELOPMENT_EVALUATOR_REGIME_MISMATCH:{family_id}")
+                if binding.get("upstream_evaluator_reused") is not False:
+                    failures.append(f"UPSTREAM_EVALUATOR_REUSE_MUST_BE_EXPLICITLY_FALSE:{family_id}")
+                source = sources.get(str(source_id), {})
+                if source.get("revision") != ALGOTUNE_DEV_UPSTREAM_REVISION:
+                    failures.append(f"DEVELOPMENT_SOURCE_REVISION_MISMATCH:{family_id}")
+                for key in ("upstream_task_sha256", "upstream_description_sha256"):
+                    if not re.fullmatch(r"[0-9a-f]{64}", str(binding.get(key, ""))):
+                        failures.append(f"DEVELOPMENT_DIGEST_INVALID:{family_id}:{key}")
+                    elif binding.get(key) != (ALGOTUNE_DEV_UPSTREAM_BINDINGS.get(family_id) or {}).get(key):
+                        failures.append(f"DEVELOPMENT_DIGEST_BINDING_MISMATCH:{family_id}:{key}")
         if status is IntegrationStatus.ADMITTED:
             admission = family.get("admission") or {}
             required = ("adapter_digest", "evaluator_digest", "license_audit_digest", "preflight_receipt_digest")
@@ -240,6 +274,9 @@ class InternalConsumedSi2Adapter:
             evaluator_digest=instance_payload["evaluator_sha256"],
             instance_digest=digest_json(instance_payload),
             claim_ceiling="CONSUMED_DEVELOPMENT_ONLY",
+            adapter_id=self.adapter_id,
+            source_revision="LOCAL_CONSUMED_SI2",
+            evaluator_regime="SI2_FROZEN_CONSUMED_DEV",
         )
 
 
@@ -255,9 +292,13 @@ def materialize_bank_instance(
     if family is None:
         raise ValueError(f"unknown benchmark family: {family_id}")
     adapter_id = family.get("adapter_id")
-    if adapter_id != InternalConsumedSi2Adapter.adapter_id:
+    if adapter_id == InternalConsumedSi2Adapter.adapter_id:
+        resolution = InternalConsumedSi2Adapter().materialize(family, instance_id, output_dir)
+    elif adapter_id == ALGOTUNE_DEV_ADAPTER_ID:
+        external = materialize_algotune_dev(family, instance_id, output_dir)
+        resolution = BenchmarkResolution(**external)
+    else:
         raise RuntimeError(f"benchmark family is catalogued but has no admitted local adapter: {family_id}")
-    resolution = InternalConsumedSi2Adapter().materialize(family, instance_id, output_dir)
     return {
         "status": "BENCHMARK_DEV_INSTANCE_MATERIALIZED",
         "bank_id": registry["bank_id"],
@@ -271,6 +312,10 @@ def materialize_bank_instance(
             "evaluator_digest": resolution.evaluator_digest,
             "instance_digest": resolution.instance_digest,
             "claim_ceiling": resolution.claim_ceiling,
+            "adapter_id": resolution.adapter_id,
+            "source_revision": resolution.source_revision,
+            "evaluator_regime": resolution.evaluator_regime,
+            "task_contract_path": resolution.task_contract_path,
         },
         "fresh_instances_consumed": 0,
     }
