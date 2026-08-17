@@ -274,3 +274,10 @@
 - **决定**：CMI-R3 只绑定 CMI-R2 的不可变 report 与 controls，以零模型门冻结 functional-output-basin causal target、适用前提、所需上下文、干预指纹、因果可达链、null/positive controls、禁止替代和失败语义。source 文本不同不是充分指纹；候选必须有效且在 state-local probe 上距 incumbent envelope 大于 `0.10`。
 - **原因**：R2 已证明不同 source 可保持完全相同的 functional signature，因此在实现 Operator 前必须先排除 source-only、rewrite/repair 和 evaluator-changing 的伪干预。
 - **后果**：Brief admission 只允许另行设计 create-once Operator protocol；它不证明 Operator 存在或有效，不授权 value trial 或 fresh search-value budget，也不得重跑 consumed R2 states。
+
+## D-040：CMI-R3 Mechanism Brief admission 通过但不授权 Operator
+
+- **日期**：2026-08-17
+- **决定**：接受 manifest `f69966c6a3f7530eb29556c4148dc0bfcc16ae6a441ad5bc0cefee090dafa595` 与 report SHA-256 `903837b1fd3de85ed51f12be45c65c9fc5e89933acf37ab39f2895c16bf12acf` 的 CMI-R3 admission。12/12 frozen checks 通过，claim ceiling 为 `DEVELOPMENT_MECHANISM_BRIEF_ONLY`。
+- **原因**：R2 authority、两状态 applicability、state-local null/positive controls、非平凡 functional-distance fingerprint、causal reachability 和失败语义均由不可变记录绑定；没有重跑 consumed states，也没有模型或 evaluator 调用。
+- **后果**：下一步只允许另行冻结新 development states 上的 escape-Operator protocol，并在 utility test 前先检查 functional fingerprint。当前仍无 Operator 被实现或 admitted，value trial 与 fresh search-value budget 继续关闭。
