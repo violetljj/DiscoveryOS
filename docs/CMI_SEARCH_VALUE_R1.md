@@ -6,7 +6,8 @@
 CMI_SEARCH_VALUE_R1_V1_NOT_EVALUABLE_RESOURCE_ENVELOPE
 CMI_SEARCH_VALUE_R1_V2_NOT_EVALUABLE_INVALID_DESCENDANT_TERMINALIZATION
 CMI_SEARCH_VALUE_R1_V3_PROTOCOL_IMPLEMENTED
-CMI_SEARCH_VALUE_R1_V3_PREFLIGHT_REQUIRED
+CMI_SEARCH_VALUE_R1_V3_REAL_PROVIDER_PREFLIGHT_PASSED
+CMI_SEARCH_VALUE_R1_V3_PREREGISTRATION_READY
 CMI_SEARCH_VALUE_NOT_YET_ESTABLISHED
 ```
 
@@ -17,6 +18,8 @@ V1 sealed manifest `0a82137cdda8d406885b276e20b04308515e78ea5bf461a60c2a5e20e321
 V2 was a resource-only validity repair with a new salt, all-new unscreened cohort and `120,000` ceiling. It failed before its first terminal task receipt when the second prefix descendant was correctly evaluated as `INVALID_MECHANICS/PATCH_APPLY_FAILURE`, but the paired runner then tried to materialize that invalid candidate's source and escalated the expected invalid observation into a process error. Failure receipt SHA-256 `1a40a742f6b2584210eb705146beef44c9d56747230ccd0f244772780324d02a` admits no scientific output; V2 is not reusable.
 
 V3 preserves the V2 resource repair and all scientific semantics, uses another new unscreened cohort, and changes only invalid-descendant terminalization: invalid candidates retain their evidence/failure receipt, are excluded from eligibility and parent replacement, and do not undergo source materialization. Before V3 may seal, the exact runner must complete a real-provider preflight on consumed development tasks.
+
+The exact V3 runner completed that preflight on consumed SI-2 task `capacitated_assignment_delta` with a terminal two-arm report. Report SHA-256 is `428c2b214bde79ab445470d4a8120c570de6b1d0ab50f83190029dae25872b61`; it is a mechanics/executability receipt only and cannot enter the fresh scientific comparison.
 
 ## Paired search design
 
@@ -78,6 +81,8 @@ python -m discoveryos cmi-search-value-r1-seal `
   --workspace runs/cmi-search-value-r1-v3 `
   --cmi-r7-workspace E:/DiscoveryOS/runs/cmi-r7-fresh-causal-replication `
   --cmi-r7-report-sha256 3072e74c1a0114920f98c7930097a5488dd8a50763709a073513a1ef4dca763f `
+  --real-provider-preflight runs/cmi-search-value-r1-v3-real-provider-preflight/terminal-preflight-report.json `
+  --real-provider-preflight-sha256 428c2b214bde79ab445470d4a8120c570de6b1d0ab50f83190029dae25872b61 `
   --model gpt-5.6-sol `
   --reasoning-effort medium `
   --codex-command C:/Users/26442/.codex/.sandbox-bin/codex.exe

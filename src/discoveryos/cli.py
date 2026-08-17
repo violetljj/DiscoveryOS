@@ -299,6 +299,8 @@ def build_parser() -> argparse.ArgumentParser:
     cmi_svr1_seal.add_argument("--workspace", type=Path, default=Path("runs/cmi-search-value-r1-v3"))
     cmi_svr1_seal.add_argument("--cmi-r7-workspace", type=Path, default=Path("runs/cmi-r7-fresh-causal-replication"))
     cmi_svr1_seal.add_argument("--cmi-r7-report-sha256", required=True)
+    cmi_svr1_seal.add_argument("--real-provider-preflight", type=Path, required=True)
+    cmi_svr1_seal.add_argument("--real-provider-preflight-sha256", required=True)
     cmi_svr1_seal.add_argument("--model", required=True)
     cmi_svr1_seal.add_argument("--codex-command", required=True)
     cmi_svr1_seal.add_argument("--reasoning-effort", required=True)
@@ -955,6 +957,8 @@ def main(argv: list[str] | None = None) -> int:
                     args.workspace,
                     cmi_r7_workspace=args.cmi_r7_workspace,
                     cmi_r7_report_sha256=args.cmi_r7_report_sha256,
+                    real_provider_preflight_path=args.real_provider_preflight,
+                    real_provider_preflight_sha256=args.real_provider_preflight_sha256,
                     provider=provider,
                 )
             else:

@@ -10,6 +10,7 @@ from discoveryos.benchmarks.cmi_search_value_r1 import (
     _aggregate,
     _bounded_observations,
     _load_r7_authority,
+    _load_real_provider_preflight,
     _run_task,
 )
 from discoveryos.benchmarks.search_policy_admission import SearchObservation
@@ -68,6 +69,16 @@ class _SecondInvalidPatchProvider(_CommentProvider):
 
 
 class CmiSearchValueR1Tests(unittest.TestCase):
+    def test_real_provider_consumed_preflight_is_terminal_and_bindable(self) -> None:
+        path = Path(__file__).resolve().parents[1] / "runs" / "cmi-search-value-r1-v3-real-provider-preflight" / "terminal-preflight-report.json"
+        if not path.is_file():
+            self.skipTest("ignored real-provider preflight is not present")
+        binding = _load_real_provider_preflight(
+            path,
+            "428c2b214bde79ab445470d4a8120c570de6b1d0ab50f83190029dae25872b61",
+        )
+        self.assertTrue(binding["terminal"])
+
     def test_invalid_prefix_descendant_is_recorded_and_falls_back_without_source_materialization(self) -> None:
         item = cmi_search_value_r1_tasks()[0]
         provider = _SecondInvalidPatchProvider()

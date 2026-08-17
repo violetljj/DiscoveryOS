@@ -71,6 +71,8 @@ def seal_cmi_search_value_r1(
     *,
     cmi_r7_workspace: Path,
     cmi_r7_report_sha256: str,
+    real_provider_preflight_path: Path,
+    real_provider_preflight_sha256: str,
     provider: PatchProvider,
     require_clean_repository: bool = True,
 ) -> dict[str, Any]:
@@ -87,6 +89,9 @@ def seal_cmi_search_value_r1(
         raise RuntimeError("CMI Search Value R1 requires explicit reasoning effort")
 
     authority = _load_r7_authority(cmi_r7_workspace.resolve(), cmi_r7_report_sha256)
+    preflight = _load_real_provider_preflight(
+        real_provider_preflight_path.resolve(), real_provider_preflight_sha256
+    )
     tasks = cmi_search_value_r1_tasks()
     _validate_fresh_population(tasks, authority["manifest"])
     workspace.mkdir(parents=True, exist_ok=True)
@@ -110,6 +115,7 @@ def seal_cmi_search_value_r1(
             for path in implementation_paths
         },
         "cmi_r7_authority": authority["binding"],
+        "real_provider_consumed_task_preflight": preflight,
         "superseded_v1": {
             "manifest_digest": "0a82137cdda8d406885b276e20b04308515e78ea5bf461a60c2a5e20e32114e7",
             "failure_receipt_sha256": "fde8384ea996e1b588f5ba62b04b7fd71d7da85675eedac2d4b96cb0b7a9f438",
@@ -841,6 +847,31 @@ def _validate_fresh_population(tasks: tuple[SearchValueTask, ...], r7_manifest: 
     r7_ids = {state["task_id"] for state in r7_manifest.get("states", [])}
     if any(item.task.task_id in r7_ids for item in tasks):
         raise RuntimeError("CMI Search Value R1 overlaps the consumed R7 sealed shard")
+
+
+def _load_real_provider_preflight(path: Path, expected_sha256: str) -> dict[str, Any]:
+    if not path.is_file() or digest_bytes(path.read_bytes()) != expected_sha256:
+        raise RuntimeError("CMI Search Value R1 real-provider preflight hash mismatch")
+    report = json.loads(path.read_text(encoding="utf-8"))
+    consumed_ids = {item.task.task_id for item in (*si2_discovery_tasks(), *si2_confirmation_tasks())}
+    if (
+        report.get("protocol_id") != PROTOCOL_ID
+        or report.get("manifest_digest") != "CONSUMED_REAL_PROVIDER_PREFLIGHT"
+        or report.get("task_id") not in consumed_ids
+        or set(report.get("arms", {})) != set(ARM_NAMES)
+        or not all(
+            all(report["arms"][arm].get("resource_checks", {}).values())
+            for arm in ARM_NAMES
+        )
+    ):
+        raise RuntimeError("CMI Search Value R1 real-provider preflight is not terminal and valid")
+    return {
+        "path": str(path),
+        "sha256": expected_sha256,
+        "task_id": report["task_id"],
+        "task_role": "CONSUMED_DEVELOPMENT_PREFLIGHT_ONLY",
+        "terminal": True,
+    }
 
 
 def _load_and_verify_manifest(workspace: Path, expected_digest: str, provider: PatchProvider) -> dict[str, Any]:
