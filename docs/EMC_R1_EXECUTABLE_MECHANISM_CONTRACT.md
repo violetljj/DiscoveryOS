@@ -4,10 +4,14 @@
 
 ```text
 EMC_R1_PROTOCOL_IMPLEMENTED
-EMC_R1_NOT_YET_SEALED
+EMC_R1_NOT_EVALUABLE_IMPLEMENTATION_ENUM
+EMC_R2_PROTOCOL_IMPLEMENTED
+EMC_R2_NOT_YET_SEALED
 ```
 
-EMC-R1 is a new protocol and create-once workspace. It does not modify, replay, or reinterpret any GCF-V2 root. Its narrow question is whether a generator that receives a frozen Structured Mechanism Object plus a deterministically compiled Executable Mechanism Contract produces implementations whose required and forbidden paths are independently observed at runtime.
+EMC-R1 was sealed at commit `cc95730`. Its E0 instrumentation sensitivity passed 4/4 controls with zero model calls, but E1 stopped before provider invocation because the implementation request referenced a nonexistent `GenerationKind.STRUCTURAL_REWRITE`. R1 is closed as `EMC_R1_NOT_EVALUABLE_IMPLEMENTATION_ENUM`: zero provider calls, zero tokens, and no semantic result. Its create-once root is not modified.
+
+EMC-R2 changes only that executability blocker to the existing `GenerationKind.PROPOSAL`, uses a new protocol ID, record names, state IDs, and workspace, and otherwise retains the R1 mechanism objects, compiler, states, instrumentation, schedule, resource ceilings, gates, and claim ceiling. Neither version modifies, replays, or reinterprets GCF-V2. The narrow question remains whether a generator that receives a frozen Structured Mechanism Object plus a deterministically compiled Executable Mechanism Contract produces implementations whose required and forbidden paths are independently observed at runtime.
 
 ## Claim ceiling
 
@@ -55,11 +59,11 @@ The 60,000-token per-call ceiling is a new-protocol executability bound based on
 ```powershell
 $codexCli = Join-Path $env:USERPROFILE ".codex\.sandbox-bin\codex.exe"
 $env:PYTHONPATH = "src"
-python -m discoveryos emc-r1-seal --workspace runs/emc-r1-executable-contract --model gpt-5.6-sol --codex-command $codexCli --reasoning-effort medium
-python -m discoveryos emc-r1-instrumentation --workspace runs/emc-r1-executable-contract --manifest-digest <digest> --model gpt-5.6-sol --codex-command $codexCli --reasoning-effort medium
-python -m discoveryos emc-r1-preflight --workspace runs/emc-r1-executable-contract --manifest-digest <digest> --model gpt-5.6-sol --codex-command $codexCli --reasoning-effort medium
-python -m discoveryos emc-r1-calibrate --workspace runs/emc-r1-executable-contract --manifest-digest <digest> --model gpt-5.6-sol --codex-command $codexCli --reasoning-effort medium
-python -m discoveryos emc-r1-validate --workspace runs/emc-r1-executable-contract --manifest-digest <digest> --model gpt-5.6-sol --codex-command $codexCli --reasoning-effort medium
+python -m discoveryos emc-r2-seal --workspace runs/emc-r2-executable-contract --model gpt-5.6-sol --codex-command $codexCli --reasoning-effort medium
+python -m discoveryos emc-r2-instrumentation --workspace runs/emc-r2-executable-contract --manifest-digest <digest> --model gpt-5.6-sol --codex-command $codexCli --reasoning-effort medium
+python -m discoveryos emc-r2-preflight --workspace runs/emc-r2-executable-contract --manifest-digest <digest> --model gpt-5.6-sol --codex-command $codexCli --reasoning-effort medium
+python -m discoveryos emc-r2-calibrate --workspace runs/emc-r2-executable-contract --manifest-digest <digest> --model gpt-5.6-sol --codex-command $codexCli --reasoning-effort medium
+python -m discoveryos emc-r2-validate --workspace runs/emc-r2-executable-contract --manifest-digest <digest> --model gpt-5.6-sol --codex-command $codexCli --reasoning-effort medium
 ```
 
 The workspace becomes consumed when a scientific implementation phase runs. Do not change contracts, states, probes, replicates, gates, or ceilings in place after observing results.

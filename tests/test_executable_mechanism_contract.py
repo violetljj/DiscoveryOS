@@ -120,10 +120,10 @@ class ExecutableMechanismContractTests(unittest.TestCase):
         draws = [_draw(condition, replicate) for condition in (CONDITION_DIRECT, CONDITION_REPAIR) for replicate in range(3)]
         analysis = _analyze_draws(draws)
         self.assertTrue(analysis["between_condition_counter_signatures_separated"])
-        self.assertEqual((True, "EMC_R1_CALIBRATION_PASSED"), _gate_verdict(draws, analysis, "CALIBRATION"))
+        self.assertEqual((True, "EMC_R2_CALIBRATION_PASSED"), _gate_verdict(draws, analysis, "CALIBRATION"))
         broken = [*draws[:-1], _draw(CONDITION_REPAIR, 2, runtime_contract_passed=False)]
         broken_analysis = _analyze_draws(broken)
-        self.assertEqual("EMC_R1_CALIBRATION_RUNTIME_CONTRACT_FAILED", _gate_verdict(broken, broken_analysis, "CALIBRATION")[1])
+        self.assertEqual("EMC_R2_CALIBRATION_RUNTIME_CONTRACT_FAILED", _gate_verdict(broken, broken_analysis, "CALIBRATION")[1])
 
     def test_prompt_hides_condition_and_instrumentation(self) -> None:
         template = _implementation_prompt_template()

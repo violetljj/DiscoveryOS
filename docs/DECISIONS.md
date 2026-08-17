@@ -190,3 +190,10 @@
 - **决定**：EMC-R1 不再把 source embedding 或模型自报 counter 当作 executable evidence。Structured Mechanism Object 由 deterministic compiler 在 implementation 调用前转成 required/forbidden function、entrypoint call edge、runtime counter bounds 和 invariants，并绑定 digest。候选不知道 profile probe 内容；独立 harness 从 `algorithm.py` 的真实 call events 生成权威 counter evidence。
 - **原因**：GCF-V2 已检测到 structured object 与 source separation，但 resource violation 使 runtime behavior 未知。若 counter 由候选自行写入或只看函数是否出现，semantic claim 仍可能与实际执行脱节。
 - **后果**：EMC-R1 使用全新 assignment/coverage development states 与 create-once root，按 E0 无模型 sensitivity、E1 单次 provider/resource preflight、E2 六次 calibration、E3 六次 independent validation 顺序执行。60,000-token ceiling 只属于新协议，按 receipt post-check fail closed；不得回改 GCF-V2。任何 positive 仍只支持 two-state contract-transmission development claim，utility、fresh value trial 与 SI-3 不自动开放。
+
+## D-028：EMC-R1 implementation enum blocker 关闭原 root，R2 只修 executability
+
+- **日期**：2026-08-17
+- **决定**：EMC-R1 的 E0 通过后，E1 在 provider 调用前因不存在的 `GenerationKind.STRUCTURAL_REWRITE` 抛出 `AttributeError`。R1 记为 `EMC_R1_NOT_EVALUABLE_IMPLEMENTATION_ENUM`，0 provider calls、0 tokens，不产生 semantic result，也不原地修改 create-once root。EMC-R2 使用已有 `GenerationKind.PROPOSAL`，换新 protocol ID、records、state IDs 与 workspace。
+- **原因**：该失败是封存后暴露的纯 executability blocker，不是 Mechanism Object、contract 或 runtime behavior 的证据。原地修改会破坏 manifest 的 commit/source binding。
+- **后果**：R2 保持 R1 的 objects、compiler、tasks、seeds、probe、replicates、gate、60,000-token ceiling 与 claim ceiling；不得趁版本切换调整科学语义。

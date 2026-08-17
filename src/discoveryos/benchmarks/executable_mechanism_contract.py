@@ -22,12 +22,12 @@ from discoveryos.runtime.artifacts import ArtifactStore
 from discoveryos.util import digest_bytes, digest_json, jsonable
 
 
-PROTOCOL_ID = "EMC_R1_EXECUTABLE_MECHANISM_CONTRACT"
-MANIFEST_RECORD = "emc-r1-manifest.json"
-SENSITIVITY_RECORD = "emc-r1-instrumentation-sensitivity.json"
-PREFLIGHT_RECORD = "emc-r1-provider-preflight.json"
-CALIBRATION_RECORD = "emc-r1-implementation-calibration.json"
-VALIDATION_RECORD = "emc-r1-implementation-validation.json"
+PROTOCOL_ID = "EMC_R2_EXECUTABLE_MECHANISM_CONTRACT"
+MANIFEST_RECORD = "emc-r2-manifest.json"
+SENSITIVITY_RECORD = "emc-r2-instrumentation-sensitivity.json"
+PREFLIGHT_RECORD = "emc-r2-provider-preflight.json"
+CALIBRATION_RECORD = "emc-r2-implementation-calibration.json"
+VALIDATION_RECORD = "emc-r2-implementation-validation.json"
 CONDITION_DIRECT = "DIRECT_CONSTRUCTION"
 CONDITION_REPAIR = "POST_CONSTRUCTION_REPAIR"
 REPLICATES_PER_CONDITION = 3
@@ -255,7 +255,7 @@ def run_instrumentation_sensitivity(
         })
     passed = len(results) == 4 and all(item["matched"] for item in results)
     record = {
-        "status": "EMC_R1_INSTRUMENTATION_SENSITIVITY_PASSED" if passed else "EMC_R1_INSTRUMENTATION_SENSITIVITY_FAILED",
+        "status": "EMC_R2_INSTRUMENTATION_SENSITIVITY_PASSED" if passed else "EMC_R2_INSTRUMENTATION_SENSITIVITY_FAILED",
         "protocol_id": PROTOCOL_ID,
         "manifest_digest": manifest_digest,
         "passed": passed,
@@ -282,11 +282,11 @@ def run_provider_preflight(
         raise RuntimeError("EMC provider preflight blocked because instrumentation sensitivity did not pass")
     item = next(item for item in manifest["implementation_schedule"] if item["phase"] == "CALIBRATION")
     state = next(state for state in manifest["states"] if state["state_id"] == item["state_id"])
-    draw = _generate_implementation(workspace, state, {**item, "draw_id": "emc-r1-provider-preflight"}, implementation_provider)
+    draw = _generate_implementation(workspace, state, {**item, "draw_id": "emc-r2-provider-preflight"}, implementation_provider)
     resource_ok = draw.token_cost <= PREFLIGHT_TOKEN_CEILING
     passed = draw.evaluable and resource_ok
     record = {
-        "status": "EMC_R1_PROVIDER_PREFLIGHT_PASSED" if passed else "EMC_R1_PROVIDER_PREFLIGHT_FAILED",
+        "status": "EMC_R2_PROVIDER_PREFLIGHT_PASSED" if passed else "EMC_R2_PROVIDER_PREFLIGHT_FAILED",
         "protocol_id": PROTOCOL_ID,
         "manifest_digest": manifest_digest,
         "sensitivity_record_sha256": digest_bytes(sensitivity_path.read_bytes()),
@@ -357,7 +357,7 @@ def run_implementation_validation(
         else gate_verdict
     )
     record = {
-        "status": "EMC_R1_COMPLETE",
+        "status": "EMC_R2_COMPLETE",
         "protocol_id": PROTOCOL_ID,
         "manifest_digest": manifest_digest,
         "calibration_record_sha256": digest_bytes(calibration_path.read_bytes()),
@@ -393,7 +393,7 @@ def _freeze_task(store: ArtifactStore, role: str, task: Any) -> dict[str, Any]:
     }
     base_source = normalized_source(task.task.algorithm_source)
     state = {
-        "state_id": f"emc-r1-{task.task.task_id}",
+        "state_id": f"emc-r2-{task.task.task_id}",
         "role": role,
         "task_id": task.task.task_id,
         "task_category": task.task.category,
@@ -463,7 +463,7 @@ def _generate_implementation(
         executable_contract=json.dumps(contract, sort_keys=True, separators=(",", ":")),
     )
     request = GenerationRequest.create(
-        kind=GenerationKind.STRUCTURAL_REWRITE,
+        kind=GenerationKind.PROPOSAL,
         root_generation_id=None,
         provider=provider.provider_name,
         model=provider.model,
@@ -682,18 +682,18 @@ def _analyze_draws(draws: Iterable[ImplementationDraw]) -> dict[str, Any]:
 def _gate_verdict(draws: Iterable[ImplementationDraw], analysis: dict[str, Any], phase: str) -> tuple[bool, str]:
     values = list(draws)
     if not analysis["resource_ceilings_respected"] or not analysis["all_evaluable"]:
-        return False, f"EMC_R1_{phase}_NOT_EVALUABLE_RESOURCE_OR_PROVIDER"
+        return False, f"EMC_R2_{phase}_NOT_EVALUABLE_RESOURCE_OR_PROVIDER"
     if not analysis["all_sources_valid"] or not analysis["all_invariant_canaries_passed"]:
-        return False, f"EMC_R1_{phase}_IMPLEMENTATION_INVALID"
+        return False, f"EMC_R2_{phase}_IMPLEMENTATION_INVALID"
     if not analysis["all_static_contracts_passed"]:
-        return False, f"EMC_R1_{phase}_STATIC_CONTRACT_FAILED"
+        return False, f"EMC_R2_{phase}_STATIC_CONTRACT_FAILED"
     if not analysis["all_runtime_contracts_passed"]:
-        return False, f"EMC_R1_{phase}_RUNTIME_CONTRACT_FAILED"
+        return False, f"EMC_R2_{phase}_RUNTIME_CONTRACT_FAILED"
     if not analysis["between_condition_counter_signatures_separated"]:
-        return False, f"EMC_R1_{phase}_RUNTIME_SIGNATURE_NOT_SEPARATED"
+        return False, f"EMC_R2_{phase}_RUNTIME_SIGNATURE_NOT_SEPARATED"
     if len(values) != 2 * REPLICATES_PER_CONDITION:
-        return False, f"EMC_R1_{phase}_INCOMPLETE"
-    return True, f"EMC_R1_{phase}_PASSED"
+        return False, f"EMC_R2_{phase}_INCOMPLETE"
+    return True, f"EMC_R2_{phase}_PASSED"
 
 
 def _provider_binding(provider: PatchProvider) -> dict[str, Any]:

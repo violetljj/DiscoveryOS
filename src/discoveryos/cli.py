@@ -241,18 +241,18 @@ def build_parser() -> argparse.ArgumentParser:
         else:
             command_parser.add_argument("--manifest-digest", required=True)
     for name, help_text in (
-        ("emc-r1-seal", "seal the Executable Mechanism Contract protocol before model calls"),
-        ("emc-r1-instrumentation", "run the no-model independent instrumentation sensitivity gate"),
-        ("emc-r1-preflight", "run the one-call EMC provider and resource preflight"),
-        ("emc-r1-calibrate", "run the six-call executable-contract calibration state"),
-        ("emc-r1-validate", "run the independent executable-contract validation state"),
+        ("emc-r2-seal", "seal the repaired Executable Mechanism Contract protocol before model calls"),
+        ("emc-r2-instrumentation", "run the no-model independent instrumentation sensitivity gate"),
+        ("emc-r2-preflight", "run the one-call EMC provider and resource preflight"),
+        ("emc-r2-calibrate", "run the six-call executable-contract calibration state"),
+        ("emc-r2-validate", "run the independent executable-contract validation state"),
     ):
         command_parser = subparsers.add_parser(name, help=help_text)
-        command_parser.add_argument("--workspace", type=Path, default=Path("runs/emc-r1-executable-contract"))
+        command_parser.add_argument("--workspace", type=Path, default=Path("runs/emc-r2-executable-contract"))
         command_parser.add_argument("--model", required=True)
         command_parser.add_argument("--codex-command", default="codex")
         command_parser.add_argument("--reasoning-effort", required=True)
-        if name == "emc-r1-seal":
+        if name == "emc-r2-seal":
             command_parser.add_argument("--max-workers", type=int, default=2)
         else:
             command_parser.add_argument("--manifest-digest", required=True)
@@ -509,11 +509,11 @@ def main(argv: list[str] | None = None) -> int:
                     progress=lambda message: print(message, file=sys.stderr, flush=True),
                 )
         elif args.command in {
-            "emc-r1-seal",
-            "emc-r1-instrumentation",
-            "emc-r1-preflight",
-            "emc-r1-calibrate",
-            "emc-r1-validate",
+            "emc-r2-seal",
+            "emc-r2-instrumentation",
+            "emc-r2-preflight",
+            "emc-r2-calibrate",
+            "emc-r2-validate",
         }:
             module = __import__(
                 "discoveryos.benchmarks.executable_mechanism_contract",
@@ -525,17 +525,17 @@ def main(argv: list[str] | None = None) -> int:
                 reasoning_effort=args.reasoning_effort,
                 output_schema=module.IMPLEMENTATION_SCHEMA,
             )
-            if args.command == "emc-r1-seal":
+            if args.command == "emc-r2-seal":
                 result = seal_emc_protocol(args.workspace, implementation_provider=provider, max_workers=args.max_workers)
-            elif args.command == "emc-r1-instrumentation":
+            elif args.command == "emc-r2-instrumentation":
                 result = run_emc_instrumentation_sensitivity(
                     args.workspace, manifest_digest=args.manifest_digest, implementation_provider=provider
                 )
-            elif args.command == "emc-r1-preflight":
+            elif args.command == "emc-r2-preflight":
                 result = run_emc_provider_preflight(
                     args.workspace, manifest_digest=args.manifest_digest, implementation_provider=provider
                 )
-            elif args.command == "emc-r1-calibrate":
+            elif args.command == "emc-r2-calibrate":
                 result = run_emc_implementation_calibration(
                     args.workspace,
                     manifest_digest=args.manifest_digest,

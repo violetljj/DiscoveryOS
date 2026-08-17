@@ -44,7 +44,9 @@ STRUCTURED_MECHANISM_OBJECT_CHANNEL_DETECTED_ON_TWO_DEV_STATES
 GCF_V2_R3_NOT_EVALUABLE_RESOURCE_CEILING
 NO_STRUCTURED_MECHANISM_CHANNEL_ADMITTED
 EMC_R1_PROTOCOL_IMPLEMENTED
-EMC_R1_NOT_YET_SEALED
+EMC_R1_NOT_EVALUABLE_IMPLEMENTATION_ENUM
+EMC_R2_PROTOCOL_IMPLEMENTED
+EMC_R2_NOT_YET_SEALED
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -151,6 +153,7 @@ EMC_R1_NOT_YET_SEALED
 14. R3 的 12/12 isolated implementations 全部 evaluable 且 source valid，source separation 为 `2/2`，hidden behavior 为 `0/2`；但 3/12 calls 超过冻结 30,000-token ceiling，最大 53,655，因此正式 verdict 是 `GCF_V2_R3_NOT_EVALUABLE_RESOURCE_CEILING`，不是 semantic negative。总计 25 calls、529,044 tokens、755.502 summed provider seconds，0 fresh search-value tasks。R3 root 关闭，不提高 ceiling、不改 probe/margin、不补 replicate；implementation validation、fresh value trial 和 SI-3 继续关闭。完整证据见 [`GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md`](GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md)。
 15. 下一允许的 generator-interface 假设是新版本 Executable Mechanism Contract：使用新 states，在调用前冻结 required/forbidden call paths、replacement points、invariants 和 runtime counters。它必须重新通过独立 proposal/object、implementation 和 hidden-behavior gates；不得用 R3 的 source separation 或 utility record-only 数字替代 admission。
 16. EMC-R1 已实现为独立 create-once 协议：Structured Mechanism Object 经 deterministic compiler 变成 required/forbidden functions、entrypoint call edges、外部 profile counters 与 invariants。候选自报 counter 不具证据权。顺序门为 0-call instrumentation sensitivity、1-call provider/resource preflight、6-call assignment calibration、6-call independent coverage validation；当前仅为 `EMC_R1_PROTOCOL_IMPLEMENTED`，尚未封存或产生模型证据。详见 [`EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md`](EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md)。
+17. EMC-R1 在 commit `cc95730` 封存，E0 的 4/4 instrumentation controls 通过；E1 因不存在的 `GenerationKind.STRUCTURAL_REWRITE` 在 provider 前失败，0 provider calls、0 tokens，正式关闭为 `EMC_R1_NOT_EVALUABLE_IMPLEMENTATION_ENUM`。R1 root 不修补。EMC-R2 只把 request kind 修正为已有的 `PROPOSAL` 并换新 protocol/root，其余科学语义不变，当前尚未封存。
 
 ## 状态更新规则
 
