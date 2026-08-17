@@ -24,9 +24,10 @@ P2_FACTOR_CONTROLS_ACTION_CAPABILITY_MATCHED
 P2_FACTORIAL_PROTOCOL_SEALED_PRE_MODEL
 P2_FACTORIAL_V1_EXECUTION_AUTHORITY_FAILED_PRE_MODEL
 P2_FACTORIAL_V1_MODEL_CALLS_ZERO
-P2_FACTORIAL_V2_RUNNER_IMPLEMENTED
-P2_FACTORIAL_V2_ZERO_MODEL_BLOCK_PREFLIGHT_PASS
-P2_FACTORIAL_V2_PENDING_CREATE_ONCE_SEAL
+P2_FACTORIAL_V2_TASK_COMMIT_IDENTITY_FAILED_PRE_MODEL
+P2_FACTORIAL_V2_MODEL_CALLS_ZERO
+P2_FACTORIAL_V3_RUNNER_IMPLEMENTED
+P2_FACTORIAL_V3_PENDING_CREATE_ONCE_SEAL
 ADA_TRAJECTORY_PARITY_SLICE_MECHANICS_READY
 ADA_TRAJECTORY_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
 ADA_SEARCH_VALUE_NOT_EVALUATED
@@ -239,7 +240,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 1. Ada trajectory slice 已通过零模型 control/generation-context transmission：productive/weak trajectory 会产生不同 receipt、mode、decision 与真实 Harness generation request，绑定漂移 fail closed。它不建立 candidate behavior 或 search value；完整边界见 [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md)。
 2. EvoX typed same-run strategy state machine 已通过零模型 mechanics/transmission：冻结策略可部署、观察、评分、retain/switch/rollback，并实际改变 parent mode 与 variation guidance；完整边界见 [`EVOX_STRATEGY_PARITY_SLICE.md`](EVOX_STRATEGY_PARITY_SLICE.md)。它不建立 candidate behavior 或 search value。
 3. `neither / Ada-only / EvoX-only / Ada+EvoX` 四臂已重新冻结并通过零模型公平性门。协议预检进一步发现并修复了 off-arm 缺少 structural capability 的 executability blocker：现在所有 arm 始终保留同一 bootstrap/local/structural capability，Ada 只替换 trajectory-unconditioned local control，EvoX 只替换 strategy-unconditioned structural control；三类 action path 的 reservation surface 相同。每臂仍使用独立物理 ledger，arm 内 candidate、strategy、lineage、evidence 和 budget 共享同一 Ledger/Research Graph 权威。完整边界见 [`P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md`](P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md)。
-4. P2 V1 的首次独立 worktree execution-authority 校验在模型调用前因 LF/CRLF-sensitive Harness digest fail closed；V1 同时没有绑定完整 12-block runner，因此 `0` model calls、`0/12` blocks，不能执行或原地修复。V2 已规范化 Harness source digest，并实现 exact schedule、逐 block fairness、48 arm terminals、资源/失败结算、within-block factorial aggregation、Holm sign tests 与 replay；真实 consumed-task 四臂零模型 block preflight 已通过。V2 仍须从 clean committed worktree create-once seal 后才授权首个模型调用；fresh 题仍未授权。见 [`P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md`](P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md)。
+4. P2 V1 在模型调用前因 LF/CRLF-sensitive Harness digest fail closed，且未绑定完整 runner。V2 修复该问题并绑定 exact 12-block 执行闭环，但首个 block 又在模型调用前发现生成 task repository 的 commit timestamp identity 不可重放；V1/V2 均为 `0` model calls、`0/12` blocks，partial root 不可续跑。V3 继续冻结相同题目、provider、资源和统计，只把内容稳定的 task Git tree 设为权威、临时 commit 降为诊断 provenance；V3 仍须从 clean committed worktree create-once seal 后才授权首个模型调用。见 [`P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md`](P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md)。
 5. 只有 P2 静态 factorial comparison 取得正向、可重放结果，才允许设计 P3 adaptive profile；否则先诊断静态组合。
 6. P3 通过后才允许 P4 memory-conditioned comparison；P4 通过后才允许 P5 Harness evolution。当前不开放 fresh/SEALED 资产或 superiority/generalization claim。
 

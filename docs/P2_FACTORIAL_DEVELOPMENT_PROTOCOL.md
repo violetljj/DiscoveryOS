@@ -5,17 +5,18 @@
 ```text
 P2_FACTORIAL_V1_EXECUTION_AUTHORITY_FAILED_PRE_MODEL
 P2_FACTORIAL_V1_MODEL_CALLS_ZERO
-P2_FACTORIAL_V2_RUNNER_IMPLEMENTED
-P2_FACTORIAL_V2_ZERO_MODEL_BLOCK_PREFLIGHT_PASS
-P2_FACTORIAL_V2_PENDING_CREATE_ONCE_SEAL
+P2_FACTORIAL_V2_TASK_COMMIT_IDENTITY_FAILED_PRE_MODEL
+P2_FACTORIAL_V2_MODEL_CALLS_ZERO
+P2_FACTORIAL_V3_RUNNER_IMPLEMENTED
+P2_FACTORIAL_V3_PENDING_CREATE_ONCE_SEAL
 P2_SEARCH_VALUE_NOT_EVALUATED
 ```
 
 V1 remains an immutable historical seal. Its first independent-worktree execution-authority check failed before any model call because `harness_code_bundle_digest()` hashed checkout line endings: the LF sealing checkout and CRLF detached worktree produced different Profile/fairness identities from byte-equivalent normalized sources. The frozen V1 source also lacked a bound 12-block execution, settlement and replay entrypoint. V1 therefore produced no scientific result and must not be executed or repaired in place.
 
-V2 preserves the scientific question, tasks, paired design, provider, resource ceilings, estimands, statistics and claim ceiling. It changes only the pre-model executability surface: Harness source digests normalize CRLF/LF, the complete runner is bound by the protocol source digest, and a real consumed-task four-arm block must pass without invoking the provider before sealing.
+V2 fixed the cross-worktree identity and bound the runner, but its first block failed before any model call because task repositories are generated with a new commit timestamp: content-identical trees received different commit IDs between seal and execution. Its partial root is immutable and cannot resume. V3 preserves the same scientific design and makes the generated task Git tree authoritative while retaining the ephemeral commit only as diagnostic provenance.
 
-## Frozen design to be sealed as V2
+## Frozen design to be sealed as V3
 
 - Arms: `neither / Ada-only / EvoX-only / Ada+EvoX`.
 - Factor controls: every arm retains bootstrap, local-refinement and structural-escape capabilities. Ada replaces only the trajectory-unconditioned local control; EvoX replaces only the strategy-unconditioned structural control.
@@ -51,4 +52,4 @@ Every direction is predeclared positive. Each requires median paired effect of a
 
 A positive result can establish only a bounded factorial development signal on these consumed tasks. It cannot establish official AdaEvolve/EvoX parity, fresh-task generalization, DiscoveryOS superiority or production readiness.
 
-The next action is to commit this V2 implementation, create a clean detached worktree at that commit, pass execution-authority verification, and create-once seal V2 before the first model call. Exact commit, source, Profile/fairness, provider and manifest digests will be recorded only after that seal succeeds.
+The next action is to commit V3, create a clean detached worktree at that commit, pass execution-authority verification, and create-once seal V3 before the first model call. Exact commit, source, Profile/fairness, provider and manifest digests will be recorded only after that seal succeeds.

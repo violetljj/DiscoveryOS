@@ -456,3 +456,10 @@
 - **决定**：V1 的首次独立 worktree authority check 在 0 model calls 时输出 `P2 factorial Profile/fairness binding drift`。根因是 `harness_code_bundle_digest()` 对 LF/CRLF checkout 字节敏感；归一化文本完全一致，但独立 worktree的 Profile identity 与 seal 不同。V1 冻结源码同时只有 seal/verify，没有绑定 12-block runner、terminal、聚合和 replay。因此撤销 V1 的执行授权，保留原 manifest 不变，以新 V2 revision 修复。
 - **原因**：独立 worktree 是协议要求，不能通过在原 sealing checkout 运行来绕过 identity mismatch；临时外置 runner 也不属于被冻结的 evidence semantics。两者都是首次模型调用前的 validity/executability blocker，不是科学结果。
 - **后果**：V2 只允许规范化 Harness 文本 digest，并绑定同一六题、两 replicate、四臂、provider、资源 ceiling、estimands、Holm gate 与 claim ceiling 的完整执行闭环。一个 baseline evaluator call 加最多六个统一 search steps，保证 evaluator 总调用不超过 7；generation 仍不超过 7。每个 block 在模型调用前重做四臂 runtime fairness，所有 start/fairness/arm/block terminal create-once，partial root 禁止同 revision resume。V2 必须在新的 clean commit 上通过真实 consumed-task 零模型 block preflight 并重新 seal，才能恢复模型调用授权。
+
+## D-066：生成 task repository 绑定 tree，不绑定时间戳 commit
+
+- **日期**：2026-08-18
+- **决定**：V2 首个 block 在 0 model calls 时发现 seal preflight 与正式 materialization 的 task Git commit 不同。任务生成器每次创建内容相同的 repository，但 commit author/committer timestamp 使 commit ID 改变。V2 partial root 保持不可续跑；V3 将 `HEAD^{tree}` 作为 task repository 内容权威，生成 commit 只保留为非权威诊断 provenance。
+- **原因**：科学绑定需要识别题目文件内容，而不是一次性临时仓库的时钟元数据。放宽为“不校验 repository”会失去 fail-closed；固定或忽略 commit 而不绑定 tree 也不足以证明 task/evaluator/lock 内容一致。
+- **后果**：V3 seal 必须记录每题 tree identity，正式 block materialization 必须重算并完全匹配；task payload、initial source、evaluator、reference/intermediate digests 继续同时绑定。其余四臂、12 blocks、provider、资源、estimands、统计和 claim ceiling 不变。V3 仍须新 commit、新 create-once root 和零模型 authority/preflight 通过后才授权模型调用。

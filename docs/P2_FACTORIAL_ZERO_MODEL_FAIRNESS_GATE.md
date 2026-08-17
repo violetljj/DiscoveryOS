@@ -7,7 +7,8 @@ P2_FACTORIAL_PROFILES_REFROZEN
 P2_ZERO_MODEL_FACTORIAL_FAIRNESS_GATE_PASS
 P2_FACTORIAL_V1_PROTOCOL_SEALED_HISTORICAL
 P2_FACTORIAL_V1_EXECUTION_AUTHORITY_FAILED_PRE_MODEL
-P2_FACTORIAL_V2_PENDING_CREATE_ONCE_SEAL
+P2_FACTORIAL_V2_TASK_COMMIT_IDENTITY_FAILED_PRE_MODEL
+P2_FACTORIAL_V3_PENDING_CREATE_ONCE_SEAL
 P2_SEARCH_VALUE_NOT_EVALUATED
 ```
 
@@ -24,7 +25,7 @@ This gate closes only the execution-fairness prerequisite created by D-060. It u
 | `evox_only` | off | on | `profile_33463b8b06be00e9aea43f81` |
 | `ada_evox` | on | on | `profile_4d94994c9187c74cad4a20a0` |
 
-The V2-preseal Profile audit digest is `4753549b6d454bdaba9a2bec6795fcc8314a3563058270609cf86129226916c7`; the exact sealed digest must be rechecked from the committed detached worktree. Direct and Router selections are byte-identical across arms, including `bootstrap_steps=1` and `allow_cross_seed=true`. Every arm always has exactly one `LOCAL_REFINEMENT` and one `STRUCTURAL_ESCAPE` provider. Ada replaces the trajectory-unconditioned local control; EvoX replaces the strategy-unconditioned structural control. Thus the factors change guidance/state semantics without removing an action capability or generation opportunity. Every arm is static and has one content-addressed Profile and one `HarnessSearchRuntime`; the prior two-child naive-parallel topology is not part of this factorial question.
+The current preseal Profile audit digest is `4753549b6d454bdaba9a2bec6795fcc8314a3563058270609cf86129226916c7`; the exact V3 sealed digest must be rechecked from the committed detached worktree. Direct and Router selections are byte-identical across arms, including `bootstrap_steps=1` and `allow_cross_seed=true`. Every arm always has exactly one `LOCAL_REFINEMENT` and one `STRUCTURAL_ESCAPE` provider. Ada replaces the trajectory-unconditioned local control; EvoX replaces the strategy-unconditioned structural control. Thus the factors change guidance/state semantics without removing an action capability or generation opportunity. Every arm is static and has one content-addressed Profile and one `HarnessSearchRuntime`; the prior two-child naive-parallel topology is not part of this factorial question.
 
 ## Executable fairness invariants
 

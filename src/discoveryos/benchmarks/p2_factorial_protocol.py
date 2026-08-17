@@ -45,9 +45,9 @@ from discoveryos.runtime.search_loop import SearchActionResult, SearchRunSpec
 from discoveryos.util import digest_bytes, digest_json, jsonable
 
 
-PROTOCOL_ID = "DISCOVERYOS_P2_ADA_EVOX_FACTORIAL_DEVELOPMENT_V2"
-MANIFEST_RECORD = "p2-factorial-development-v2-manifest.json"
-REPORT_RECORD = "p2-factorial-development-v2-report.json"
+PROTOCOL_ID = "DISCOVERYOS_P2_ADA_EVOX_FACTORIAL_DEVELOPMENT_V3"
+MANIFEST_RECORD = "p2-factorial-development-v3-manifest.json"
+REPORT_RECORD = "p2-factorial-development-v3-report.json"
 ARM_IDS = ("neither", "ada_only", "evox_only", "ada_evox")
 TASK_IDS = (
     "bounded_knapsack_alpha",
@@ -124,7 +124,8 @@ def preflight_p2_factorial_tasks() -> tuple[dict[str, Any], ...]:
                     "asset_level": "L2_CONSUMED_DEVELOPMENT_TASK",
                     "consumption_source": "DISCOVERYOS_SEARCH_VALUE_MVP0_V1",
                     "task_payload_digest": item.payload_digest,
-                    "task_repository_commit": commit,
+                    "preflight_task_repository_commit_non_authoritative": commit,
+                    "task_repository_tree_digest": _git_tree_digest(repository),
                     "initial_state_digest": digest_json(
                         {
                             "question": item.task.question,
@@ -280,7 +281,7 @@ def build_p2_factorial_manifest(
     }
     payload = {
         "protocol_id": PROTOCOL_ID,
-        "protocol_revision": 2,
+        "protocol_revision": 3,
         "status": "SEALED_PRE_MODEL",
         "claim_ceiling": "P2_FACTORIAL_DEVELOPMENT_SIGNAL_ON_CONSUMED_TASKS_ONLY",
         "model_calls_before_seal": 0,
@@ -502,7 +503,7 @@ def run_p2_factorial_protocol(
         return report
     result_root = workspace / "result-artifacts"
     if result_root.exists() and any(result_root.rglob("*.json")):
-        raise RuntimeError("P2 V2 has partial result receipts; same-revision resume is forbidden")
+        raise RuntimeError("P2 V3 has partial result receipts; same-revision resume is forbidden")
 
     provider = inspect_provider(provider_executable)
     local_provider = CodexExecProvider(
@@ -533,7 +534,7 @@ def run_p2_factorial_protocol(
         task_record = task_records[task_id]
         if progress:
             progress(
-                f"P2 V2 block {scheduled['block_index']}/12 preparing {block_id} "
+                f"P2 V3 block {scheduled['block_index']}/12 preparing {block_id} "
                 f"order={','.join(scheduled['arm_order'])}"
             )
         store.write_record(
@@ -549,8 +550,8 @@ def run_p2_factorial_protocol(
         )
         repository_root = workspace / "task-materialization" / block_id
         task_repository, task_commit = item.task.initialize_repository(repository_root)
-        if task_commit != task_record["task_repository_commit"]:
-            raise RuntimeError(f"P2 task repository commit drift: {block_id}")
+        if _git_tree_digest(task_repository) != task_record["task_repository_tree_digest"]:
+            raise RuntimeError(f"P2 task repository tree drift: {block_id}")
 
         prepared: dict[str, dict[str, Any]] = {}
         runtimes: dict[str, HarnessSearchRuntime] = {}
@@ -641,7 +642,7 @@ def run_p2_factorial_protocol(
             if preparation_failure is None:
                 for arm_id in scheduled["arm_order"]:
                     if progress:
-                        progress(f"P2 V2 starting {block_id}:{arm_id}")
+                        progress(f"P2 V3 starting {block_id}:{arm_id}")
                     runtime_started = time.monotonic()
                     failure: str | None = None
                     try:
@@ -663,7 +664,7 @@ def run_p2_factorial_protocol(
                     store.write_record(f"blocks/{block_id}/arms/{arm_id}.json", terminal)
                     if progress:
                         progress(
-                            f"P2 V2 completed {block_id}:{arm_id} "
+                            f"P2 V3 completed {block_id}:{arm_id} "
                             f"status={terminal['status']} steps={terminal['response_steps']:.4f} "
                             f"calls={terminal['generation_calls']}/{terminal['evaluator_calls']} "
                             f"tokens={terminal['actual_usage']['tokens']}"
@@ -696,7 +697,7 @@ def run_p2_factorial_protocol(
         store.write_record(f"blocks/{block_id}/block-terminal.json", block)
         block_results.append(block)
         if progress:
-            progress(f"P2 V2 terminal {block_id} status={block['status']}")
+            progress(f"P2 V3 terminal {block_id} status={block['status']}")
 
     report = _aggregate_p2_factorial(manifest, tuple(block_results))
     store.write_record(REPORT_RECORD, report)
@@ -712,7 +713,7 @@ def _p2_search_spec(
     seed: int,
 ) -> SearchRunSpec:
     return SearchRunSpec(
-        run_id=f"p2-v2-{block_id}-{arm.name}",
+        run_id=f"p2-v3-{block_id}-{arm.name}",
         contract_digest=arm.contract.digest,
         root_candidate_id=arm.baseline.candidate_id,
         branch_id="single-active-branch",
@@ -1025,6 +1026,20 @@ def _one_sided_sign_p(positives: int, negatives: int) -> float:
     return sum(math.comb(n, k) for k in range(positives, n + 1)) / (2**n)
 
 
+def _git_tree_digest(repository: Path) -> str:
+    completed = subprocess.run(
+        ("git", "-C", str(repository), "rev-parse", "HEAD^{tree}"),
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    tree = completed.stdout.strip()
+    if len(tree) != 40:
+        raise RuntimeError("P2 task repository did not produce a Git tree identity")
+    return tree
+
+
 def _holm_one_sided(p_values: dict[str, float], alpha: float = 0.05) -> dict[str, dict[str, Any]]:
     ordered = sorted(p_values.items(), key=lambda item: (item[1], item[0]))
     result: dict[str, dict[str, Any]] = {}
@@ -1083,7 +1098,7 @@ def replay_p2_factorial_report(
 
 
 def _main() -> int:
-    parser = argparse.ArgumentParser(description="Seal, run, or replay the P2 factorial V2 protocol")
+    parser = argparse.ArgumentParser(description="Seal, run, or replay the P2 factorial V3 protocol")
     parser.add_argument("action", choices=("seal", "run", "replay"))
     parser.add_argument("--workspace", required=True, type=Path)
     parser.add_argument("--repository", required=True, type=Path)

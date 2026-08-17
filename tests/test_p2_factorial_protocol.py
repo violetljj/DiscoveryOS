@@ -16,6 +16,7 @@ from discoveryos.benchmarks.p2_factorial_protocol import (
     FrozenProviderBinding,
     _aggregate_p2_factorial,
     _evaluate_at,
+    _git_tree_digest,
     _p2_harness_run_manifest,
     _p2_search_spec,
     _task_suite,
@@ -134,6 +135,17 @@ class P2FactorialProtocolTests(unittest.TestCase):
             all(record["asset_level"] == "L2_CONSUMED_DEVELOPMENT_TASK" for record in self.tasks)
         )
         self.assertTrue(all(record["preflight_model_calls"] == 0 for record in self.tasks))
+        self.assertTrue(
+            all(len(record["task_repository_tree_digest"]) == 40 for record in self.tasks)
+        )
+        with tempfile.TemporaryDirectory() as left, tempfile.TemporaryDirectory() as right:
+            item = _task_suite()[0]
+            left_repository, _ = item.task.initialize_repository(Path(left))
+            right_repository, _ = item.task.initialize_repository(Path(right))
+            self.assertEqual(
+                _git_tree_digest(left_repository),
+                _git_tree_digest(right_repository),
+            )
 
     def test_aggregate_computes_within_block_factorial_estimands(self) -> None:
         manifest = self._manifest()
