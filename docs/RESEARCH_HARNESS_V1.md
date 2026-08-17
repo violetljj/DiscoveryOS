@@ -13,7 +13,7 @@ SEPARATE_LOCAL_AND_STRUCTURAL_PROVIDERS_READY
 CORE_CLI_ISOLATED_FROM_HISTORICAL_PROTOCOL_RUNNERS
 HISTORICAL_PROTOCOL_REPLAY_COMPATIBILITY_PRESERVED
 STATIC_HARNESS_COMPOSITION_VALUE_NOT_EVALUATED
-P2_DEVELOPMENT_PROTOCOL_NOT_SEALED
+P2_DEVELOPMENT_PROTOCOL_SEALED_PRE_MODEL
 MECHANISM_COMPLETE_PARITY_NOT_ESTABLISHED
 P2_ZERO_MODEL_FACTORIAL_FAIRNESS_GATE_PASS
 ADA_TRAJECTORY_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
@@ -143,4 +143,4 @@ Parent/Novelty/CMI and old protocol runners remain frozen regression/evidence as
 
 ## Next gate
 
-The next gate is a separate matched-resource P2 development protocol seal. It must freeze exact L0-L2 task instances, provider executable/version/settings, model calls, evaluator-call ceilings, wall/resource envelopes, statistics, factorial main/interaction estimands, winner rule and stop conditions. The fairness pass does not itself authorize model calls, broader adaptive routing, cross-task memory, Harness evolution, fresh assets or stronger claims.
+The matched-resource P2 development protocol is create-once sealed at commit `ced4dd2b617e821adc41b2d7fcaf8c1c560ffbf9`; see [`P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md`](P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md). The next gate is execution and settlement of that exact 12-block schedule from its bound clean worktree. No P2 model call has started. Broader adaptive routing, cross-task memory, Harness evolution, fresh assets and stronger claims remain unauthorized.
