@@ -26,7 +26,10 @@ P2_FACTORIAL_FLAGS: tuple[tuple[str, bool, bool], ...] = (
     ("ada_evox", True, True),
 )
 _COMMON_PLUGIN_IDS = ("direct_llm", "state_router")
-_VARIABLE_PLUGIN_IDS = ("ada_lineage", "evox_meta_strategy")
+_VARIABLE_PLUGIN_IDS = (
+    "local_refinement_control|ada_lineage",
+    "structural_escape_control|evox_meta_strategy",
+)
 
 
 def _type_id(value: object) -> str:
@@ -64,11 +67,11 @@ def audit_p2_factorial_profiles(
         profile = profiles[0]
         if profile.adaptive:
             raise ValueError(f"P2 factorial profiles must remain static: {arm_id}")
-        expected_plugins = ["direct_llm"]
-        if ada_enabled:
-            expected_plugins.append("ada_lineage")
-        if evox_enabled:
-            expected_plugins.append("evox_meta_strategy")
+        expected_plugins = [
+            "direct_llm",
+            "ada_lineage" if ada_enabled else "local_refinement_control",
+            "evox_meta_strategy" if evox_enabled else "structural_escape_control",
+        ]
         expected_plugins.append("state_router")
         actual_plugins = [selection.plugin_id for selection in profile.plugins]
         if actual_plugins != expected_plugins:

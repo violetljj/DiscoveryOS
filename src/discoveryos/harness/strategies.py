@@ -125,6 +125,13 @@ class AdaLineageOperator(LocalPatchOperator):
         return self.trajectory_policy.verify_decision(state, decision).generation_guidance()
 
 
+class LocalRefinementControlOperator(LocalPatchOperator):
+    operator_id = "local_refinement_control_v1"
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(strategy_id="local_refinement_control_strategy_v1", **kwargs)
+
+
 class EvoXMetaStrategyOperator(StructuralRewriteOperator):
     operator_id = "evox_meta_strategy_rewrite_v1"
 
@@ -152,6 +159,13 @@ class EvoXMetaStrategyOperator(StructuralRewriteOperator):
 
     def settle_strategy(self, **kwargs: Any):
         return self.strategy_machine.settle(**kwargs)
+
+
+class StructuralEscapeControlOperator(StructuralRewriteOperator):
+    operator_id = "structural_escape_control_v1"
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(strategy_id="structural_escape_control_strategy_v1", **kwargs)
 
 
 @dataclass(frozen=True, slots=True)
@@ -438,6 +452,26 @@ class AdaLineagePlugin(_OperatorPlugin):
     )
 
 
+class LocalRefinementControlPlugin(_OperatorPlugin):
+    manifest = _plugin_manifest(
+        "local_refinement_control",
+        source_system="DiscoveryOS local refinement factorial control",
+        capabilities=(ResearchCapability.LOCAL_REFINEMENT,),
+        requires=(LOCAL_PATCH_PROVIDER, ARTIFACTS, LEDGER, CONTRACT, OPERATOR_REGISTRY),
+        provides=(OPERATOR_REGISTRY,),
+    )
+    operator_type = LocalRefinementControlOperator
+    provider_key = LOCAL_PATCH_PROVIDER
+    descriptor = StrategyDescriptor(
+        "local_refinement_control_strategy_v1",
+        "lineage_control",
+        LocalRefinementControlOperator.operator_id,
+        "DiscoveryOS",
+        "trajectory-unconditioned local refinement control",
+        (ResearchCapability.LOCAL_REFINEMENT,),
+    )
+
+
 class EvoXMetaStrategyPlugin(_OperatorPlugin):
     manifest = _plugin_manifest(
         "evox_meta_strategy",
@@ -458,6 +492,26 @@ class EvoXMetaStrategyPlugin(_OperatorPlugin):
         "EvoX",
         "stagnation-triggered strategy revision and structural basin shift",
         (ResearchCapability.STRUCTURAL_ESCAPE, ResearchCapability.META_STRATEGY),
+    )
+
+
+class StructuralEscapeControlPlugin(_OperatorPlugin):
+    manifest = _plugin_manifest(
+        "structural_escape_control",
+        source_system="DiscoveryOS structural escape factorial control",
+        capabilities=(ResearchCapability.STRUCTURAL_ESCAPE,),
+        requires=(STRUCTURAL_PATCH_PROVIDER, ARTIFACTS, LEDGER, CONTRACT, OPERATOR_REGISTRY),
+        provides=(OPERATOR_REGISTRY,),
+    )
+    operator_type = StructuralEscapeControlOperator
+    provider_key = STRUCTURAL_PATCH_PROVIDER
+    descriptor = StrategyDescriptor(
+        "structural_escape_control_strategy_v1",
+        "structural_control",
+        StructuralEscapeControlOperator.operator_id,
+        "DiscoveryOS",
+        "strategy-unconditioned structural escape control",
+        (ResearchCapability.STRUCTURAL_ESCAPE,),
     )
 
 
@@ -545,6 +599,12 @@ def neither_factorial_v2_profile() -> ResearchProfile:
         plugins=(
             PluginSelection.create("direct_llm", DirectLLMPlugin.manifest.digest),
             PluginSelection.create(
+                "local_refinement_control", LocalRefinementControlPlugin.manifest.digest
+            ),
+            PluginSelection.create(
+                "structural_escape_control", StructuralEscapeControlPlugin.manifest.digest
+            ),
+            PluginSelection.create(
                 "state_router",
                 StateRouterPlugin.manifest.digest,
                 {"bootstrap_steps": 1, "allow_cross_seed": True},
@@ -559,6 +619,9 @@ def ada_only_factorial_v2_profile() -> ResearchProfile:
         plugins=(
             PluginSelection.create("direct_llm", DirectLLMPlugin.manifest.digest),
             PluginSelection.create("ada_lineage", AdaLineagePlugin.manifest.digest),
+            PluginSelection.create(
+                "structural_escape_control", StructuralEscapeControlPlugin.manifest.digest
+            ),
             PluginSelection.create(
                 "state_router",
                 StateRouterPlugin.manifest.digest,
@@ -575,6 +638,9 @@ def evox_only_factorial_v2_profile() -> ResearchProfile:
         name="p2-evox-only-factorial-v2",
         plugins=(
             PluginSelection.create("direct_llm", DirectLLMPlugin.manifest.digest),
+            PluginSelection.create(
+                "local_refinement_control", LocalRefinementControlPlugin.manifest.digest
+            ),
             PluginSelection.create("evox_meta_strategy", EvoXMetaStrategyPlugin.manifest.digest),
             PluginSelection.create(
                 "state_router",
@@ -617,7 +683,14 @@ def static_composition_profiles() -> dict[str, tuple[ResearchProfile, ...]]:
 
 
 def standard_research_plugins() -> tuple[ResearchPlugin, ...]:
-    return (DirectLLMPlugin(), AdaLineagePlugin(), EvoXMetaStrategyPlugin(), StateRouterPlugin())
+    return (
+        DirectLLMPlugin(),
+        LocalRefinementControlPlugin(),
+        AdaLineagePlugin(),
+        StructuralEscapeControlPlugin(),
+        EvoXMetaStrategyPlugin(),
+        StateRouterPlugin(),
+    )
 
 
 def build_root_research_context(

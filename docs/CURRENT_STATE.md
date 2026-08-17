@@ -20,6 +20,8 @@ P2_DEVELOPMENT_PROTOCOL_NOT_SEALED
 ADA_EVOX_MECHANISM_PARITY_AUDIT_COMPLETE
 MECHANISM_COMPLETE_PARITY_NOT_ESTABLISHED
 P2_ZERO_MODEL_FACTORIAL_FAIRNESS_GATE_PASS
+P2_FACTOR_CONTROLS_ACTION_CAPABILITY_MATCHED
+P2_FACTORIAL_PROTOCOL_IMPLEMENTED_NOT_SEALED
 ADA_TRAJECTORY_PARITY_SLICE_MECHANICS_READY
 ADA_TRAJECTORY_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
 ADA_SEARCH_VALUE_NOT_EVALUATED
@@ -232,8 +234,8 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 
 1. Ada trajectory slice 已通过零模型 control/generation-context transmission：productive/weak trajectory 会产生不同 receipt、mode、decision 与真实 Harness generation request，绑定漂移 fail closed。它不建立 candidate behavior 或 search value；完整边界见 [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md)。
 2. EvoX typed same-run strategy state machine 已通过零模型 mechanics/transmission：冻结策略可部署、观察、评分、retain/switch/rollback，并实际改变 parent mode 与 variation guidance；完整边界见 [`EVOX_STRATEGY_PARITY_SLICE.md`](EVOX_STRATEGY_PARITY_SLICE.md)。它不建立 candidate behavior 或 search value。
-3. `neither / Ada-only / EvoX-only / Ada+EvoX` 四臂已重新冻结并通过零模型公平性门：四臂都使用一个统一 Harness runtime；Executor、Evaluator、Budget、reservation/reconciliation、provider/resource envelope 与 authority topology 一致，每臂使用独立物理 ledger 且 arm 内 candidate、strategy、lineage、evidence 和 budget 共享同一 Ledger/Research Graph 权威。完整边界见 [`P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md`](P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md)。
-4. 下一步只允许封存 matched-resource P2 development protocol，预声明 Ada 主效应、EvoX 主效应和二者交互效应，并冻结 L0-L2 task instances、provider、调用/evaluator budget、资源 envelope、统计、winner rule 与停止条件；当前仍未授权模型调用或 fresh 题。
+3. `neither / Ada-only / EvoX-only / Ada+EvoX` 四臂已重新冻结并通过零模型公平性门。协议预检进一步发现并修复了 off-arm 缺少 structural capability 的 executability blocker：现在所有 arm 始终保留同一 bootstrap/local/structural capability，Ada 只替换 trajectory-unconditioned local control，EvoX 只替换 strategy-unconditioned structural control；三类 action path 的 reservation surface 相同。每臂仍使用独立物理 ledger，arm 内 candidate、strategy、lineage、evidence 和 budget 共享同一 Ledger/Research Graph 权威。完整边界见 [`P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md`](P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md)。
+4. Matched-resource P2 development protocol 已实现并完成六个 consumed L2 tasks 的零模型 executable/headroom preflight，预声明 Ada 主效应、EvoX 主效应和交互效应，冻结两次 paired replicates、每 cell 7 generation/evaluator calls、资源 envelope、Holm sign tests、最小一分辨率步、停止与失败结算。它仍需先提交到 clean commit 再 create-once seal；当前仍未授权模型调用或 fresh 题。见 [`P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md`](P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md)。
 5. 只有 P2 静态 factorial comparison 取得正向、可重放结果，才允许设计 P3 adaptive profile；否则先诊断静态组合。
 6. P3 通过后才允许 P4 memory-conditioned comparison；P4 通过后才允许 P5 Harness evolution。当前不开放 fresh/SEALED 资产或 superiority/generalization claim。
 

@@ -234,7 +234,13 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
         self.assertTrue(all(len(profiles) == 1 for profiles in arms.values()))
         audit = audit_p2_factorial_profiles(arms)
         self.assertEqual("P2_FACTORIAL_PROFILES_REFROZEN", audit.status)
-        self.assertEqual(("ada_lineage", "evox_meta_strategy"), audit.allowed_variable_plugin_ids)
+        self.assertEqual(
+            (
+                "local_refinement_control|ada_lineage",
+                "structural_escape_control|evox_meta_strategy",
+            ),
+            audit.allowed_variable_plugin_ids,
+        )
         tampered = dict(arms)
         tampered["neither"] = tampered["ada_only"]
         with self.assertRaisesRegex(ValueError, "unauthorized plugin surface"):
@@ -366,10 +372,23 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
         arms = static_composition_profiles()
         with tempfile.TemporaryDirectory() as directory:
             demo = initialize_demo(Path(directory))
+            action_surfaces = {"local": set(), "structural": set()}
             expected_operators = {
-                "neither": {"direct_llm_research_v1"},
-                "ada_only": {"direct_llm_research_v1", "ada_lineage_refinement_v1"},
-                "evox_only": {"direct_llm_research_v1", "evox_meta_strategy_rewrite_v1"},
+                "neither": {
+                    "direct_llm_research_v1",
+                    "local_refinement_control_v1",
+                    "structural_escape_control_v1",
+                },
+                "ada_only": {
+                    "direct_llm_research_v1",
+                    "ada_lineage_refinement_v1",
+                    "structural_escape_control_v1",
+                },
+                "evox_only": {
+                    "direct_llm_research_v1",
+                    "local_refinement_control_v1",
+                    "evox_meta_strategy_rewrite_v1",
+                },
                 "ada_evox": {
                     "direct_llm_research_v1",
                     "ada_lineage_refinement_v1",
@@ -395,27 +414,46 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
                     controller = session.context.get(ACTION_CONTROLLER)
                     local = controller.decide(self._state(step=1, strategy_id="baseline"))
                     self.assertEqual(
-                        "ada_lineage_strategy_v1" if arm_id in {"ada_only", "ada_evox"} else "direct_llm_strategy_v1",
+                        "ada_lineage_strategy_v1"
+                        if arm_id in {"ada_only", "ada_evox"}
+                        else "local_refinement_control_strategy_v1",
                         local.strategy_id,
                     )
-                    if arm_id in {"evox_only", "ada_evox"}:
-                        decision = controller.decide(
-                            self._state(
-                                step=3,
-                                strategy_id="ada_lineage_strategy_v1",
-                                stagnant=True,
-                            )
+                    action_surfaces["local"].add(
+                        (
+                            local.action,
+                            local.resource_floor,
+                            local.generation_reserve,
+                            local.evaluation_reserve,
+                            local.settlement_reserve,
+                            local.budget_reserved,
                         )
-                        self.assertEqual("evox_meta_strategy_v1", decision.strategy_id)
-                    else:
-                        with self.assertRaisesRegex(ValueError, "structural escape"):
-                            controller.decide(
-                                self._state(
-                                    step=3,
-                                    strategy_id="ada_lineage_strategy_v1",
-                                    stagnant=True,
-                                )
-                            )
+                    )
+                    structural = controller.decide(
+                        self._state(
+                            step=3,
+                            strategy_id=local.strategy_id,
+                            stagnant=True,
+                        )
+                    )
+                    self.assertEqual(
+                        "evox_meta_strategy_v1"
+                        if arm_id in {"evox_only", "ada_evox"}
+                        else "structural_escape_control_strategy_v1",
+                        structural.strategy_id,
+                    )
+                    action_surfaces["structural"].add(
+                        (
+                            structural.action,
+                            structural.resource_floor,
+                            structural.generation_reserve,
+                            structural.evaluation_reserve,
+                            structural.settlement_reserve,
+                            structural.budget_reserved,
+                        )
+                    )
+            self.assertEqual(1, len(action_surfaces["local"]))
+            self.assertEqual(1, len(action_surfaces["structural"]))
 
     def test_standard_profile_composes_three_strategies_without_replacing_authority(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

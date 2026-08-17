@@ -18,16 +18,16 @@ This gate closes only the execution-fairness prerequisite created by D-060. It u
 
 | Arm | Ada trajectory slice | EvoX strategy slice | Profile id |
 |---|---:|---:|---|
-| `neither` | off | off | `profile_f520df43f3ff0bce03927cf1` |
-| `ada_only` | on | off | `profile_f9adc98de2805eb378354f24` |
-| `evox_only` | off | on | `profile_d280f796482e067a9064c05f` |
-| `ada_evox` | on | on | `profile_593097298d2ed0c7122c652e` |
+| `neither` | off | off | `profile_7b9e85dd62e3cbce1ffa9f33` |
+| `ada_only` | on | off | `profile_1e3322d95a663be4461ffd34` |
+| `evox_only` | off | on | `profile_24417da9d134439f1c4ea422` |
+| `ada_evox` | on | on | `profile_42e79a3a7669085dff8a44f4` |
 
-The Profile audit digest is `f6d6a11d8f6b39052d01c11441ce588b1226f0ecfa9ddf84f968757a282153f8`. Direct and Router selections are byte-identical across arms, including `bootstrap_steps=1` and `allow_cross_seed=true`. The only permitted plugin-presence differences are `ada_lineage` and `evox_meta_strategy`. Every arm is static and has one content-addressed Profile and one `HarnessSearchRuntime`; the prior two-child naive-parallel topology is not part of this factorial question.
+The Profile audit digest is `6e9fd6c741cd0f52c885575044342053ea39b2547f68a24343648b3f89d3eaf6`. Direct and Router selections are byte-identical across arms, including `bootstrap_steps=1` and `allow_cross_seed=true`. Every arm always has exactly one `LOCAL_REFINEMENT` and one `STRUCTURAL_ESCAPE` provider. Ada replaces the trajectory-unconditioned local control; EvoX replaces the strategy-unconditioned structural control. Thus the factors change guidance/state semantics without removing an action capability or generation opportunity. Every arm is static and has one content-addressed Profile and one `HarnessSearchRuntime`; the prior two-child naive-parallel topology is not part of this factorial question.
 
 ## Executable fairness invariants
 
-`audit_p2_factorial_profiles()` fails closed unless the four exact arms have one Profile each, common Direct/Router bindings match and only the two declared factor plugins vary.
+`audit_p2_factorial_profiles()` fails closed unless the four exact arms have one Profile each, common Direct/Router bindings match and the two factor positions are exactly local-control/Ada and structural-control/EvoX.
 
 `P2ZeroModelRuntimeSurface.capture()` and `audit_p2_zero_model_runtime_fairness()` additionally require:
 
@@ -35,6 +35,7 @@ The Profile audit digest is `f6d6a11d8f6b39052d01c11441ce588b1226f0ecfa9ddf84f96
 - identical contract and evaluator bindings;
 - identical run budget, ASHA rungs, action limits, seeds, controller cost/reservation policy, provider bindings, environment, winner rule and claim ceiling;
 - identical initial action reservation, generation, evaluation, settlement, novelty and downstream-budget surfaces;
+- executable and reservation-matched bootstrap, local-refinement and structural-escape paths in all four arms;
 - one object-identical Ledger authority inside each arm across the Harness event sink, Research Graph, projector, unified executor, evaluator/budget executor, trace recorder, every operator and the EvoX strategy state machine when loaded;
 - a distinct job-scoped physical ledger for each arm, preventing cross-arm candidate, strategy, lineage, evidence or budget contamination.
 

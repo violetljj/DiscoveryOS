@@ -64,12 +64,12 @@ The current source-role metadata is intentionally narrow. Ada/EvoX names still d
 
 `static_composition_profiles()` now exposes four one-runtime, 2x2 factorial arms:
 
-- `neither`: Direct plus the common Router, with both bounded parity slices absent;
-- `ada_only`: Direct plus trajectory-conditioned Ada local adaptation;
-- `evox_only`: Direct plus the typed same-run EvoX strategy state machine;
-- `ada_evox`: Direct plus both bounded slices in one shared research state.
+- `neither`: Direct, trajectory-unconditioned local refinement control and strategy-unconditioned structural escape control;
+- `ada_only`: replace only the local control with trajectory-conditioned Ada adaptation;
+- `evox_only`: replace only the structural control with the typed same-run EvoX strategy state machine;
+- `ada_evox`: replace both controls with the bounded parity slices in one shared research state.
 
-Every arm is exactly one `HarnessSearchRuntime`; no baseline requires a compatibility-only direct `SearchLoopRunner` path and there is no child-budget settlement difference. Direct and Router selections, including `bootstrap_steps=1` and `allow_cross_seed=true`, are identical. The only permitted Profile differences are presence of the Ada and EvoX plugin selections. In the V1.1 closure, each operator plugin binds one or more typed roles from `BOOTSTRAP_PROPOSAL`, `LOCAL_REFINEMENT`, `STRUCTURAL_ESCAPE` and `META_STRATEGY` into both its manifest digest and strategy descriptor. `HarnessResearchController` resolves those roles without containing Direct/Ada/EvoX operator or strategy ids. Missing capabilities and multiple providers for the same capability fail closed; the router never silently substitutes a different action class. Cross-strategy handoff is also derived from the source and target capabilities rather than source-system names.
+Every arm is exactly one `HarnessSearchRuntime`; no baseline requires a compatibility-only direct `SearchLoopRunner` path and there is no child-budget settlement difference. Direct and Router selections, including `bootstrap_steps=1` and `allow_cross_seed=true`, are identical. All arms expose the same bootstrap/local/structural action capabilities; only the implementation occupying the Ada and EvoX factor positions changes. In the V1.1 closure, each operator plugin binds one or more typed roles from `BOOTSTRAP_PROPOSAL`, `LOCAL_REFINEMENT`, `STRUCTURAL_ESCAPE` and `META_STRATEGY` into both its manifest digest and strategy descriptor. `HarnessResearchController` resolves those roles without containing Direct/Ada/EvoX operator or strategy ids. Missing capabilities and multiple providers for the same capability fail closed; the router never silently substitutes a different action class. Cross-strategy handoff is also derived from the source and target capabilities rather than source-system names.
 
 This is a composition contract, not package discovery or a plugin marketplace. `standard_research_plugins()` remains the static built-in catalog, and a Profile currently admits at most one provider for each routed capability unless a future, separately versioned selection policy is frozen. Because capability declarations enter manifest digests, this closure creates new Profile identities; earlier run manifests and receipts remain bound to their original code/manifest identities and are not rewritten.
 
