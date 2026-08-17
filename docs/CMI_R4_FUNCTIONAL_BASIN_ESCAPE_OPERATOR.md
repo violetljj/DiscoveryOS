@@ -4,7 +4,7 @@
 
 ```text
 CMI_R4_PROTOCOL_IMPLEMENTED
-CMI_R4_NOT_YET_EXECUTED
+CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR_MECHANICS_CONFIRMED_ON_TWO_DEV_STATES
 NO_OPERATOR_CAUSAL_VALUE_TRIAL_AUTHORIZED
 NO_FRESH_SEARCH_VALUE_BUDGET_AUTHORIZED
 ```
@@ -54,3 +54,13 @@ CMI_R4_NOT_EVALUABLE_CONTROL_OR_PROBE
 ```
 
 Binding drift, authority mismatch, repository drift, or create-once violation fail closed before a scientific result is written. A passing result can establish only bounded two-state development mechanics. It cannot establish causal value, search value, superiority, or production readiness, and it does not by itself authorize a fresh budget.
+
+## Result
+
+The protocol was sealed against implementation commit `aed8261`. The create-once manifest digest is `05a7c426aeba12c7a13ca51485799a738835520ff094cf3ab46090d36c8397dc`; the result report SHA-256 is `6e284e4efce34d0ed4b461989be40a2aebaa5ad410e130da2a59642ed71c6e13`.
+
+Both development states passed. Assignment treatment functional distance was `0.49382716` and independent descendant-behavior distance was `0.41975309`; coverage treatment functional distance was `0.30000000` and descendant-behavior distance was `0.31111111`. Both null distances were exactly `0`. Positive-control functional distances were `0.45679012` and `0.30000000`. Baseline, null, positive, and treatment candidates all passed their frozen public validity checks.
+
+The runtime trace bound all five required Brief field paths to candidate generation. Both treatments differed from their isolated positive controls, and both traces recorded `positive_control_received=false` and `evaluator_feedback_received=false`.
+
+Usage was exactly zero model calls, zero evaluator calls, zero fresh search-value tasks, and 24 local public/probe process calls across two newly consumed development states. The result establishes only that this deterministic minimal Operator transmits the admitted Brief into measurable functional basin escape on these two states. Causal value, general escape probability, utility/AUC improvement, search value, superiority, and production readiness remain unestablished.

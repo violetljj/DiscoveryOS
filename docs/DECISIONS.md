@@ -288,3 +288,10 @@
 - **决定**：CMI-R4 只回答 `Structured Brief -> Real Operator -> valid candidate -> functional distance > 0.10`。协议绑定 CMI-R3 authority，在两个新 development states 上运行确定性最小 Operator、same-source null 与隔离 positive control；记录 source、structural、functional 与 descendant-behavior distance，但只有 functional fingerprint 和因果传导进入通过门。
 - **原因**：Direct/Repair 已证明 executable transmission 不等于 utility；R2 又证明不同 source 可以落在相同 functional basin。若在 value trial 前不先验证真实 functional escape，Operator execution、basin escape 与 utility effect 会再次混为一个不可诊断问题。
 - **后果**：R4 使用零模型、零 evaluator、零 fresh search-value task；positive reference 不得进入 Operator 输入，utility/AUC 不比较。即使通过也只建立 bounded development mechanics，causal-value trial 与 fresh budget 继续关闭。
+
+## D-042：接受 CMI-R4 two-state mechanics positive，保持 value gate 关闭
+
+- **日期**：2026-08-17
+- **决定**：接受 manifest `05a7c426aeba12c7a13ca51485799a738835520ff094cf3ab46090d36c8397dc` 与 report SHA-256 `6e284e4efce34d0ed4b461989be40a2aebaa5ad410e130da2a59642ed71c6e13`。两个 treatment 均 valid、functional distance 严格大于 `0.10`，null 为 `0`，positive controls 敏感，且 Brief 字段真实进入未读取 positive/evaluator 的 Operator 路径。
+- **原因**：该证据排除了 source-only rewrite，并把 structured Brief 到 measurable functional escape 的 transmission 闭合；独立 descendant probe 也观察到行为距离。但 Operator 是 deterministic development mechanism，两个状态不能估计一般 escape probability，更没有比较 utility。
+- **后果**：claim ceiling 仅为 `DEVELOPMENT_OPERATOR_MECHANICS_ONLY`。可以另行提出 R5 causal-value protocol，但本结果不自动授权执行 R5，不开放 fresh tasks，也不得声称 CMI、Operator 或 basin escape 有价值。
