@@ -316,3 +316,10 @@
 - **决定**：R6 绑定 R5 Operator/control 文件哈希，纳入 SI-2 discovery 与 confirmation 中全部 4 个 Assignment 和 4 个 Coverage states；不按 prospective R6 utility 选样。Balanced Cut 因冻结 Operator 不支持而按兼容规则排除。主门检查 state-level effect sign、两 family median、validity、escape/replacement/breakthrough 与 evaluator runtime penalty。
 - **原因**：R5 的两个 deterministic pairs 只能排除最小反例。全量复用 exact state IDs/seeds 未进入 CMI-R3/R4/R5 的 consumed SI-2 states，可以低成本检查同两 task families 内的 effect consistency，同时避免再为 mechanics 消耗 fresh budget。
 - **后果**：SI-2 task families 与 intermediate heuristic evidence 在 R6 前已可见，因此该阶段不是 blind、mechanism-formation-independent replication，只是全量 consumed-distribution robustness。通过最多输出 `CMI_FRESH_CAUSAL_VALIDATION_ADMISSION_READY`，只允许另行预注册极小 fresh causal protocol；不建立独立泛化、跨 task-family 泛化、概率、显著性或 search value。
+
+## D-046：接受 CMI-R6 全量 consumed-distribution sign consistency
+
+- **日期**：2026-08-17
+- **决定**：接受 manifest `c4b0844fc3beae43f624194318611b3899865abe1199ad705e978294ff2ea876` 与 report SHA-256 `95213c5bb419cd995d2ddc588cc0d394698043da2a4c3fdceafcb10dcbae9dfe`。8/8 states 的 treatment 均 escape、产生 resolution 外正 utility effect 并 replacement，两个 family median utility/AUC 为正，validity 不降，runtime guardrail 通过，13 项 gate 全部为真。
+- **原因**：结果排除了 R5 positive 只由两个特定 evaluator seeds 支撑的最小解释，并在完整兼容 SI-2 consumed population 上保持 effect sign。Aggregate evaluator runtime ratio 约 `1.0x`，没有复现 R5 的 `1.51x` aggregate penalty。
+- **后果**：输出 `CMI_FRESH_CAUSAL_VALIDATION_ADMISSION_READY`，仅授权另行冻结极小 fresh causal validation protocol；fresh execution 仍关闭。由于 task families 和历史 heuristic evidence 已可见，不能声明 blind independent replication、概率、显著性、跨 family generalization、search value 或 superiority。
