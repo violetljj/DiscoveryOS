@@ -8,6 +8,7 @@ from pathlib import Path
 
 from discoveryos.benchmarks import (
     audit_si2_search_causality,
+    audit_cmi_search_transmission,
     audit_si2_secondary_usage,
     audit_local_patch_invalids,
     replay_local_patch_mechanics,
@@ -313,6 +314,18 @@ def build_parser() -> argparse.ArgumentParser:
     cmi_svr1_run.add_argument("--model", required=True)
     cmi_svr1_run.add_argument("--codex-command", required=True)
     cmi_svr1_run.add_argument("--reasoning-effort", required=True)
+    cmi_transmission = subparsers.add_parser(
+        "cmi-search-transmission-autopsy",
+        help="audit consumed CMI V3 retention and lineage without model or evaluator calls",
+    )
+    cmi_transmission.add_argument("--workspace", type=Path, default=Path("runs/cmi-search-value-r1-v3"))
+    cmi_transmission.add_argument("--manifest-digest", required=True)
+    cmi_transmission.add_argument("--source-report-sha256", required=True)
+    cmi_transmission.add_argument("--cmi-r7-report", type=Path, required=True)
+    cmi_transmission.add_argument("--cmi-r7-report-sha256", required=True)
+    cmi_transmission.add_argument(
+        "--output-workspace", type=Path, default=Path("runs/cmi-search-transmission-autopsy-r1")
+    )
     bank_validate = subparsers.add_parser(
         "benchmark-bank-validate",
         help="validate the pinned Benchmark Bank v1 registry without consuming any shard",
@@ -588,6 +601,15 @@ def main(argv: list[str] | None = None) -> int:
             result = audit_si2_search_causality(
                 args.workspace,
                 manifest_digest=args.manifest_digest,
+                output_workspace=args.output_workspace,
+            )
+        elif args.command == "cmi-search-transmission-autopsy":
+            result = audit_cmi_search_transmission(
+                args.workspace,
+                manifest_digest=args.manifest_digest,
+                source_report_sha256=args.source_report_sha256,
+                r7_report_path=args.cmi_r7_report,
+                r7_report_sha256=args.cmi_r7_report_sha256,
                 output_workspace=args.output_workspace,
             )
         elif args.command == "cib-seal-synthetic":

@@ -103,3 +103,7 @@ python -m discoveryos cmi-search-value-r1-run `
 ```
 
 The second command consumes all six exact fresh tasks once. Partial task receipts are retained, but a partial task directory without a terminal create-once receipt fails closed.
+
+## Closed-result follow-up
+
+The zero-call consumed-trace follow-up is recorded in [`CMI_SEARCH_TRANSMISSION_AUTOPSY_R1.md`](CMI_SEARCH_TRANSMISSION_AUTOPSY_R1.md). It does not modify this protocol or its verdict.

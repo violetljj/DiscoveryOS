@@ -372,3 +372,10 @@
 - **决定**：接受 manifest `5c1395d78efc1b102896471655cc9cf83b7d61585592172712b92a4191233d3b` 与 report SHA-256 `de4850ae8c75bec35455e197356bd0dc608d47c7e6983a9a9025617ccea2a39b`。六个 exact fresh tasks 全部 evaluable，paired result 为 `0 win / 6 tie / 0 loss`，median final/AUC delta 均为 `0`，exact-sign `p=1.0`，正式 verdict 为 `CMI_SEARCH_VALUE_NOT_ESTABLISHED`。
 - **原因**：CMI 在五个 eligible tasks 上均实际调用且 descendant technically accepted，但全部未 retained，也未成为 downstream parent 或产生 downstream retained contribution；因此 Search advantage 与 Causal transmission 两门均失败。Cost gate 独立通过，不能把结果归因于 enabled arm 资源不足或 evaluator 调用不匹配。
 - **后果**：保留 R7 的 `ADMITTED OPERATOR` 状态，但不得再声称或暗示 CMI 已提升 DiscoveryOS 完整搜索价值。六个 V3 tasks 永久 consumed；不对本 cohort 重跑、补 seed、改 threshold 或事后修改 gate。后续若研究，应作为新的机制/调度问题重新走 consumed-development 证据链，而不是延长 R1。
+
+## D-054：CMI transmission autopsy 先裁决 candidate competition，不改 selection
+
+- **日期**：2026-08-17
+- **决定**：接受绑定 V3 manifest/report、六个 task receipts、真实 treatment/shared-prefix ledgers 与 R7 report 的零调用 autopsy。5/5 invoked CMI descendants 都 valid，但全部低于 incumbent 与同期 control intervention；Assignment/Coverage median CMI-minus-incumbent 为 `-0.03908327 / -0.01007647`，正式诊断为 `CMI_DESCENDANT_COMPETITION_FAILURE_DETECTED_ON_CONSUMED_V3_TRACES`。当前不接受 selection integration defect，也不开放 forced-retention 或 fresh search budget。
+- **原因**：R7/V3 的声明目标、per-category score resolution 与 CMI Operator output digest 对齐，未观察到 selection objective mismatch。V3 冻结 selection 只是拒绝了低于阈值的候选。原 task report 的 `observations[].parent_id` 是顺序代理；权威 `CandidateSpec.parent_ids` 证明 5/5 downstream candidates 都从 prefix incumbent 生成，现有缓存中没有 CMI-parent descendant，无法离线识别 forced-retention 后的 compounding effect。
+- **后果**：Autopsy record SHA-256 为 `45e960bcad90ee0f777e202f089051662b6cb5450825fe1f97f32fc0f60b8b7d`，claim ceiling 仅为 consumed V3 trace diagnostic。下一允许问题是另行冻结 consumed-task 的 incumbent-conditioned/monotonic CMI candidate-competition protocol；必须先证明 CMI 能保留强 incumbent 的已有价值并超过 frozen retention threshold，才可提出 lineage continuation 或 selection integration。不得把 R7 local causal value、V3 token 较少或离线不可识别改写为 search value、效率优势或 selection failure。

@@ -90,6 +90,12 @@ CMI_SEARCH_VALUE_R1_V3_PROTOCOL_IMPLEMENTED
 CMI_SEARCH_VALUE_R1_V3_REAL_PROVIDER_PREFLIGHT_PASSED
 CMI_SEARCH_VALUE_R1_V3_COMPLETED
 CMI_SEARCH_VALUE_NOT_ESTABLISHED
+CMI_SEARCH_TRANSMISSION_AUTOPSY_R1_COMPLETE
+CMI_DESCENDANT_COMPETITION_FAILURE_DETECTED_ON_CONSUMED_V3_TRACES
+CMI_SELECTION_INTEGRATION_DEFECT_NOT_ESTABLISHED
+FORCED_RETENTION_DOWNSTREAM_VALUE_NOT_IDENTIFIABLE_OFFLINE
+CMI_COMPOUNDING_SEARCH_VALUE_NOT_ESTABLISHED
+DO_NOT_OPEN_FRESH_CMI_SEARCH_BUDGET
 BENCHMARK_BANK_V1_REGISTRY_IMPLEMENTED
 BENCHMARK_BANK_V1_DEVELOPMENT_SLICE_EXECUTABLE
 BENCHMARK_BANK_V1_R0_R1_ALGOTUNE_DEV_BATCH_EXECUTABLE
@@ -225,6 +231,7 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 33. CMI-R7 已在 commit `913ab5e` 上封存并通过。Manifest digest 为 `df1d2dd26730a5487e8e1e685339b7fd35430abd509cb4ea0433aa6458228209`，report SHA-256 为 `3072e74c1a0114920f98c7930097a5488dd8a50763709a073513a1ef4dca763f`。6/6 states 均 valid 且 paired utility delta 超过 state resolution，0 negative、0 tie；Assignment/Coverage 各 3/3 positive。Control 为 0/6 escape/replacement，Treatment 为 6/6；breakthrough 为 `0/6 -> 1/6`。Aggregate/max-state evaluator runtime ratio 为 `1.04189x` / `1.61769x`，6 项冻结 gate 全通过；6 matched pairs、24 evaluator calls、24 probe calls、0 model calls、0 tokens。六个 exact fresh states 已消费，不得重跑。正式输出 `CMI_OPERATOR_ADMITTED_ON_FRESH_ASSIGNMENT_COVERAGE_STATES`，只授权另行预注册 CMI-enabled Search vs identical Search without CMI。States 是 instance-fresh，不是 distribution、task-family 或 evaluator-regime fresh；search value、概率、显著性、跨 family 泛化和 superiority 仍未建立。详见 [`CMI_R7_FRESH_CAUSAL_REPLICATION.md`](CMI_R7_FRESH_CAUSAL_REPLICATION.md)。
 34. ALE R3 六个 family 的 code commit、Hugging Face dataset commit、逐 ZIP LFS SHA-256/大小与 CC-BY-ND-4.0 数据许可证已绑定。官方 ZIP 将 public 工具/seeds 与 private seeds/standings 同包，stock session 初始化会同时生成 public/private inputs；当前 Bank 又缺少 native stdin program bundle，且本机 Docker CLI 可见但 Linux daemon 不可用。因此六题保持 `CATALOGUED`，执行 blocker 固定为 public-only selective extraction、native bundle 和 Docker judge preflight 三项。Registry 会拒绝缺少三项 digest 的伪 execution-ready 状态。本轮未下载/打开任何题目 ZIP，未读取 private seed，未运行 judge，也未消费 ALE shard。详见 [`BENCHMARK_BANK_V1.md`](BENCHMARK_BANK_V1.md)。
 35. CMI Search Value R1 V1/V2 分别以 resource-envelope 与 invalid-descendant terminalization blocker 结算为 `NOT_EVALUABLE`，failure receipt SHA-256 为 `fde8384ea996e1b588f5ba62b04b7fd71d7da85675eedac2d4b96cb0b7a9f438` / `1a40a742f6b2584210eb705146beef44c9d56747230ccd0f244772780324d02a`，两批 cohort 均永久不可重用。V3 在 commit `79164cb`、manifest `5c1395d78efc1b102896471655cc9cf83b7d61585592172712b92a4191233d3b` 上完成全部六个 fresh tasks：`0 win / 6 tie / 0 loss`，median final/AUC delta 均为 `0`，exact-sign `p=1.0`。CMI 在 5/6 eligible tasks 上均被调用且 descendant 均 technically accepted，但 retained、downstream-parent 与 downstream retained contribution 均为 `0`；Search advantage 与 Causal transmission gate 失败。Cost gate 通过：enabled/control tokens `429,442 / 538,217`、evaluator calls `30 / 30`、elapsed `501.892s / 724.453s`。正式 verdict 为 `CMI_SEARCH_VALUE_NOT_ESTABLISHED`，report SHA-256 `de4850ae8c75bec35455e197356bd0dc608d47c7e6983a9a9025617ccea2a39b`。六个 V3 fresh tasks 已消费，不得重跑。详见 [`CMI_SEARCH_VALUE_R1.md`](CMI_SEARCH_VALUE_R1.md)。
+36. CMI Search Transmission Autopsy R1 已用零模型、零 evaluator、零 fresh budget 绑定 V3 六任务 receipts、权威 ledgers 与 R7 report 完成。5/5 invoked CMI descendants 都 valid，但相对 incumbent 与同期 control intervention 均为 `0 positive / 5 negative`；Assignment/Coverage median CMI-minus-incumbent 为 `-0.03908327 / -0.01007647`，median retention-threshold gap 为 `0.04208327 / 0.01507647`。R7/V3 的声明目标、per-family resolution 与 CMI output digest 对齐，当前证据支持 `CMI_DESCENDANT_COMPETITION_FAILURE_DETECTED_ON_CONSUMED_V3_TRACES`，不支持 selection integration defect。V3 的 sequential observation parent proxy 在 5/5 eligible tasks 与权威 `CandidateSpec.parent_ids` 不同；实际 downstream 均从 prefix incumbent 生成，因此 offline forced-retention compounding 不可识别，未执行新 provider continuation。Create-once autopsy record SHA-256 为 `45e960bcad90ee0f777e202f089051662b6cb5450825fe1f97f32fc0f60b8b7d`。下一允许问题是 consumed-task 上另行冻结 incumbent-conditioned/monotonic CMI candidate-competition protocol；fresh CMI search budget 与 selection-policy 修改均不开放。详见 [`CMI_SEARCH_TRANSMISSION_AUTOPSY_R1.md`](CMI_SEARCH_TRANSMISSION_AUTOPSY_R1.md)。
 
 ## 状态更新规则
 
@@ -259,4 +266,5 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 - CMI-R6 consumed distribution replication：[`CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md`](CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md)
 - CMI-R7 fresh-state causal replication：[`CMI_R7_FRESH_CAUSAL_REPLICATION.md`](CMI_R7_FRESH_CAUSAL_REPLICATION.md)
 - CMI Search Value R1：[`CMI_SEARCH_VALUE_R1.md`](CMI_SEARCH_VALUE_R1.md)
+- CMI Search Transmission Autopsy R1：[`CMI_SEARCH_TRANSMISSION_AUTOPSY_R1.md`](CMI_SEARCH_TRANSMISSION_AUTOPSY_R1.md)
 - Benchmark Bank v1：[`BENCHMARK_BANK_V1.md`](BENCHMARK_BANK_V1.md)
