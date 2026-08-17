@@ -38,7 +38,10 @@ GCF_R1_VALIDATION_BLOCKED_NOT_RUN
 GCF_V2_STRUCTURED_MEDIATION_PROTOCOL_IMPLEMENTED
 GCF_V2_R1_NOT_EVALUABLE_PROVIDER_SCHEMA
 GCF_V2_R2_PREFLIGHT_RESOURCE_BLOCKED
-GCF_V2_R3_NOT_YET_SEALED
+GCF_V2_R3_PROPOSAL_CALIBRATION_PASSED
+GCF_V2_R3_PROPOSAL_VALIDATION_PASSED
+STRUCTURED_MECHANISM_OBJECT_CHANNEL_DETECTED_ON_TWO_DEV_STATES
+GCF_V2_R3_NOT_EVALUABLE_RESOURCE_CEILING
 NO_STRUCTURED_MECHANISM_CHANNEL_ADMITTED
 ```
 
@@ -142,7 +145,9 @@ NO_STRUCTURED_MECHANISM_CHANNEL_ADMITTED
 10. 下一允许的 GCF 假设应版本化 generator interface，例如 structured proposal 或 explicit executable mechanism contract，并使用新 calibration evidence；不是继续完善通用框架，也不是绕过独立 behavior validation 直接开 fresh value trial。
 11. GCF-V2 R1 在 commit `c4fd8a4` 封存后，12/12 proposal invocations 均以 CLI exit `1`、0 reported tokens 在 provider/schema 边界失败，0 个 object 可评估或合规；implementation 严格保持 0 calls。正式状态为 `GCF_V2_R1_NOT_EVALUABLE_PROVIDER_SCHEMA`，不是 structured interface 的语义负结果。R1 create-once root 不修改、不补跑。
 12. GCF-V2 R2 的 1-call preflight 已证明 provider、修正 schema、parser 和 condition contract 全部可执行并产出合规对象，但实测 17,497 tokens 超过冻结 8,000 ceiling，因此以 `GCF_V2_R2_PREFLIGHT_RESOURCE_BLOCKED` 关闭；scientific proposal 与 implementation calls 均为零，不能形成语义结论。
-13. GCF-V2 R3 已实施但尚未 seal。它只把 per-call executability ceiling 调整为 25,000，并把两个 proposal states 改为顺序 gate：先用 coverage 做 6-call repeated-state calibration，通过才以 cut 做 6-call independent proposal validation，两者通过才允许 12 个隔离 implementation calls。按 R2 实测，首个 scientific stop 约 104,982 tokens，为 GCF-R1 用量的 19.6%。完整边界见 [`GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md`](GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md)。
+13. GCF-V2 R3 已在 commit `c317a0c` 完成。Coverage proposal calibration 与 balanced-cut independent proposal validation 均为 6/6 evaluable/compliant、within categorical envelope `0`、between median `2.23607`，建立 `STRUCTURED_MECHANISM_OBJECT_CHANNEL_DETECTED_ON_TWO_DEV_STATES`；首六个 scientific calls 实耗 104,844 tokens，为 GCF-R1 的 19.53%。
+14. R3 的 12/12 isolated implementations 全部 evaluable 且 source valid，source separation 为 `2/2`，hidden behavior 为 `0/2`；但 3/12 calls 超过冻结 30,000-token ceiling，最大 53,655，因此正式 verdict 是 `GCF_V2_R3_NOT_EVALUABLE_RESOURCE_CEILING`，不是 semantic negative。总计 25 calls、529,044 tokens、755.502 summed provider seconds，0 fresh search-value tasks。R3 root 关闭，不提高 ceiling、不改 probe/margin、不补 replicate；implementation validation、fresh value trial 和 SI-3 继续关闭。完整证据见 [`GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md`](GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md)。
+15. 下一允许的 generator-interface 假设是新版本 Executable Mechanism Contract：使用新 states，在调用前冻结 required/forbidden call paths、replacement points、invariants 和 runtime counters。它必须重新通过独立 proposal/object、implementation 和 hidden-behavior gates；不得用 R3 的 source separation 或 utility record-only 数字替代 admission。
 
 ## 状态更新规则
 
