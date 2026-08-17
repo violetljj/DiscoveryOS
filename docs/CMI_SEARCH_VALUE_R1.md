@@ -7,8 +7,8 @@ CMI_SEARCH_VALUE_R1_V1_NOT_EVALUABLE_RESOURCE_ENVELOPE
 CMI_SEARCH_VALUE_R1_V2_NOT_EVALUABLE_INVALID_DESCENDANT_TERMINALIZATION
 CMI_SEARCH_VALUE_R1_V3_PROTOCOL_IMPLEMENTED
 CMI_SEARCH_VALUE_R1_V3_REAL_PROVIDER_PREFLIGHT_PASSED
-CMI_SEARCH_VALUE_R1_V3_PREREGISTRATION_READY
-CMI_SEARCH_VALUE_NOT_YET_ESTABLISHED
+CMI_SEARCH_VALUE_R1_V3_COMPLETED
+CMI_SEARCH_VALUE_NOT_ESTABLISHED
 ```
 
 CMI Search Value R1 asks one question: on an otherwise identical bounded search, does making the frozen CMI functional-basin-escape Operator available improve final search value? It is the first complete-search comparison authorized by CMI-R7. It does not modify CMI, its Brief, applicability threshold, evaluator, parent rule, Local Patch policy, task selection, or claim ceiling.
@@ -20,6 +20,14 @@ V2 was a resource-only validity repair with a new salt, all-new unscreened cohor
 V3 preserves the V2 resource repair and all scientific semantics, uses another new unscreened cohort, and changes only invalid-descendant terminalization: invalid candidates retain their evidence/failure receipt, are excluded from eligibility and parent replacement, and do not undergo source materialization. Before V3 may seal, the exact runner must complete a real-provider preflight on consumed development tasks.
 
 The exact V3 runner completed that preflight on consumed SI-2 task `capacitated_assignment_delta` with a terminal two-arm report. Report SHA-256 is `428c2b214bde79ab445470d4a8120c570de6b1d0ab50f83190029dae25872b61`; it is a mechanics/executability receipt only and cannot enter the fresh scientific comparison.
+
+## Result
+
+V3 sealed at commit `79164cb` with manifest digest `5c1395d78efc1b102896471655cc9cf83b7d61585592172712b92a4191233d3b`. All six fresh tasks completed and are now consumed. The paired result was `0 win / 6 tie / 0 loss`; median final-utility delta and median anytime-AUC delta were both `0`, with one-sided exact-sign `p=1.0`.
+
+CMI had six opportunities, was eligible and invoked on five, and produced five technically accepted descendants. None replaced the incumbent, became the downstream retained parent, or contributed to a retained final advantage. The Search advantage and Causal transmission gates therefore failed. The Cost gate passed: enabled/control tokens were `429,442 / 538,217`, evaluator calls were `30 / 30`, and aggregate elapsed time was `501.892s / 724.453s`.
+
+The formal verdict is `CMI_SEARCH_VALUE_NOT_ESTABLISHED`. This is a valid scientific non-establishment result within the frozen Assignment/Coverage families and evaluator regime, not a protocol failure and not evidence that CMI is universally harmful or useless. Report SHA-256 is `de4850ae8c75bec35455e197356bd0dc608d47c7e6983a9a9025617ccea2a39b`.
 
 ## Paired search design
 

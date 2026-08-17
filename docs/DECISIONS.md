@@ -365,3 +365,10 @@
 - **决定**：V2 首个 task 的第二个 prefix descendant 已由冻结 evaluator 记为 `INVALID_MECHANICS/PATCH_APPLY_FAILURE`，但 runner 随后仍调用 source materialization，导致 process-level error。V2 标记 `CMI_SEARCH_VALUE_R1_V2_NOT_EVALUABLE_INVALID_DESCENDANT_TERMINALIZATION`，manifest、partial artifacts 与 failure receipt 全部保留且 cohort 不重用。V3 只允许在 `valid && feasible` 时 materialize source；invalid observation 保留在 trace、不能触发 eligibility、不能替换 parent。
 - **原因**：invalid candidate 是预声明的 mechanics outcome，不应升级为 runner crash。Fake-provider 回归此前只覆盖可应用的 comment patches，没有覆盖“generation 成功但 evaluator patch apply 失败”的真实路径。
 - **后果**：V3 使用新 salt 与全新无筛选 cohort，resource ceiling 保持 `120,000`，所有科学门不变。V3 seal 前必须用 exact runner 和真实 provider 在 consumed development task 上完成多步 preflight，覆盖 valid/invalid descendant 的 terminalization；preflight 结果不得选择 V3 tasks 或改变 science gates。
+
+## D-053：接受 CMI Search Value R1 V3 的未建立结果
+
+- **日期**：2026-08-17
+- **决定**：接受 manifest `5c1395d78efc1b102896471655cc9cf83b7d61585592172712b92a4191233d3b` 与 report SHA-256 `de4850ae8c75bec35455e197356bd0dc608d47c7e6983a9a9025617ccea2a39b`。六个 exact fresh tasks 全部 evaluable，paired result 为 `0 win / 6 tie / 0 loss`，median final/AUC delta 均为 `0`，exact-sign `p=1.0`，正式 verdict 为 `CMI_SEARCH_VALUE_NOT_ESTABLISHED`。
+- **原因**：CMI 在五个 eligible tasks 上均实际调用且 descendant technically accepted，但全部未 retained，也未成为 downstream parent 或产生 downstream retained contribution；因此 Search advantage 与 Causal transmission 两门均失败。Cost gate 独立通过，不能把结果归因于 enabled arm 资源不足或 evaluator 调用不匹配。
+- **后果**：保留 R7 的 `ADMITTED OPERATOR` 状态，但不得再声称或暗示 CMI 已提升 DiscoveryOS 完整搜索价值。六个 V3 tasks 永久 consumed；不对本 cohort 重跑、补 seed、改 threshold 或事后修改 gate。后续若研究，应作为新的机制/调度问题重新走 consumed-development 证据链，而不是延长 R1。
