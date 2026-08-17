@@ -38,6 +38,7 @@ from .structured_mechanism_mediation import (
     run_structured_provider_preflight,
     run_structured_implementation_calibration,
     seal_structured_mediation_protocol,
+    validate_structured_proposals,
 )
 
 __all__ = [
@@ -77,5 +78,6 @@ __all__ = [
     "seal_structured_mediation_protocol",
     "calibrate_structured_proposals",
     "run_structured_provider_preflight",
+    "validate_structured_proposals",
     "run_structured_implementation_calibration",
 ]

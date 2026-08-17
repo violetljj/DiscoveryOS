@@ -13,6 +13,7 @@ from discoveryos.benchmarks.structured_mechanism_mediation import (
     MECHANISM_OBJECT_SCHEMA,
     PREFLIGHT_RECORD,
     PROPOSAL_RECORD,
+    PROPOSAL_VALIDATION_RECORD,
     ImplementationDraw,
     MechanismObject,
     ProposalDraw,
@@ -91,7 +92,7 @@ class StructuredMechanismMediationTests(unittest.TestCase):
                 proposal_provider=self.proposal_provider,
                 implementation_provider=self.implementation_provider,
             )
-            self.assertEqual(12, result["proposal_calls_before_gate"])
+            self.assertEqual(6, result["proposal_calls_before_gate"])
             self.assertEqual(25, result["maximum_total_model_calls"])
             manifest = json.loads(
                 (Path(temporary) / "protocol-artifacts" / "records" / MANIFEST_RECORD).read_text(encoding="utf-8")
@@ -188,10 +189,10 @@ class StructuredMechanismMediationTests(unittest.TestCase):
                 implementation_provider=self.implementation_provider,
             )
             ArtifactStore(workspace / "result-artifacts").write_record(
-                PROPOSAL_RECORD,
+                PROPOSAL_VALIDATION_RECORD,
                 {"manifest_digest": sealed["manifest_digest"], "passed": False},
             )
-            with self.assertRaisesRegex(RuntimeError, "proposal gate did not pass"):
+            with self.assertRaisesRegex(RuntimeError, "proposal validation did not pass"):
                 run_structured_implementation_calibration(
                     workspace,
                     manifest_digest=sealed["manifest_digest"],

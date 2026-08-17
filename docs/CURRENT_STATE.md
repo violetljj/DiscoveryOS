@@ -37,7 +37,8 @@ MECHANISM_BRIEF_REAL_SEMANTIC_TRANSMISSION_NOT_ESTABLISHED
 GCF_R1_VALIDATION_BLOCKED_NOT_RUN
 GCF_V2_STRUCTURED_MEDIATION_PROTOCOL_IMPLEMENTED
 GCF_V2_R1_NOT_EVALUABLE_PROVIDER_SCHEMA
-GCF_V2_R2_NOT_YET_SEALED
+GCF_V2_R2_PREFLIGHT_RESOURCE_BLOCKED
+GCF_V2_R3_NOT_YET_SEALED
 NO_STRUCTURED_MECHANISM_CHANNEL_ADMITTED
 ```
 
@@ -140,7 +141,8 @@ NO_STRUCTURED_MECHANISM_CHANNEL_ADMITTED
 9. GCF-R1 已完成 calibration 并按冻结门 fail closed：24/24 branches evaluable、final source valid 且资源门通过；proposal detectability 为 `0/2`，因此 42-call validation 被阻断且实际调用为零。Implementation/repair/final 结构 separation 在 `2/2` calibration states 超过 null，hidden behavior 仅 `1/2`，只能作为 development diagnosis，不能建立现实 channel semantic transmission。不得在 consumed calibration root 上调 proposal probe、margin、prompt、brief 或 replicates 翻案。
 10. 下一允许的 GCF 假设应版本化 generator interface，例如 structured proposal 或 explicit executable mechanism contract，并使用新 calibration evidence；不是继续完善通用框架，也不是绕过独立 behavior validation 直接开 fresh value trial。
 11. GCF-V2 R1 在 commit `c4fd8a4` 封存后，12/12 proposal invocations 均以 CLI exit `1`、0 reported tokens 在 provider/schema 边界失败，0 个 object 可评估或合规；implementation 严格保持 0 calls。正式状态为 `GCF_V2_R1_NOT_EVALUABLE_PROVIDER_SCHEMA`，不是 structured interface 的语义负结果。R1 create-once root 不修改、不补跑。
-12. GCF-V2 R2 已实施但尚未 seal。它移除 Structured Outputs 支持子集未包含的 `uniqueItems`，保留解析后的 deterministic uniqueness validation，并在 12-call scientific proposal gate 前新增 1-call non-scientific provider/schema preflight。只有 preflight 与 proposal gate 依次通过，才允许 12 个隔离 implementation calls；implementation request 仍只能看到 canonical Mechanism Object。完整边界见 [`GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md`](GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md)。
+12. GCF-V2 R2 的 1-call preflight 已证明 provider、修正 schema、parser 和 condition contract 全部可执行并产出合规对象，但实测 17,497 tokens 超过冻结 8,000 ceiling，因此以 `GCF_V2_R2_PREFLIGHT_RESOURCE_BLOCKED` 关闭；scientific proposal 与 implementation calls 均为零，不能形成语义结论。
+13. GCF-V2 R3 已实施但尚未 seal。它只把 per-call executability ceiling 调整为 25,000，并把两个 proposal states 改为顺序 gate：先用 coverage 做 6-call repeated-state calibration，通过才以 cut 做 6-call independent proposal validation，两者通过才允许 12 个隔离 implementation calls。按 R2 实测，首个 scientific stop 约 104,982 tokens，为 GCF-R1 用量的 19.6%。完整边界见 [`GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md`](GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md)。
 
 ## 状态更新规则
 

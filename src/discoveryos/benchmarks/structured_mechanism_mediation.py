@@ -24,16 +24,18 @@ from discoveryos.runtime.artifacts import ArtifactStore
 from discoveryos.util import digest_bytes, digest_json, jsonable
 
 
-PROTOCOL_ID = "GCF_V2_STRUCTURED_MECHANISM_MEDIATION_R2"
-MANIFEST_RECORD = "gcf-v2-r2-structured-mediation-manifest.json"
-PREFLIGHT_RECORD = "gcf-v2-r2-provider-preflight.json"
-PROPOSAL_RECORD = "gcf-v2-r2-structured-proposal-calibration.json"
-IMPLEMENTATION_RECORD = "gcf-v2-r2-structured-implementation-calibration.json"
+PROTOCOL_ID = "GCF_V2_STRUCTURED_MECHANISM_MEDIATION_R3"
+MANIFEST_RECORD = "gcf-v2-r3-structured-mediation-manifest.json"
+PREFLIGHT_RECORD = "gcf-v2-r3-provider-preflight.json"
+PROPOSAL_RECORD = "gcf-v2-r3-structured-proposal-calibration.json"
+PROPOSAL_VALIDATION_RECORD = "gcf-v2-r3-structured-proposal-validation.json"
+IMPLEMENTATION_RECORD = "gcf-v2-r3-structured-implementation-calibration.json"
 CONDITION_A = "CONSTRUCTIVE_GREEDY"
 CONDITION_B = "ITERATIVE_LOCAL_IMPROVEMENT"
 REPLICATES_PER_CONDITION = 3
-MINIMUM_CALIBRATION_STATES = 2
-PROPOSAL_TOKEN_CEILING = 8_000
+MINIMUM_CALIBRATION_STATES = 1
+PREFLIGHT_TOKEN_CEILING = 25_000
+PROPOSAL_TOKEN_CEILING = 25_000
 IMPLEMENTATION_TOKEN_CEILING = 30_000
 SOURCE_MARGIN = 0.05
 BEHAVIOR_MARGIN = 0.02
@@ -308,11 +310,12 @@ def seal_structured_mediation_protocol(
     _validate_provider_pair(proposal_provider, implementation_provider)
     workspace = workspace.resolve()
     store = ArtifactStore(workspace / "protocol-artifacts")
-    states = [_freeze_task(store, task) for task in _calibration_tasks()]
+    states = [_freeze_task(store, role, task) for role, task in _calibration_tasks()]
     schedule = [
         {
             "state_id": state["state_id"],
             "condition_id": condition,
+            "phase": state["role"],
             "draw_id": f"{state['state_id']}:{condition.casefold()}:{replicate}",
             "replicate": replicate,
         }
@@ -345,10 +348,12 @@ def seal_structured_mediation_protocol(
         "cheap_first_gate": {
             "provider_schema_preflight_calls": 1,
             "proposal_blocked_if_preflight_fails": True,
-            "proposal_calls": len(schedule),
+            "calibration_proposal_calls": sum(item["phase"] == "CALIBRATION" for item in schedule),
+            "validation_proposal_calls": sum(item["phase"] == "VALIDATION" for item in schedule),
             "proposal_token_ceiling": PROPOSAL_TOKEN_CEILING,
             "replicates_per_state_condition": REPLICATES_PER_CONDITION,
-            "minimum_detectable_states": MINIMUM_CALIBRATION_STATES,
+            "minimum_detectable_states_per_phase": MINIMUM_CALIBRATION_STATES,
+            "validation_blocked_if_calibration_fails": True,
             "implementation_blocked_if_proposal_gate_fails": True,
             "between_condition_must_exceed_within_condition": True,
         },
@@ -382,7 +387,7 @@ def seal_structured_mediation_protocol(
         "manifest_digest": manifest["manifest_digest"],
         "manifest_path": str(path),
         "manifest_file_sha256": digest_bytes(path.read_bytes()),
-        "proposal_calls_before_gate": len(schedule),
+        "proposal_calls_before_gate": sum(item["phase"] == "CALIBRATION" for item in schedule),
         "maximum_total_model_calls": 1 + len(schedule) * 2,
         "fresh_search_value_tasks_consumed": 0,
     }
@@ -405,7 +410,7 @@ def run_structured_provider_preflight(
         "replicate": -1,
     }
     draw = _generate_proposal(ArtifactStore(workspace / "protocol-artifacts"), state, item, proposal_provider)
-    passed = draw.evaluable and draw.contract_compliant and draw.token_cost <= PROPOSAL_TOKEN_CEILING
+    passed = draw.evaluable and draw.contract_compliant and draw.token_cost <= PREFLIGHT_TOKEN_CEILING
     record = {
         "status": "GCF_V2_R2_PROVIDER_PREFLIGHT_PASSED" if passed else "GCF_V2_R2_PROVIDER_PREFLIGHT_FAILED",
         "protocol_id": PROTOCOL_ID,
@@ -436,7 +441,8 @@ def calibrate_structured_proposals(
     preflight = _load_json(preflight_path)
     if preflight.get("manifest_digest") != manifest_digest or not preflight.get("passed"):
         raise RuntimeError("GCF-V2 proposal calibration blocked because provider/schema preflight did not pass")
-    draws = _execute_proposals(workspace, manifest, proposal_provider, progress)
+    schedule = [item for item in manifest["proposal_schedule"] if item["phase"] == "CALIBRATION"]
+    draws = _execute_proposals(workspace, manifest, schedule, proposal_provider, progress)
     analysis = _analyze_proposals(manifest, draws)
     resource_ok = all(draw.token_cost <= PROPOSAL_TOKEN_CEILING for draw in draws.values())
     all_evaluable = all(draw.evaluable for draw in draws.values())
@@ -445,7 +451,7 @@ def calibrate_structured_proposals(
         resource_ok
         and all_evaluable
         and all_compliant
-        and analysis["detectable_states"] == MINIMUM_CALIBRATION_STATES
+        and analysis["detectable_states"] >= MINIMUM_CALIBRATION_STATES
     )
     record = {
         "status": "GCF_V2_PROPOSAL_CALIBRATION_PASSED" if passed else "GCF_V2_PROPOSAL_CALIBRATION_FAILED",
@@ -457,14 +463,56 @@ def calibrate_structured_proposals(
         "all_objects_contract_compliant": all_compliant,
         "resource_ceilings_respected": resource_ok,
         "analysis": analysis,
-        "draw_bindings": _draw_bindings(workspace, manifest, "proposals"),
+        "draw_bindings": _draw_bindings(workspace, manifest, "proposals", schedule),
         "usage": _combine_usage(preflight["usage"], _usage(draws.values())),
         "preflight_model_calls": 1,
         "scientific_proposal_model_calls": len(draws),
-        "implementation_calls_authorized": passed,
+        "proposal_validation_authorized": passed,
+        "implementation_calls_authorized": False,
         "fresh_search_value_tasks_consumed": 0,
     }
     path = ArtifactStore(workspace / "result-artifacts").write_record(PROPOSAL_RECORD, record)
+    return {**record, "record_path": str(path), "record_sha256": digest_bytes(path.read_bytes())}
+
+
+def validate_structured_proposals(
+    workspace: Path,
+    *,
+    manifest_digest: str,
+    proposal_provider: PatchProvider,
+    implementation_provider: PatchProvider,
+    progress: Callable[[str], None] | None = None,
+) -> dict[str, Any]:
+    workspace = workspace.resolve()
+    manifest = _load_manifest(workspace, manifest_digest, proposal_provider, implementation_provider)
+    calibration_path = workspace / "result-artifacts" / "records" / PROPOSAL_RECORD
+    calibration = _load_json(calibration_path)
+    if calibration.get("manifest_digest") != manifest_digest or not calibration.get("passed"):
+        raise RuntimeError("GCF-V2 proposal validation blocked because proposal calibration did not pass")
+    schedule = [item for item in manifest["proposal_schedule"] if item["phase"] == "VALIDATION"]
+    draws = _execute_proposals(workspace, manifest, schedule, proposal_provider, progress)
+    analysis = _analyze_proposals(manifest, draws)
+    resource_ok = all(draw.token_cost <= PROPOSAL_TOKEN_CEILING for draw in draws.values())
+    all_evaluable = all(draw.evaluable for draw in draws.values())
+    all_compliant = all(draw.contract_compliant for draw in draws.values())
+    passed = resource_ok and all_evaluable and all_compliant and analysis["detectable_states"] >= 1
+    record = {
+        "status": "GCF_V2_PROPOSAL_VALIDATION_PASSED" if passed else "GCF_V2_PROPOSAL_VALIDATION_FAILED",
+        "protocol_id": PROTOCOL_ID,
+        "manifest_digest": manifest_digest,
+        "calibration_record_sha256": digest_bytes(calibration_path.read_bytes()),
+        "passed": passed,
+        "all_draws_evaluable": all_evaluable,
+        "all_objects_contract_compliant": all_compliant,
+        "resource_ceilings_respected": resource_ok,
+        "analysis": analysis,
+        "draw_bindings": _draw_bindings(workspace, manifest, "proposals", schedule),
+        "usage": _combine_usage(calibration["usage"], _usage(draws.values())),
+        "validation_model_calls": len(draws),
+        "implementation_calls_authorized": passed,
+        "fresh_search_value_tasks_consumed": 0,
+    }
+    path = ArtifactStore(workspace / "result-artifacts").write_record(PROPOSAL_VALIDATION_RECORD, record)
     return {**record, "record_path": str(path), "record_sha256": digest_bytes(path.read_bytes())}
 
 
@@ -478,10 +526,10 @@ def run_structured_implementation_calibration(
 ) -> dict[str, Any]:
     workspace = workspace.resolve()
     manifest = _load_manifest(workspace, manifest_digest, proposal_provider, implementation_provider)
-    proposal_path = workspace / "result-artifacts" / "records" / PROPOSAL_RECORD
+    proposal_path = workspace / "result-artifacts" / "records" / PROPOSAL_VALIDATION_RECORD
     proposal_record = _load_json(proposal_path)
     if proposal_record.get("manifest_digest") != manifest_digest or not proposal_record.get("passed"):
-        raise RuntimeError("GCF-V2 implementation blocked because the frozen proposal gate did not pass")
+        raise RuntimeError("GCF-V2 implementation blocked because frozen proposal validation did not pass")
     proposals = _load_proposal_draws(workspace, manifest)
     draws = _execute_implementations(workspace, manifest, proposals, implementation_provider, progress)
     analysis = _analyze_implementations(manifest, draws)
@@ -536,12 +584,12 @@ def run_structured_implementation_calibration(
 
 def _calibration_tasks():
     return (
-        _coverage_task("gcf_v2_coverage_calibration_alpha", (11113, 11131, 11149, 11171, 11197, 11213)),
-        _balanced_cut_task("gcf_v2_cut_calibration_alpha", (12109, 12143, 12161, 12197, 12211, 12239)),
+        ("CALIBRATION", _coverage_task("gcf_v2_coverage_calibration_alpha", (11113, 11131, 11149, 11171, 11197, 11213))),
+        ("VALIDATION", _balanced_cut_task("gcf_v2_cut_calibration_alpha", (12109, 12143, 12161, 12197, 12211, 12239))),
     )
 
 
-def _freeze_task(store: ArtifactStore, task: Any) -> dict[str, Any]:
+def _freeze_task(store: ArtifactStore, role: str, task: Any) -> dict[str, Any]:
     files = {
         "question": store.put_bytes(task.task.question.encode("utf-8"), media_type="text/plain"),
         "public_tests.py": store.put_bytes(
@@ -555,6 +603,7 @@ def _freeze_task(store: ArtifactStore, task: Any) -> dict[str, Any]:
     base_digest = store.put_bytes(base_source.encode("utf-8"), media_type="text/x-python")
     state = {
         "state_id": f"gcf-v2-{task.task.task_id}",
+        "role": role,
         "task_id": task.task.task_id,
         "task_category": task.task.category,
         "task_payload_digest": task.payload_digest,
@@ -568,6 +617,7 @@ def _freeze_task(store: ArtifactStore, task: Any) -> dict[str, Any]:
 def _execute_proposals(
     workspace: Path,
     manifest: dict[str, Any],
+    schedule: list[dict[str, Any]],
     provider: PatchProvider,
     progress: Callable[[str], None] | None,
 ) -> dict[str, ProposalDraw]:
@@ -593,7 +643,7 @@ def _execute_proposals(
         })
         return draw
 
-    return _parallel_draws(manifest, manifest["proposal_schedule"], execute, progress, "proposal")
+    return _parallel_draws(manifest, schedule, execute, progress, "proposal")
 
 
 def _generate_proposal(
@@ -751,7 +801,10 @@ def _generate_implementation(
 
 def _analyze_proposals(manifest: dict[str, Any], draws: dict[str, ProposalDraw]) -> dict[str, Any]:
     states = []
+    observed_states = {draw.state_id for draw in draws.values()}
     for state in manifest["states"]:
+        if state["state_id"] not in observed_states:
+            continue
         left = [draw for draw in draws.values() if draw.state_id == state["state_id"] and draw.condition_id == CONDITION_A]
         right = [draw for draw in draws.values() if draw.state_id == state["state_id"] and draw.condition_id == CONDITION_B]
         within = _within_envelope(left, right, lambda draw: draw.categorical_signature)
@@ -952,10 +1005,15 @@ def _load_proposal_draws(workspace: Path, manifest: dict[str, Any]) -> dict[str,
     return result
 
 
-def _draw_bindings(workspace: Path, manifest: dict[str, Any], stage: str) -> list[dict[str, str]]:
+def _draw_bindings(
+    workspace: Path,
+    manifest: dict[str, Any],
+    stage: str,
+    schedule: list[dict[str, Any]] | None = None,
+) -> list[dict[str, str]]:
     root = workspace / "result-artifacts" / "records"
     result = []
-    for item in manifest["proposal_schedule"]:
+    for item in schedule or manifest["proposal_schedule"]:
         path = root / _draw_record_path(manifest, stage, item["draw_id"])
         result.append({"draw_id": item["draw_id"], "path": str(path), "sha256": digest_bytes(path.read_bytes())})
     return result

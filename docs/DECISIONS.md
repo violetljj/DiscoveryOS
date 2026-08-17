@@ -169,3 +169,10 @@
 - **决定**：GCF-V2 R1 的 12/12 proposal invocations 全部在 Codex CLI/schema 边界以 exit `1`、0 tokens 失败，记为 `GCF_V2_R1_NOT_EVALUABLE_PROVIDER_SCHEMA`，不得写成 structured proposal semantic failure。R1 root 保持 create-once，不修改 schema、不补跑。R2 使用新 protocol ID、新 workspace 和新 seal；移除官方 Structured Outputs 支持子集未包含的 `uniqueItems`，同时保留 parse 后 uniqueness 检查。
 - **原因**：R1 没有产生任何可评估 Mechanism Object，因而没有进入 condition separation gate。一次 schema transport 缺陷被并发复制成 12 次失败，也证明 scientific schedule 前缺少廉价 executability check。
 - **后果**：R2 在 scientific draws 前冻结并执行一次 non-scientific provider/schema preflight，保存 transport error excerpt；失败即停止，成功才开放原 12-call proposal schedule。该修复只恢复协议可执行性，不改变 task、condition、replicate、proposal admission、implementation isolation、behavior gate 或 claim ceiling。
+
+## D-025：以实测 CLI 固定成本修正 R3 ceiling，并把两个 proposal states 改为顺序门
+
+- **状态**：Accepted; R2 closed; R3 implemented; not yet run
+- **决定**：接受 R2 preflight 的 provider/schema/contract success，但因 17,497 tokens 超过冻结 8,000 ceiling，将 R2 关闭为 `GCF_V2_R2_PREFLIGHT_RESOURCE_BLOCKED`，不运行 scientific schedule。R3 使用新 protocol ID、root 和 seal，把 preflight/proposal per-call ceiling 冻结为 25,000；weighted coverage 的 3A+3B 为 calibration，只有通过才运行 balanced cut 的 3A+3B independent proposal validation，两者通过才运行 12 个 isolated implementations。
+- **原因**：Codex CLI 的固定 model-visible context 已超过原 8,000 ceiling，R2 阻断是 executability/resource-contract 问题，不是 Mechanism Object 失败。顺序 state gate 使最早的科学失败只消耗六 calls；按独立 R2 preflight 的观测约为 104,982 tokens，即 GCF-R1 的 19.6%，同时保留每 condition 三次 same-state stochastic replication。
+- **后果**：R2 root 不修改、不重跑。R3 不改变 schema semantics、conditions、每 state replicate 数、task/evaluator content、between-vs-within 判据、implementation isolation、source/behavior margins 或 claim ceiling。Calibration 失败阻断 proposal validation；validation 失败阻断 implementation；任何 positive calibration 仍不建立 utility 或 search value。
