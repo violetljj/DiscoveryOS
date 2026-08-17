@@ -75,6 +75,8 @@ CMI_R3_PROTOCOL_IMPLEMENTED
 CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF_ADMITTED
 CMI_R4_PROTOCOL_IMPLEMENTED
 CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR_MECHANICS_CONFIRMED_ON_TWO_DEV_STATES
+CMI_R5_PROTOCOL_IMPLEMENTED
+CMI_R5_NOT_YET_EXECUTED
 NO_ESCAPE_OPERATOR_IMPLEMENTED
 NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 ```
@@ -196,6 +198,7 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 27. CMI-R2 bounded real diagnosis 已完成。Manifest digest 为 `e7729e2d186ce60acd00bf56f61b783c4d8025a8c2babe67c9824da9226d2a0f`，controls SHA-256 为 `7add4d0ec5aa490544b9a1e948b13b420a281b654a6599355b27018ae7ed7dad`，report SHA-256 为 `0dabc1d1fb9850266e5cbdb58a5868bffc45144c408d2d269df17504e47d3dfb`。6/6 calls evaluable/valid，合计 `116,729` tokens；evaluator sensitivity 与 valid-source rate 均为 `1.0`，反证 evaluator insensitivity 与 implementation bottleneck。每 state 的三个 source SHA-256 各不相同，但 evaluator score 与冻结 functional signature 各自完全相同，六个 within-state pair distances 全为 `0`；因此 `H5_STRUCTURAL_BASIN_LOCK` 在这两个 dev states 上被唯一支持，状态机输出 `MECHANISM_BRIEF_ALLOWED`。该结论不授权 Operator、value trial 或 fresh search-value budget。详见 [`CMI_R2_BOUNDED_REAL_DIAGNOSIS.md`](CMI_R2_BOUNDED_REAL_DIAGNOSIS.md)。
 28. CMI-R3 functional-basin escape Mechanism Brief 已正式 admitted。Create-once manifest digest 为 `f69966c6a3f7530eb29556c4148dc0bfcc16ae6a441ad5bc0cefee090dafa595`，admission report SHA-256 为 `903837b1fd3de85ed51f12be45c65c9fc5e89933acf37ab39f2895c16bf12acf`。12/12 frozen checks 通过，模型调用、evaluator 调用和 fresh tasks 均为零；不同 source 文本本身不构成干预，未来候选必须有效且在 state-local functional probe 上距 incumbent envelope 大于 `0.10`。Claim ceiling 保持 `DEVELOPMENT_MECHANISM_BRIEF_ONLY`，Operator implementation、value trial 和 fresh search-value budget 仍全部未授权。详见 [`CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md`](CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md)。
 29. CMI-R4 functional-basin-escape Operator mechanics 已在 commit `aed8261` 上封存并通过。Manifest digest 为 `05a7c426aeba12c7a13ca51485799a738835520ff094cf3ab46090d36c8397dc`，report SHA-256 为 `6e284e4efce34d0ed4b461989be40a2aebaa5ad410e130da2a59642ed71c6e13`。Assignment/coverage treatment 的 functional distance 分别为 `0.49382716` / `0.30000000`，独立 descendant-behavior distance 为 `0.41975309` / `0.31111111`；null 均为 `0`，positive controls 为 `0.45679012` / `0.30000000`，全部 public validity 与 Brief-to-generation causal reachability 检查通过。模型、evaluator 与 fresh search-value 调用均为零，共执行 24 个本地 public/probe 进程并消费两个新 development states。该结果只建立 deterministic minimal Operator 的 bounded mechanics；一般 escape probability、causal value、utility/AUC、search value 与 superiority 均未建立，R5 和 fresh budget 仍未授权。详见 [`CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md`](CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md)。
+30. CMI-R5 consumed-development causal-value paired protocol 已实现但尚未执行。它复用 R4 两个 consumed states，在 same state/parent、一次确定性 Operator 调用、零模型/零 token、同一 functional probe/evaluator/environment 下比较 behavior-preserving local CONTROL 与 CMI escape TREATMENT。Functional distance 只作 manipulation check；utility、two-allocation AUC、replacement、breakthrough、validity 与 cost 决定 verdict。每状态仅一个确定性 pair，因此无概率或显著性 claim，fresh budget 继续关闭。详见 [`CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md`](CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md)。
 
 ## 状态更新规则
 
@@ -226,3 +229,4 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 - CMI-R2 bounded real diagnosis：[`CMI_R2_BOUNDED_REAL_DIAGNOSIS.md`](CMI_R2_BOUNDED_REAL_DIAGNOSIS.md)
 - CMI-R3 functional basin escape brief：[`CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md`](CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md)
 - CMI-R4 functional basin escape Operator mechanics：[`CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md`](CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md)
+- CMI-R5 consumed development causal value：[`CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md`](CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md)

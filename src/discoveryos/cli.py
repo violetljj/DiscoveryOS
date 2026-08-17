@@ -63,6 +63,8 @@ from discoveryos.benchmarks import (
     seal_cmi_escape_brief,
     run_cmi_escape_operator,
     seal_cmi_escape_operator,
+    run_cmi_causal_value,
+    seal_cmi_causal_value,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.mechanism_intelligence import run_cmi_r0_synthetic, seal_cmi_r0_protocol
@@ -256,6 +258,13 @@ def build_parser() -> argparse.ArgumentParser:
     cmi_r4_run = subparsers.add_parser("cmi-r4-run-operator", help="run the sealed zero-model escape Operator mechanics controls")
     cmi_r4_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-r4-functional-basin-escape-operator"))
     cmi_r4_run.add_argument("--manifest-digest", required=True)
+    cmi_r5_seal = subparsers.add_parser("cmi-r5-seal-causal-value", help="seal the consumed-state paired CMI causal-value protocol")
+    cmi_r5_seal.add_argument("--workspace", type=Path, default=Path("runs/cmi-r5-consumed-dev-causal-value"))
+    cmi_r5_seal.add_argument("--cmi-r4-workspace", type=Path, default=Path("runs/cmi-r4-functional-basin-escape-operator"))
+    cmi_r5_seal.add_argument("--cmi-r4-report-sha256", required=True)
+    cmi_r5_run = subparsers.add_parser("cmi-r5-run-causal-value", help="run the sealed consumed-state paired CMI causal-value bench")
+    cmi_r5_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-r5-consumed-dev-causal-value"))
+    cmi_r5_run.add_argument("--manifest-digest", required=True)
     cib_parent_seal = subparsers.add_parser(
         "cib-seal-parent-dev",
         help="seal consumed development states for a real parent-policy paired trace",
@@ -558,6 +567,14 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.command == "cmi-r4-run-operator":
             result = run_cmi_escape_operator(args.workspace, manifest_digest=args.manifest_digest)
+        elif args.command == "cmi-r5-seal-causal-value":
+            result = seal_cmi_causal_value(
+                args.workspace,
+                cmi_r4_workspace=args.cmi_r4_workspace,
+                cmi_r4_report_sha256=args.cmi_r4_report_sha256,
+            )
+        elif args.command == "cmi-r5-run-causal-value":
+            result = run_cmi_causal_value(args.workspace, manifest_digest=args.manifest_digest)
         elif args.command == "cib-seal-parent-dev":
             result = seal_parent_dev_cib_protocol(args.workspace)
         elif args.command == "cib-run-parent-dev":

@@ -295,3 +295,10 @@
 - **决定**：接受 manifest `05a7c426aeba12c7a13ca51485799a738835520ff094cf3ab46090d36c8397dc` 与 report SHA-256 `6e284e4efce34d0ed4b461989be40a2aebaa5ad410e130da2a59642ed71c6e13`。两个 treatment 均 valid、functional distance 严格大于 `0.10`，null 为 `0`，positive controls 敏感，且 Brief 字段真实进入未读取 positive/evaluator 的 Operator 路径。
 - **原因**：该证据排除了 source-only rewrite，并把 structured Brief 到 measurable functional escape 的 transmission 闭合；独立 descendant probe 也观察到行为距离。但 Operator 是 deterministic development mechanism，两个状态不能估计一般 escape probability，更没有比较 utility。
 - **后果**：claim ceiling 仅为 `DEVELOPMENT_OPERATOR_MECHANICS_ONLY`。可以另行提出 R5 causal-value protocol，但本结果不自动授权执行 R5，不开放 fresh tasks，也不得声称 CMI、Operator 或 basin escape 有价值。
+
+## D-043：CMI-R5 只在 consumed R4 states 上做确定性 paired causal-value bench
+
+- **日期**：2026-08-17
+- **决定**：R5 复用 R4 的两个已消费 development states，以相同 parent、一次确定性 Operator 调用、冻结 functional probe/evaluator、零模型和零 token 比较 source-local behavior-preserving CONTROL 与 CMI escape TREATMENT。Functional distance 只作 manipulation check；胜负由预冻结的 utility、AUC、replacement、breakthrough、validity 和 resource gates 决定。
+- **原因**：R4 只证明能 escape。先在已消费状态上做最便宜的配对效应检查，可以在开放 fresh budget 前识别“跳得远但跳得更差”的机制失败。
+- **后果**：每状态只有一个确定性 pair，不能估计一般概率、方差或显著性。即使通过也只支持 two-consumed-state causal value，不自动授权 fresh search-value trial。

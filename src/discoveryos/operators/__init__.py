@@ -35,6 +35,7 @@ from .novelty import (
     ShinkaStyleNoveltyPolicy,
 )
 from .functional_basin_escape import FunctionalBasinEscapeOperator, FunctionalBasinEscapeResult
+from .local_behavior_control import LocalBehaviorControlOperator, LocalBehaviorControlResult
 
 __all__ = [
     "ActionControllerConfig",
@@ -73,4 +74,6 @@ __all__ = [
     "ShinkaStyleNoveltyPolicy",
     "FunctionalBasinEscapeOperator",
     "FunctionalBasinEscapeResult",
+    "LocalBehaviorControlOperator",
+    "LocalBehaviorControlResult",
 ]
