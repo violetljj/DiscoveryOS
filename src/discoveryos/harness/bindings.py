@@ -36,7 +36,9 @@ def harness_code_bundle_digest() -> str:
 
     return digest_json(
         {
-            relative: digest_bytes((_SOURCE_ROOT / relative).read_bytes())
+            relative: digest_bytes(
+                (_SOURCE_ROOT / relative).read_bytes().replace(b"\r\n", b"\n")
+            )
             for relative in _CODE_BUNDLE_PATHS
         }
     )

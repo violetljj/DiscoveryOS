@@ -5,8 +5,9 @@
 ```text
 P2_FACTORIAL_PROFILES_REFROZEN
 P2_ZERO_MODEL_FACTORIAL_FAIRNESS_GATE_PASS
-P2_MODEL_PROTOCOL_SEALED_PRE_MODEL
-P2_MODEL_CALLS_AUTHORIZED_NOT_STARTED
+P2_FACTORIAL_V1_PROTOCOL_SEALED_HISTORICAL
+P2_FACTORIAL_V1_EXECUTION_AUTHORITY_FAILED_PRE_MODEL
+P2_FACTORIAL_V2_PENDING_CREATE_ONCE_SEAL
 P2_SEARCH_VALUE_NOT_EVALUATED
 ```
 
@@ -18,12 +19,12 @@ This gate closes only the execution-fairness prerequisite created by D-060. It u
 
 | Arm | Ada trajectory slice | EvoX strategy slice | Profile id |
 |---|---:|---:|---|
-| `neither` | off | off | `profile_7b9e85dd62e3cbce1ffa9f33` |
-| `ada_only` | on | off | `profile_1e3322d95a663be4461ffd34` |
-| `evox_only` | off | on | `profile_24417da9d134439f1c4ea422` |
-| `ada_evox` | on | on | `profile_42e79a3a7669085dff8a44f4` |
+| `neither` | off | off | `profile_fdef41d2505d96de7231ed19` |
+| `ada_only` | on | off | `profile_fb49389a6909abedeaf03184` |
+| `evox_only` | off | on | `profile_33463b8b06be00e9aea43f81` |
+| `ada_evox` | on | on | `profile_4d94994c9187c74cad4a20a0` |
 
-The Profile audit digest is `6e9fd6c741cd0f52c885575044342053ea39b2547f68a24343648b3f89d3eaf6`. Direct and Router selections are byte-identical across arms, including `bootstrap_steps=1` and `allow_cross_seed=true`. Every arm always has exactly one `LOCAL_REFINEMENT` and one `STRUCTURAL_ESCAPE` provider. Ada replaces the trajectory-unconditioned local control; EvoX replaces the strategy-unconditioned structural control. Thus the factors change guidance/state semantics without removing an action capability or generation opportunity. Every arm is static and has one content-addressed Profile and one `HarnessSearchRuntime`; the prior two-child naive-parallel topology is not part of this factorial question.
+The V2-preseal Profile audit digest is `4753549b6d454bdaba9a2bec6795fcc8314a3563058270609cf86129226916c7`; the exact sealed digest must be rechecked from the committed detached worktree. Direct and Router selections are byte-identical across arms, including `bootstrap_steps=1` and `allow_cross_seed=true`. Every arm always has exactly one `LOCAL_REFINEMENT` and one `STRUCTURAL_ESCAPE` provider. Ada replaces the trajectory-unconditioned local control; EvoX replaces the strategy-unconditioned structural control. Thus the factors change guidance/state semantics without removing an action capability or generation opportunity. Every arm is static and has one content-addressed Profile and one `HarnessSearchRuntime`; the prior two-child naive-parallel topology is not part of this factorial question.
 
 ## Executable fairness invariants
 

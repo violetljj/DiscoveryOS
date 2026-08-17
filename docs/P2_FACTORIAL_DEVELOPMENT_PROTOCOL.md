@@ -1,62 +1,54 @@
 # P2 Ada × EvoX Factorial Development Protocol
 
-## Sealed status
+## Current status
 
 ```text
-P2_FACTORIAL_PROTOCOL_SEALED_PRE_MODEL
-P2_FACTORIAL_TASK_PREFLIGHT_PASS_ZERO_MODEL
-P2_MODEL_CALLS_AUTHORIZED_NOT_STARTED
+P2_FACTORIAL_V1_EXECUTION_AUTHORITY_FAILED_PRE_MODEL
+P2_FACTORIAL_V1_MODEL_CALLS_ZERO
+P2_FACTORIAL_V2_RUNNER_IMPLEMENTED
+P2_FACTORIAL_V2_ZERO_MODEL_BLOCK_PREFLIGHT_PASS
+P2_FACTORIAL_V2_PENDING_CREATE_ONCE_SEAL
 P2_SEARCH_VALUE_NOT_EVALUATED
 ```
 
-This protocol answers three separate development questions on consumed L2 assets: the main effect of trajectory-conditioned Ada local adaptation, the main effect of online EvoX strategy adaptation, and their interaction. It does not test official-system parity, fresh-task generalization or superiority.
+V1 remains an immutable historical seal. Its first independent-worktree execution-authority check failed before any model call because `harness_code_bundle_digest()` hashed checkout line endings: the LF sealing checkout and CRLF detached worktree produced different Profile/fairness identities from byte-equivalent normalized sources. The frozen V1 source also lacked a bound 12-block execution, settlement and replay entrypoint. V1 therefore produced no scientific result and must not be executed or repaired in place.
 
-## Frozen design
+V2 preserves the scientific question, tasks, paired design, provider, resource ceilings, estimands, statistics and claim ceiling. It changes only the pre-model executability surface: Harness source digests normalize CRLF/LF, the complete runner is bound by the protocol source digest, and a real consumed-task four-arm block must pass without invoking the provider before sealing.
+
+## Frozen design to be sealed as V2
 
 - Arms: `neither / Ada-only / EvoX-only / Ada+EvoX`.
-- Factor controls: all arms retain one local-refinement and one structural-escape capability. Ada replaces a trajectory-unconditioned local control; EvoX replaces a strategy-unconditioned structural control.
-- Tasks: six consumed MVP-0 development tasks, selected without P2 outcomes as the first two lexical identities in each of three existing families.
-- Replicates: two paired replicates per task and arm; the four arms form one randomized execution block for each task-replicate.
-- Maximum size: 12 paired blocks, 48 arm runs and 336 provider-call slots.
-- Per task-replicate-arm envelope: 7 generation calls, 7 evaluator calls, 140,000 input-plus-output tokens, 2,100 wall seconds and 420 CPU seconds.
-- Provider: `gpt-5.6-sol`, reasoning effort `medium`, read-only ephemeral Codex execution, per-call timeout 300 seconds.
-- No novelty resampling, free repair, task replacement, cross-arm budget transfer or unused-budget filling.
+- Factor controls: every arm retains bootstrap, local-refinement and structural-escape capabilities. Ada replaces only the trajectory-unconditioned local control; EvoX replaces only the strategy-unconditioned structural control.
+- Tasks: the same six consumed MVP-0 L2 development tasks, two per existing family.
+- Replicates: two paired replicates per task; all four arms form one randomized block.
+- Maximum size: 12 paired blocks and 48 arm runs.
+- Per task-replicate-arm ceiling: 7 generation calls, 7 evaluator calls, 140,000 input-plus-output tokens, 2,100 wall seconds and 420 CPU seconds.
+- Execution accounting: one bound baseline evaluator call plus at most six unified search steps; generation calls therefore remain at or below seven and evaluator calls at or below seven.
+- Provider: `gpt-5.6-sol`, reasoning effort `medium`, read-only ephemeral Codex execution, 300-second per-call timeout.
+- No novelty resampling, free repair, task replacement, cross-arm budget transfer, unused-budget filling or same-revision partial resume.
 
 ## Primary estimands
 
-For every paired task-replicate block, normalize final feasible improvement by that task's frozen score resolution and denote the four responses by `Y00`, `Y10`, `Y01`, `Y11`.
+For each evaluable paired block, final feasible improvement is divided by the frozen task score resolution, producing `Y00`, `Y10`, `Y01` and `Y11`.
 
 - Ada main effect: `0.5 × ((Y10 − Y00) + (Y11 − Y01))`.
 - EvoX main effect: `0.5 × ((Y01 − Y00) + (Y11 − Y10))`.
 - Ada × EvoX interaction: `Y11 − Y10 − Y01 + Y00`.
 
-All three directions are predeclared positive. Each requires a median paired effect of at least one task-resolution step plus a one-sided exact paired sign test under Holm family-wise alpha `0.05`. Contrasts are computed inside paired blocks before aggregation; subtracting arm-level medians is forbidden. `Ada+EvoX` versus `neither` is descriptive and cannot establish synergy.
+Every direction is predeclared positive. Each requires median paired effect of at least one task-resolution step and a one-sided exact paired sign test under Holm family-wise alpha `0.05`. Contrasts are computed inside blocks. `Ada+EvoX` versus `neither` is descriptive only. P3 additionally requires the positive replayable interaction and median `Y11` noninferiority with zero-step margin against `Y10`, `Y01` and `Y00`.
 
-## Stop and failure semantics
+## Execution and failure semantics
 
-- Controller stop is terminal; unused resources disappear.
-- Invalid candidates consume their generation/evaluator slots and cannot replace the incumbent.
-- Provider failure consumes a call slot and receives no free retry.
-- Evaluator failure invalidates the complete paired four-arm block; there is no backfill.
-- Timeout or budget failure stops the arm and marks the paired block `NOT_EVALUABLE_RESOURCE`.
-- All 12 paired blocks are required for a scientific estimand verdict. Otherwise the protocol result is `NOT_EVALUABLE`, not an algorithm loss.
-- After the first model call, no task, mechanism, threshold, evaluator, resource envelope, gate or same-revision rerun may change.
-
-## Create-once seal binding
-
-- Source commit: `ced4dd2b617e821adc41b2d7fcaf8c1c560ffbf9`.
-- Tracked source-tree digest: `f1c3bdea1d5ae8886de662585fbc3ddc3c59e480b26bb3df535946d9cc5d6485`.
-- Profile fairness digest: `6e9fd6c741cd0f52c885575044342053ea39b2547f68a24343648b3f89d3eaf6`.
-- Protocol manifest digest: `8970fe227571e28a29d7baf0a7d911b6b306398051f00c2eaba7d13991528500`.
-- Manifest file SHA-256: `e0a7411d85d7b59c0798f5e412346472f170adb20e1d82112cd99138d4aeec52`.
-- Provider: `codex-cli 0.148.0-alpha.9`; executable SHA-256 `f29f609375f3731d8db507a95124862a84e306982e30ba4300ddce5638bc6946`.
-- Local create-once record: ignored path `runs/p2-factorial-development-v1/protocol-artifacts/records/p2-factorial-development-v1-manifest.json`.
-- Seal and disk replay verification used zero model calls and opened zero fresh/SEALED assets.
-
-The execution authority verifies manifest integrity, exact source commit/tree, clean worktree, profile/fairness binding, task implementation and provider executable/settings before a run. Because this status document is committed after the seal, model execution must use a separate clean worktree checked out at the sealed source commit; current `main` is not silently treated as equivalent.
+- The manifest stores the exact randomized block and within-block arm order.
+- Every block constructs four isolated physical ledgers, one authority per arm, and reruns the zero-model runtime fairness audit before any arm model call.
+- Block start, fairness, arm terminal and block terminal records are create-once. A partial result root cannot resume under the same revision.
+- Invalid candidates consume their slots and do not replace the incumbent. Provider failure consumes the attempted generation slot and gets no free retry.
+- Evaluator failure invalidates the complete block. Timeout or resource overrun marks the block `NOT_EVALUABLE_RESOURCE`. There is no backfill.
+- All 12 blocks must be evaluable. Otherwise the protocol result is `NOT_EVALUABLE`, never an algorithm loss.
+- Replay revalidates manifest/source/provider authority and recomputes the aggregate from the 12 immutable block terminals.
 
 ## Claim ceiling and next action
 
-A positive result can establish only a bounded factorial development signal on these consumed tasks. P3 requires a positive replayable interaction plus `Ada+EvoX` noninferiority to both single-factor arms and `neither`; otherwise diagnosis remains on consumed traces.
+A positive result can establish only a bounded factorial development signal on these consumed tasks. It cannot establish official AdaEvolve/EvoX parity, fresh-task generalization, DiscoveryOS superiority or production readiness.
 
-The protocol now authorizes only its exact P2 development run. No model call has started. The next action is to execute the sealed 12-block schedule from the bound commit without changing tasks, mechanisms, thresholds, evaluator, resources or gates.
+The next action is to commit this V2 implementation, create a clean detached worktree at that commit, pass execution-authority verification, and create-once seal V2 before the first model call. Exact commit, source, Profile/fairness, provider and manifest digests will be recorded only after that seal succeeds.

@@ -449,3 +449,10 @@
 - **决定**：接受 `DISCOVERYOS_P2_ADA_EVOX_FACTORIAL_DEVELOPMENT_V1` 的 create-once seal。科学执行绑定 commit `ced4dd2b617e821adc41b2d7fcaf8c1c560ffbf9`、tracked source-tree digest `f1c3bdea1d5ae8886de662585fbc3ddc3c59e480b26bb3df535946d9cc5d6485`、fairness digest `6e9fd6c741cd0f52c885575044342053ea39b2547f68a24343648b3f89d3eaf6`、manifest digest `8970fe227571e28a29d7baf0a7d911b6b306398051f00c2eaba7d13991528500` 和 `codex-cli 0.148.0-alpha.9` executable/settings binding。seal 与磁盘 replay 验证均为 0 model calls、0 fresh/SEALED assets。
 - **原因**：四臂同能力 controls 已消除 action-path 缺失，任务 preflight、provider、source、Profile、公平性、资源和 estimand 均能在首次科学调用前被不可变绑定，满足 D-063 的授权条件。
 - **后果**：该 revision 的模型调用已获协议授权但尚未开始。运行必须在独立 clean worktree checkout 到冻结 commit 后通过 execution-authority verification；当前 `main` 的后续文档提交不能冒充冻结科学 source。任何绑定漂移均 fail closed 并要求新 revision；本 seal 不授权 fresh task、P3、官方 parity、generalization 或 superiority claim。
+
+## D-065：P2 V1 fail closed，并以完整可执行 V2 supersede
+
+- **日期**：2026-08-18
+- **决定**：V1 的首次独立 worktree authority check 在 0 model calls 时输出 `P2 factorial Profile/fairness binding drift`。根因是 `harness_code_bundle_digest()` 对 LF/CRLF checkout 字节敏感；归一化文本完全一致，但独立 worktree的 Profile identity 与 seal 不同。V1 冻结源码同时只有 seal/verify，没有绑定 12-block runner、terminal、聚合和 replay。因此撤销 V1 的执行授权，保留原 manifest 不变，以新 V2 revision 修复。
+- **原因**：独立 worktree 是协议要求，不能通过在原 sealing checkout 运行来绕过 identity mismatch；临时外置 runner 也不属于被冻结的 evidence semantics。两者都是首次模型调用前的 validity/executability blocker，不是科学结果。
+- **后果**：V2 只允许规范化 Harness 文本 digest，并绑定同一六题、两 replicate、四臂、provider、资源 ceiling、estimands、Holm gate 与 claim ceiling 的完整执行闭环。一个 baseline evaluator call 加最多六个统一 search steps，保证 evaluator 总调用不超过 7；generation 仍不超过 7。每个 block 在模型调用前重做四臂 runtime fairness，所有 start/fairness/arm/block terminal create-once，partial root 禁止同 revision resume。V2 必须在新的 clean commit 上通过真实 consumed-task 零模型 block preflight 并重新 seal，才能恢复模型调用授权。

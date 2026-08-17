@@ -42,7 +42,7 @@ from discoveryos.runtime.ledger import EvidenceLedger
 from discoveryos.runtime.repository_runner import ExecutableCandidateEvaluator
 from discoveryos.runtime.scheduler import ComputeFabric, ExperimentExecutor
 from discoveryos.runtime.vault import SplitVault
-from discoveryos.util import digest_bytes, digest_json, jsonable
+from discoveryos.util import digest_bytes, digest_json, jsonable, utc_now
 
 
 DEFAULT_TOKEN_CEILING = 90_000
@@ -496,6 +496,10 @@ def _initialize_arm(
     repository: Path,
     base_commit: str,
     token_ceiling: int,
+    *,
+    cpu_ceiling: float = 600,
+    wall_ceiling: float = 3600,
+    contract_created_at: str | None = None,
 ) -> AdmissionArm:
     artifacts = ArtifactStore(root / "artifacts")
     ledger = EvidenceLedger(root / "ledger.sqlite3")
@@ -548,10 +552,15 @@ def _initialize_arm(
             MetricDefinition("valid", MetricDirection.MAXIMIZE, objective=False, available_from=Fidelity.G0),
         ),
         hard_constraints=(HardConstraint("valid", ConstraintOperator.GE, 1.0, Fidelity.G0),),
-        budget=ResourceBudget(tokens=token_ceiling, cpu_seconds=600, wall_seconds=3600),
+        budget=ResourceBudget(
+            tokens=token_ceiling,
+            cpu_seconds=cpu_ceiling,
+            wall_seconds=wall_ceiling,
+        ),
         winner_rule=WinnerRule(metric_order=("score",), require_fidelity=Fidelity.G2),
         evaluator_bindings=tuple((fidelity.value, probe.evaluator_id, digest) for fidelity in (Fidelity.G0, Fidelity.G1, Fidelity.G2)),
         claim_ceiling=ClaimCeiling.DEVELOPMENT_ONLY,
+        created_at=contract_created_at or utc_now(),
     )
     registry = EvaluatorRegistry()
     registry.register(ExecutableCandidateEvaluator(artifacts, contract=contract))
