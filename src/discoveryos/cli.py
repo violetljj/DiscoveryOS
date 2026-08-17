@@ -65,6 +65,8 @@ from discoveryos.benchmarks import (
     seal_cmi_escape_operator,
     run_cmi_causal_value,
     seal_cmi_causal_value,
+    run_cmi_replication_admission,
+    seal_cmi_replication_admission,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.mechanism_intelligence import run_cmi_r0_synthetic, seal_cmi_r0_protocol
@@ -265,6 +267,16 @@ def build_parser() -> argparse.ArgumentParser:
     cmi_r5_run = subparsers.add_parser("cmi-r5-run-causal-value", help="run the sealed consumed-state paired CMI causal-value bench")
     cmi_r5_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-r5-consumed-dev-causal-value"))
     cmi_r5_run.add_argument("--manifest-digest", required=True)
+    cmi_r6_seal = subparsers.add_parser("cmi-r6-seal-replication", help="seal all eligible consumed SI-2 states for CMI replication admission")
+    cmi_r6_seal.add_argument("--workspace", type=Path, default=Path("runs/cmi-r6-consumed-distribution-replication"))
+    cmi_r6_seal.add_argument("--cmi-r5-workspace", type=Path, default=Path("runs/cmi-r5-consumed-dev-causal-value"))
+    cmi_r6_seal.add_argument("--cmi-r5-report-sha256", required=True)
+    cmi_r6_seal.add_argument("--si2-workspace", type=Path, default=Path("runs/si2-fresh-search-value-r1"))
+    cmi_r6_seal.add_argument("--si2-discovery-report-sha256", required=True)
+    cmi_r6_seal.add_argument("--si2-confirmation-report-sha256", required=True)
+    cmi_r6_run = subparsers.add_parser("cmi-r6-run-replication", help="run the sealed consumed-distribution CMI replication admission")
+    cmi_r6_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-r6-consumed-distribution-replication"))
+    cmi_r6_run.add_argument("--manifest-digest", required=True)
     cib_parent_seal = subparsers.add_parser(
         "cib-seal-parent-dev",
         help="seal consumed development states for a real parent-policy paired trace",
@@ -575,6 +587,17 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.command == "cmi-r5-run-causal-value":
             result = run_cmi_causal_value(args.workspace, manifest_digest=args.manifest_digest)
+        elif args.command == "cmi-r6-seal-replication":
+            result = seal_cmi_replication_admission(
+                args.workspace,
+                cmi_r5_workspace=args.cmi_r5_workspace,
+                cmi_r5_report_sha256=args.cmi_r5_report_sha256,
+                si2_workspace=args.si2_workspace,
+                si2_discovery_report_sha256=args.si2_discovery_report_sha256,
+                si2_confirmation_report_sha256=args.si2_confirmation_report_sha256,
+            )
+        elif args.command == "cmi-r6-run-replication":
+            result = run_cmi_replication_admission(args.workspace, manifest_digest=args.manifest_digest)
         elif args.command == "cib-seal-parent-dev":
             result = seal_parent_dev_cib_protocol(args.workspace)
         elif args.command == "cib-run-parent-dev":

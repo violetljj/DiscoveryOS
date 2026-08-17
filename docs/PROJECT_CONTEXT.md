@@ -130,3 +130,4 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - Functional basin escape Mechanism Brief / CMI-R3：`CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md`
 - Functional basin escape Operator mechanics / CMI-R4：`CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md`
 - Consumed development causal value / CMI-R5：`CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md`
+- Consumed distribution replication / CMI-R6：`CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md`

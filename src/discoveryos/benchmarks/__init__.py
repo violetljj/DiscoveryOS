@@ -64,6 +64,7 @@ from .cmi_real_diagnosis import run_cmi_real_controls, run_cmi_real_diagnosis, s
 from .cmi_escape_brief import admit_cmi_escape_brief, seal_cmi_escape_brief
 from .cmi_escape_operator import run_cmi_escape_operator, seal_cmi_escape_operator
 from .cmi_causal_value import run_cmi_causal_value, seal_cmi_causal_value
+from .cmi_replication_admission import run_cmi_replication_admission, seal_cmi_replication_admission
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -129,4 +130,6 @@ __all__ = [
     "run_cmi_escape_operator",
     "seal_cmi_causal_value",
     "run_cmi_causal_value",
+    "seal_cmi_replication_admission",
+    "run_cmi_replication_admission",
 ]

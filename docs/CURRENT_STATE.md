@@ -77,6 +77,8 @@ CMI_R4_PROTOCOL_IMPLEMENTED
 CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR_MECHANICS_CONFIRMED_ON_TWO_DEV_STATES
 CMI_R5_PROTOCOL_IMPLEMENTED
 CMI_R5_CAUSAL_VALUE_DETECTED_ON_TWO_CONSUMED_DEV_STATES
+CMI_R6_PROTOCOL_IMPLEMENTED
+CMI_R6_NOT_YET_EXECUTED
 NO_ESCAPE_OPERATOR_IMPLEMENTED
 NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 ```
@@ -199,6 +201,7 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 28. CMI-R3 functional-basin escape Mechanism Brief 已正式 admitted。Create-once manifest digest 为 `f69966c6a3f7530eb29556c4148dc0bfcc16ae6a441ad5bc0cefee090dafa595`，admission report SHA-256 为 `903837b1fd3de85ed51f12be45c65c9fc5e89933acf37ab39f2895c16bf12acf`。12/12 frozen checks 通过，模型调用、evaluator 调用和 fresh tasks 均为零；不同 source 文本本身不构成干预，未来候选必须有效且在 state-local functional probe 上距 incumbent envelope 大于 `0.10`。Claim ceiling 保持 `DEVELOPMENT_MECHANISM_BRIEF_ONLY`，Operator implementation、value trial 和 fresh search-value budget 仍全部未授权。详见 [`CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md`](CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md)。
 29. CMI-R4 functional-basin-escape Operator mechanics 已在 commit `aed8261` 上封存并通过。Manifest digest 为 `05a7c426aeba12c7a13ca51485799a738835520ff094cf3ab46090d36c8397dc`，report SHA-256 为 `6e284e4efce34d0ed4b461989be40a2aebaa5ad410e130da2a59642ed71c6e13`。Assignment/coverage treatment 的 functional distance 分别为 `0.49382716` / `0.30000000`，独立 descendant-behavior distance 为 `0.41975309` / `0.31111111`；null 均为 `0`，positive controls 为 `0.45679012` / `0.30000000`，全部 public validity 与 Brief-to-generation causal reachability 检查通过。模型、evaluator 与 fresh search-value 调用均为零，共执行 24 个本地 public/probe 进程并消费两个新 development states。该结果只建立 deterministic minimal Operator 的 bounded mechanics；一般 escape probability、causal value、utility/AUC、search value 与 superiority 均未建立，R5 和 fresh budget 仍未授权。详见 [`CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md`](CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md)。
 30. CMI-R5 consumed-development paired causal-value 已在 commit `4465f0e` 上封存并通过。Manifest digest 为 `09260d9c235a22c4a6a348021a834079b9cbb742c040be9af9549d1b0d28ba5b`，report SHA-256 为 `6457625fcf02d9d720a143f62dbf10927adce445863eca8b7b08259070be7b0d`。Assignment/coverage final utility delta 为 `+0.20103693` / `+0.09768933`，two-allocation AUC delta 为 `+0.10051846` / `+0.04884466`；escape rate `0 -> 1`、replacement `0 -> 1`、breakthrough `0 -> 0.5`、两臂 validity 均为 `1`。模型、token 与 fresh tasks 均为零；treatment/control evaluator 总耗时约为 `1.118s` / `0.739s`。正式 verdict 为 `CMI_R5_CAUSAL_VALUE_DETECTED_ON_TWO_CONSUMED_DEV_STATES`，仅适用于该 deterministic escape Operator 相对 behavior-preserving local control 的两个 consumed states；无概率、显著性、一般 CMI value 或 fresh search-value claim，fresh budget 继续关闭。详见 [`CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md`](CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md)。
+31. CMI-R6 consumed-distribution replication admission 协议已实现但尚未执行。它绑定 R5 frozen Operator/control hashes，并全量纳入 SI-2 discovery/confirmation 中兼容的 4 个 Assignment 与 4 个 Coverage consumed states；Balanced Cut 因无冻结实现排除。主门要求至少 `7/8` treatment escape 与正 utility sign、无 resolution 外负效应、两个 family median utility/AUC 均为正、validity/breakthrough 不劣、replacement 提高，且 aggregate/max-state evaluator runtime ratio 不超过 `2x/3x`。Exact states/seeds 未进入 R3–R5，但 task families 与 intermediate heuristic evidence 在 R6 前已可见；故这不是 blind independent replication，只是全量 consumed-distribution robustness。通过只允许另行预注册极小 fresh causal validation，不直接开放 fresh execution。详见 [`CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md`](CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md)。
 
 ## 状态更新规则
 
@@ -230,3 +233,4 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 - CMI-R3 functional basin escape brief：[`CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md`](CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md)
 - CMI-R4 functional basin escape Operator mechanics：[`CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md`](CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md)
 - CMI-R5 consumed development causal value：[`CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md`](CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md)
+- CMI-R6 consumed distribution replication：[`CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md`](CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md)
