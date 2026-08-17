@@ -10,7 +10,12 @@ from pathlib import Path
 
 from discoveryos.contracts.models import ResourceUsage
 from discoveryos.contracts.patch import GenerationKind, GenerationProviderError, GenerationRequest, ProviderGeneration
-from discoveryos.runtime.provider_invocations import DurableProviderInvoker, InvocationStateUnknown, _request_binding
+from discoveryos.runtime.provider_invocations import (
+    DurableProviderInvoker,
+    InvocationStateUnknown,
+    _request_binding,
+    assert_no_orphaned_invocations,
+)
 from discoveryos.util import canonical_json, digest_json
 
 
@@ -83,6 +88,8 @@ class DurableProviderInvokerTests(unittest.TestCase):
             with self.assertRaisesRegex(InvocationStateUnknown, "retry forbidden"):
                 DurableProviderInvoker(root, namespace="test").invoke(provider, request)
             self.assertEqual(0, provider.calls)
+            with self.assertRaisesRegex(InvocationStateUnknown, "new calls forbidden"):
+                assert_no_orphaned_invocations(root)
 
     def test_concurrent_observer_cannot_duplicate_in_flight_call(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

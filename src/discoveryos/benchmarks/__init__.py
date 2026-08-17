@@ -47,6 +47,13 @@ from .executable_mechanism_contract import (
     run_provider_preflight as run_emc_provider_preflight,
     seal_emc_protocol,
 )
+from .emc_resource_calibration import run_emc_resource_calibration, seal_emc_resource_calibration
+from .executable_mechanism_contract_r3 import (
+    run_emc_r3_calibration,
+    run_emc_r3_instrumentation,
+    run_emc_r3_validation,
+    seal_emc_r3_protocol,
+)
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -92,4 +99,10 @@ __all__ = [
     "run_emc_provider_preflight",
     "run_emc_implementation_calibration",
     "run_emc_implementation_validation",
+    "seal_emc_resource_calibration",
+    "run_emc_resource_calibration",
+    "seal_emc_r3_protocol",
+    "run_emc_r3_instrumentation",
+    "run_emc_r3_calibration",
+    "run_emc_r3_validation",
 ]

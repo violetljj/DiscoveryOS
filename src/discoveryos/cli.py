@@ -45,6 +45,12 @@ from discoveryos.benchmarks import (
     run_emc_instrumentation_sensitivity,
     run_emc_provider_preflight,
     seal_emc_protocol,
+    run_emc_resource_calibration,
+    seal_emc_resource_calibration,
+    run_emc_r3_calibration,
+    run_emc_r3_instrumentation,
+    run_emc_r3_validation,
+    seal_emc_r3_protocol,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
@@ -221,6 +227,34 @@ def build_parser() -> argparse.ArgumentParser:
         if name == "gcf-r1-seal-mechanism-brief":
             command_parser.add_argument("--source-workspace", type=Path, default=Path("runs/cib-r1-parent-real"))
             command_parser.add_argument("--source-manifest-digest", required=True)
+            command_parser.add_argument("--max-workers", type=int, default=2)
+        else:
+            command_parser.add_argument("--manifest-digest", required=True)
+    for name, help_text in (
+        ("emc-resource-r1-seal", "seal the non-scientific EMC resource calibration corpus"),
+        ("emc-resource-r1-run", "run the four-call non-scientific EMC resource calibration"),
+    ):
+        command_parser = subparsers.add_parser(name, help=help_text)
+        command_parser.add_argument("--workspace", type=Path, default=Path("runs/emc-resource-calibration-r1"))
+        command_parser.add_argument("--model", required=True)
+        command_parser.add_argument("--codex-command", default="codex")
+        command_parser.add_argument("--reasoning-effort", required=True)
+        if name == "emc-resource-r1-run":
+            command_parser.add_argument("--manifest-digest", required=True)
+    for name, help_text in (
+        ("emc-r3-seal", "seal resource-calibrated EMC confirmation on two new development states"),
+        ("emc-r3-instrumentation", "run EMC-R3 no-model instrumentation sensitivity"),
+        ("emc-r3-calibrate", "run EMC-R3 six-call fresh-state calibration"),
+        ("emc-r3-validate", "run EMC-R3 independent six-call validation"),
+    ):
+        command_parser = subparsers.add_parser(name, help=help_text)
+        command_parser.add_argument("--workspace", type=Path, default=Path("runs/emc-r3-resource-calibrated-confirmation"))
+        command_parser.add_argument("--model", required=True)
+        command_parser.add_argument("--codex-command", default="codex")
+        command_parser.add_argument("--reasoning-effort", required=True)
+        if name == "emc-r3-seal":
+            command_parser.add_argument("--resource-workspace", type=Path, default=Path("runs/emc-resource-calibration-r1"))
+            command_parser.add_argument("--resource-record-sha256", required=True)
             command_parser.add_argument("--max-workers", type=int, default=2)
         else:
             command_parser.add_argument("--manifest-digest", required=True)
@@ -544,6 +578,65 @@ def main(argv: list[str] | None = None) -> int:
                 )
             else:
                 result = run_emc_implementation_validation(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    implementation_provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+        elif args.command in {"emc-resource-r1-seal", "emc-resource-r1-run"}:
+            module = __import__(
+                "discoveryos.benchmarks.executable_mechanism_contract",
+                fromlist=["IMPLEMENTATION_SCHEMA"],
+            )
+            provider = CodexExecProvider(
+                command=tuple(shlex.split(args.codex_command, posix=False)),
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+                output_schema=module.IMPLEMENTATION_SCHEMA,
+            )
+            if args.command == "emc-resource-r1-seal":
+                result = seal_emc_resource_calibration(args.workspace, provider=provider)
+            else:
+                result = run_emc_resource_calibration(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+        elif args.command in {"emc-r3-seal", "emc-r3-instrumentation", "emc-r3-calibrate", "emc-r3-validate"}:
+            module = __import__(
+                "discoveryos.benchmarks.executable_mechanism_contract",
+                fromlist=["IMPLEMENTATION_SCHEMA"],
+            )
+            provider = CodexExecProvider(
+                command=tuple(shlex.split(args.codex_command, posix=False)),
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+                output_schema=module.IMPLEMENTATION_SCHEMA,
+            )
+            if args.command == "emc-r3-seal":
+                result = seal_emc_r3_protocol(
+                    args.workspace,
+                    resource_workspace=args.resource_workspace,
+                    resource_record_sha256=args.resource_record_sha256,
+                    implementation_provider=provider,
+                    max_workers=args.max_workers,
+                )
+            elif args.command == "emc-r3-instrumentation":
+                result = run_emc_r3_instrumentation(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    implementation_provider=provider,
+                )
+            elif args.command == "emc-r3-calibrate":
+                result = run_emc_r3_calibration(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    implementation_provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+            else:
+                result = run_emc_r3_validation(
                     args.workspace,
                     manifest_digest=args.manifest_digest,
                     implementation_provider=provider,

@@ -19,7 +19,7 @@ from discoveryos.contracts.models import ResourceUsage
 from discoveryos.contracts.patch import GenerationKind, GenerationProviderError, GenerationRequest
 from discoveryos.operators.local_patch import PatchProvider
 from discoveryos.runtime.artifacts import ArtifactStore
-from discoveryos.runtime.provider_invocations import DurableProviderInvoker
+from discoveryos.runtime.provider_invocations import DurableProviderInvoker, assert_no_orphaned_invocations
 from discoveryos.util import digest_bytes, digest_json, jsonable
 
 
@@ -414,6 +414,7 @@ def _execute_implementations(
     provider: PatchProvider,
     progress: Callable[[str], None] | None,
 ) -> dict[str, ImplementationDraw]:
+    assert_no_orphaned_invocations(workspace / "result-artifacts")
     states = {state["state_id"]: state for state in manifest["states"]}
     result_store = ArtifactStore(workspace / "result-artifacts")
 
@@ -450,6 +451,9 @@ def _generate_implementation(
     state: dict[str, Any],
     item: dict[str, Any],
     provider: PatchProvider,
+    *,
+    protocol_id: str = PROTOCOL_ID,
+    token_ceiling: int = IMPLEMENTATION_TOKEN_CEILING,
 ) -> ImplementationDraw:
     protocol_store = ArtifactStore(workspace / "protocol-artifacts")
     result_store = ArtifactStore(workspace / "result-artifacts")
@@ -472,7 +476,7 @@ def _generate_implementation(
         prompt_template_digest=digest_json({"stage": "emc_implementation", "template": _implementation_prompt_template()}),
         context_digest=digest_json({"state": state["state_digest"], "draw": item}),
         prompt=prompt,
-        token_ceiling=IMPLEMENTATION_TOKEN_CEILING,
+        token_ceiling=token_ceiling,
     )
     started = time.monotonic()
     source = ""
@@ -483,7 +487,7 @@ def _generate_implementation(
     try:
         invocation = DurableProviderInvoker(
             workspace / "result-artifacts",
-            namespace=f"{PROTOCOL_ID}:{item['draw_id']}",
+            namespace=f"{protocol_id}:{item['draw_id']}",
         ).invoke(provider, request)
         generated = invocation.generation
         payload = json.loads(generated.raw_response)
@@ -655,7 +659,11 @@ def _implementation_prompt_template() -> str:
     )
 
 
-def _analyze_draws(draws: Iterable[ImplementationDraw]) -> dict[str, Any]:
+def _analyze_draws(
+    draws: Iterable[ImplementationDraw],
+    *,
+    token_ceiling: int = IMPLEMENTATION_TOKEN_CEILING,
+) -> dict[str, Any]:
     values = list(draws)
     direct = [draw for draw in values if draw.condition_id == CONDITION_DIRECT]
     repair = [draw for draw in values if draw.condition_id == CONDITION_REPAIR]
@@ -669,7 +677,7 @@ def _analyze_draws(draws: Iterable[ImplementationDraw]) -> dict[str, Any]:
         "all_static_contracts_passed": all(draw.static_contract_passed for draw in values),
         "all_runtime_contracts_passed": all(draw.runtime_contract_passed for draw in values),
         "all_invariant_canaries_passed": all(draw.invariant_canary_passed for draw in values),
-        "resource_ceilings_respected": all(draw.token_cost <= IMPLEMENTATION_TOKEN_CEILING for draw in values),
+        "resource_ceilings_respected": all(draw.token_cost <= token_ceiling for draw in values),
         "between_condition_counter_signatures_separated": separated,
         "within_condition_signatures": {
             CONDITION_DIRECT: [list(value) for value in sorted(direct_signatures)],
@@ -687,21 +695,28 @@ def _analyze_draws(draws: Iterable[ImplementationDraw]) -> dict[str, Any]:
     }
 
 
-def _gate_verdict(draws: Iterable[ImplementationDraw], analysis: dict[str, Any], phase: str) -> tuple[bool, str]:
+def _gate_verdict(
+    draws: Iterable[ImplementationDraw],
+    analysis: dict[str, Any],
+    phase: str,
+    *,
+    verdict_prefix: str = "EMC_R2",
+    replicates_per_condition: int = REPLICATES_PER_CONDITION,
+) -> tuple[bool, str]:
     values = list(draws)
     if not analysis["resource_ceilings_respected"] or not analysis["all_evaluable"]:
-        return False, f"EMC_R2_{phase}_NOT_EVALUABLE_RESOURCE_OR_PROVIDER"
+        return False, f"{verdict_prefix}_{phase}_NOT_EVALUABLE_RESOURCE_OR_PROVIDER"
     if not analysis["all_sources_valid"] or not analysis["all_invariant_canaries_passed"]:
-        return False, f"EMC_R2_{phase}_IMPLEMENTATION_INVALID"
+        return False, f"{verdict_prefix}_{phase}_IMPLEMENTATION_INVALID"
     if not analysis["all_static_contracts_passed"]:
-        return False, f"EMC_R2_{phase}_STATIC_CONTRACT_FAILED"
+        return False, f"{verdict_prefix}_{phase}_STATIC_CONTRACT_FAILED"
     if not analysis["all_runtime_contracts_passed"]:
-        return False, f"EMC_R2_{phase}_RUNTIME_CONTRACT_FAILED"
+        return False, f"{verdict_prefix}_{phase}_RUNTIME_CONTRACT_FAILED"
     if not analysis["between_condition_counter_signatures_separated"]:
-        return False, f"EMC_R2_{phase}_RUNTIME_SIGNATURE_NOT_SEPARATED"
-    if len(values) != 2 * REPLICATES_PER_CONDITION:
-        return False, f"EMC_R2_{phase}_INCOMPLETE"
-    return True, f"EMC_R2_{phase}_PASSED"
+        return False, f"{verdict_prefix}_{phase}_RUNTIME_SIGNATURE_NOT_SEPARATED"
+    if len(values) != 2 * replicates_per_condition:
+        return False, f"{verdict_prefix}_{phase}_INCOMPLETE"
+    return True, f"{verdict_prefix}_{phase}_PASSED"
 
 
 def _provider_binding(provider: PatchProvider) -> dict[str, Any]:

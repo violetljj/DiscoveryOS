@@ -208,6 +208,13 @@
 ## D-030：provider invocation 使用不可猜测重发的 durable journal
 
 - **日期**：2026-08-17
-- **决定**：每个受保护 provider request 在进入外部调用前，必须以 request identity 原子创建 owner claim；正常返回或 `GenerationProviderError` 后立即创建 terminal record，绑定 response、transport、usage、provider request ID 与 failure semantics。恢复时只有完整 terminal 才能零调用重放；claim 存在而 terminal 缺失一律记为状态未知并永久禁止自动 reclaim/retry，除非未来能证明 provider 端支持同一 identity 的幂等执行。
+- **决定**：每个受保护 provider request 在进入外部调用前，必须以 request identity 原子创建 owner claim；正常返回或 `GenerationProviderError` 后立即创建 terminal record，绑定 response、transport、usage、provider request ID 与 failure semantics。恢复时只有完整 terminal 才能零调用重放；claim 存在而 terminal 缺失一律记为状态未知并永久禁止自动 reclaim/retry，除非未来能证明 provider 端支持同一 identity 的幂等执行。任何 phase 在创建 worker pool 前先审计全部 journal；存在一个 orphan claim 即阻断该 phase 的所有新调用。
 - **原因**：最终 draw checkpoint 比 provider side effect 晚。用 checkpoint 缺失推断“调用未发生”会在迟到 worker、进程中断或聚合失败时重复消费模型预算，并破坏 matched-call accounting。超时或本机 PID 消失也不能证明外部 provider 没有完成调用。
 - **后果**：该机制只建立 crash-safe、at-most-once 的调用 mechanics；它不能恢复 R2 未持久化的 duplicate usage，不能把 R2 的诊断 6/6 升级为 admission，也不自动授权 R3。新的科学协议必须先在非科学故障夹具和资源校准上验证 journal，再使用新 states、独立 root 和预冻结 ceiling。
+
+## D-031：EMC-R3 以独立资源 authority 回答 fresh-state confirmation 问题
+
+- **日期**：2026-08-17
+- **决定**：先封存并运行四调用的 `EMC_RESOURCE_CALIBRATION_R1`，只记录 schema executability、exact token 与 wall distribution。科学 ceiling 在资源调用前冻结为 `ceil(max(61,681, observed_max) * 1.25 / 1,000) * 1,000`，且不得超过 100,000。资源 authority 通过后，EMC-R3 才可绑定其 record SHA-256，在全新 assignment calibration 与 coverage validation states 上各运行 3A+3B。
+- **原因**：R2 已产生正向 actuation diagnostics，但资源 ceiling 与重复调用使其不可评价。新的问题不是补跑 R2，而是在已修复调用权威和独立实测 ceiling 下，对两份 never-consumed states 做 confirmatory transmission。资源测量必须先于科学封存，避免看到 scientific output 后选择 ceiling。
+- **后果**：E0 或 E2 失败立即阻断后续调用。E3 positive 只支持 two-state development transmission，并授权另行预注册 Operator causal-value protocol；它不建立 utility/search value，也不直接发放 fresh search-value budget。任何 resource、provider 或 orphaned invocation failure 都记为 `NOT_EVALUABLE`。

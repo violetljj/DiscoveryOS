@@ -166,6 +166,18 @@ class DurableProviderInvoker:
         return self.store.get_bytes(digest).decode("utf-8")
 
 
+def assert_no_orphaned_invocations(root: Path) -> None:
+    records = root.resolve() / "records" / "provider-invocations"
+    if not records.is_dir():
+        return
+    orphaned = [claim.parent.name for claim in records.glob("*/claim.json") if not (claim.parent / "terminal.json").is_file()]
+    if orphaned:
+        raise InvocationStateUnknown(
+            "provider phase contains claimed invocations without terminal records; new calls forbidden: "
+            + ",".join(sorted(orphaned))
+        )
+
+
 def _request_binding(request: GenerationRequest) -> dict[str, Any]:
     value = jsonable(request)
     value.pop("created_at", None)
