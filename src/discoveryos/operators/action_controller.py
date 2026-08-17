@@ -61,6 +61,8 @@ class CandidateSearchState:
     promotion_eligible: bool = False
     promotion_target: Fidelity | None = None
     active: bool = True
+    operator_id: str | None = None
+    strategy_id: str | None = None
 
     def __post_init__(self) -> None:
         if not self.candidate_id or not self.branch_id:
@@ -184,6 +186,7 @@ class SearchDecision:
     candidate_id: str | None
     branch_id: str | None
     operator_id: str | None
+    strategy_id: str | None
     fidelity: Fidelity | None
     reason_codes: tuple[str, ...]
     resource_floor: ResourceBudget
@@ -209,6 +212,7 @@ class SearchDecision:
         candidate_id: str | None,
         branch_id: str | None,
         operator_id: str | None,
+        strategy_id: str | None,
         fidelity: Fidelity | None,
         reason_codes: tuple[str, ...],
         resource_floor: ResourceBudget,
@@ -238,6 +242,7 @@ class SearchDecision:
             "candidate_id": candidate_id,
             "branch_id": branch_id,
             "operator_id": operator_id,
+            "strategy_id": strategy_id,
             "fidelity": fidelity,
             "reason_codes": reason_codes,
             "resource_floor": resource_floor,
@@ -273,6 +278,7 @@ class AnytimeTraceRecord:
     candidate_id: str | None
     branch_id: str | None
     operator_id: str | None
+    strategy_id: str | None
     fidelity: Fidelity | None
     reason_codes: tuple[str, ...]
     budget_before: ResourceBudget
@@ -399,6 +405,7 @@ class DeterministicActionController:
             "candidate_id",
             "branch_id",
             "operator_id",
+            "strategy_id",
             "fidelity",
             "reason_codes",
             "resource_floor",
@@ -554,6 +561,7 @@ class DeterministicActionController:
             candidate_id=candidate.candidate_id,
             branch_id=branch_id,
             operator_id=operator_id,
+            strategy_id=None,
             fidelity=fidelity,
             reason_codes=reason_codes,
             resource_floor=cost.resource_floor,
@@ -594,6 +602,7 @@ class DeterministicActionController:
             candidate_id=None,
             branch_id=None,
             operator_id=self.operator_id,
+            strategy_id=None,
             fidelity=None,
             reason_codes=rejected_reason,
             resource_floor=resource_floor or ResourceBudget(),
@@ -669,6 +678,7 @@ class AnytimeTraceRecorder:
             candidate_id=decision.candidate_id,
             branch_id=decision.branch_id,
             operator_id=decision.operator_id,
+            strategy_id=decision.strategy_id,
             fidelity=decision.fidelity,
             reason_codes=decision.reason_codes,
             budget_before=state_before.remaining_budget,

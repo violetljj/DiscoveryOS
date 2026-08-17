@@ -661,6 +661,8 @@ class LedgerBackedSearchStateProjector:
                     promotion_eligible=target is not None,
                     promotion_target=target,
                     active=candidate_id == facts.current_candidate_id,
+                    operator_id=facts.candidates[candidate_id].operator_id,
+                    strategy_id=facts.candidates[candidate_id].strategy_id,
                 )
             )
         return states
@@ -766,6 +768,7 @@ class UnifiedActionExecutor:
         structural_operator: StructuralRewriteOperator,
         experiment_executor: ExperimentExecutor,
         novelty_policy: ShinkaStyleNoveltyPolicy | None = None,
+        additional_operators: tuple[LocalPatchOperator, ...] = (),
     ) -> None:
         self.spec = spec
         self.contract = contract
@@ -776,6 +779,10 @@ class UnifiedActionExecutor:
         self.structural_operator = structural_operator
         self.experiment_executor = experiment_executor
         self.novelty_policy = novelty_policy
+        operators = (local_operator, structural_operator, *additional_operators)
+        self.generative_operators = {operator.operator_id: operator for operator in operators}
+        if len(self.generative_operators) != len(operators):
+            raise ValueError("generative operator ids must be unique")
         if (self.spec.novelty is None) != (self.novelty_policy is None):
             raise ValueError("search spec and novelty policy enablement must match")
         if self.novelty_policy is not None:
@@ -824,6 +831,21 @@ class UnifiedActionExecutor:
                 payload=jsonable(receipt),
             )
         if decision.action in GENERATIVE_ACTIONS:
+            selected_operator = self.generative_operators.get(decision.operator_id or "")
+            if selected_operator is None:
+                raise ValueError(f"decision references an unloaded research operator: {decision.operator_id}")
+            if decision.strategy_id is not None and selected_operator.strategy_id != decision.strategy_id:
+                raise ValueError("decision strategy differs from the loaded research operator")
+            if decision.action is SearchAction.STRUCTURAL_ESCAPE and not isinstance(
+                selected_operator,
+                StructuralRewriteOperator,
+            ):
+                raise ValueError("structural escape requires a structural research operator")
+            if decision.action is SearchAction.LOCAL_PATCH and isinstance(
+                selected_operator,
+                StructuralRewriteOperator,
+            ):
+                raise ValueError("local refinement cannot use a structural research operator")
             result_candidate = None
             bundle = ExecutableCandidateBundle.from_artifact(self.artifacts, source.artifact_digest)
             build = _build_spec(bundle)
@@ -874,7 +896,7 @@ class UnifiedActionExecutor:
             for attempt in range(1, max_attempts + 1):
                 memory = (*self.projector.semantic_memory(), *novelty_feedback)
                 if decision.action is SearchAction.LOCAL_PATCH:
-                    generated = self.local_operator.propose(
+                    generated = selected_operator.propose(
                         parent=source,
                         mutable_files=mutable_files,
                         development_evidence_summary=self.projector.evidence_summary(source.candidate_id),
@@ -887,7 +909,7 @@ class UnifiedActionExecutor:
                         request_nonce=f"{self.spec.run_id}:{state.step}:{attempt}",
                     )
                 else:
-                    generated = self.structural_operator.propose(
+                    generated = selected_operator.propose(
                         parent=source,
                         mutable_files=mutable_files,
                         development_evidence_summary=self.projector.evidence_summary(source.candidate_id),
@@ -991,6 +1013,29 @@ class UnifiedActionExecutor:
                         code=proposal_code,
                     ),
                 )
+            if result_candidate is not None:
+                if result_candidate.operator_id != selected_operator.operator_id:
+                    raise ValueError("candidate operator provenance differs from the planned operator")
+                if result_candidate.strategy_id != selected_operator.strategy_id:
+                    raise ValueError("candidate strategy provenance differs from the planned strategy")
+                if source.strategy_id != result_candidate.strategy_id:
+                    handoff = {
+                        "run_id": self.spec.run_id,
+                        "step": state.step,
+                        "decision_id": decision.decision_id,
+                        "source_candidate_id": source.candidate_id,
+                        "result_candidate_id": result_candidate.candidate_id,
+                        "from_strategy_id": source.strategy_id,
+                        "to_strategy_id": result_candidate.strategy_id,
+                        "controller_digest": decision.controller_digest,
+                    }
+                    self.ledger.add_edge(
+                        source.candidate_id,
+                        result_candidate.candidate_id,
+                        "CROSS_SEEDED_TO",
+                        handoff,
+                    )
+                    self.ledger.record_event("HARNESS_STRATEGY_HANDOFF", handoff)
         if result_candidate is not None:
             fidelity = decision.fidelity or self.spec.initial_fidelity
             evidence = await self._evaluate(

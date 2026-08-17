@@ -79,8 +79,10 @@ from discoveryos.benchmarks import (
     validate_benchmark_bank,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
+from discoveryos.harness import algorithm_discovery_v0_profile
 from discoveryos.mechanism_intelligence import run_cmi_r0_synthetic, seal_cmi_r0_protocol
 from discoveryos.providers import CodexExecProvider
+from discoveryos.util import jsonable
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -88,6 +90,10 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
     discovery = subparsers.add_parser("demo-discovery", help="run the deterministic G0/G1/G2 discovery example")
     discovery.add_argument("--workspace", type=Path, default=Path("runs/clearance-demo"))
+    subparsers.add_parser(
+        "harness-profile-show",
+        help="print the frozen built-in Research Harness V0 profile without booting plugins",
+    )
     discovery.add_argument("--candidates", type=int, default=12)
     discovery.add_argument("--seed", type=int, default=7)
     certification = subparsers.add_parser("demo-certify", help="certify the already-frozen demo winner on final blind")
@@ -519,6 +525,14 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "demo-discovery":
             result = run_demo_discovery(args.workspace, candidate_count=args.candidates, seed=args.seed)
+        elif args.command == "harness-profile-show":
+            profile = algorithm_discovery_v0_profile()
+            result = {
+                "status": "RESEARCH_HARNESS_V0_PROFILE_AVAILABLE",
+                "profile_id": profile.profile_id,
+                "profile": jsonable(profile),
+                "claim_ceiling_changed": False,
+            }
         elif args.command == "demo-certify":
             result = run_demo_certification(args.workspace, seed=args.seed)
         elif args.command == "demo-replay":

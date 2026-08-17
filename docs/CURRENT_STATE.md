@@ -1,6 +1,6 @@
 # DiscoveryOS 当前状态
 
-> 状态日期：2026-08-17。这里是进入项目后的状态入口；正式实验的冻结协议和完整结果仍以对应阶段文档与不可变收据为准。
+> 状态日期：2026-08-18。这里是进入项目后的状态入口；正式实验的冻结协议和完整结果仍以对应阶段文档与不可变收据为准。
 
 ## 结论先行
 
@@ -8,6 +8,12 @@
 DISCOVERYOS_KERNEL_ADMITTED
 DISCOVERYOS_ACTION_CONTROLLER_MECHANICS_READY
 DISCOVERYOS_AUTONOMOUS_SEARCH_LOOP_MECHANICS_READY
+RESEARCH_HARNESS_V0_MECHANICS_READY
+STATIC_ALGORITHM_DISCOVERY_PROFILE_AVAILABLE
+DIRECT_ADA_EVOX_PLUGIN_COMPOSITION_READY
+CROSS_STRATEGY_HANDOFF_PROVENANCE_READY
+HARNESS_ADAPTATION_PROTOCOL_ONLY
+HYBRID_SEARCH_VALUE_NOT_EVALUATED
 CONTROLLER_BUDGET_REACHABILITY_REPAIRED
 SEARCH_VALUE_MVP0_FAIL
 DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
@@ -124,6 +130,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 - 可执行代码 bundle、临时 Git worktree runner、路径策略、超时进程树终止和 run receipts。
 - ASHA mechanics admission；bounded Local Patch、一次 mechanical repair 和 generation provenance。
 - Structural Rewrite mechanics、ledger-backed state projector、deterministic action controller、unified executor 和 anytime settlement。
+- Research Harness V0：typed/scoped `ResearchContext`、不可覆盖的 authority services、原子插件启动/逆序清理、内容寻址 `ResearchProfile`、Direct/Ada/EvoX 内部策略插件、state router、strategy provenance 与 cross-seeding ledger edge。当前只到 mechanics，未运行 Hybrid search-value 比较，也未启用 Harness adaptation。
 - residual-headroom task admission 与 matched-resource Search-Value MVP 协议/runner。
 - Benchmark Bank v1 的 47-family commit-pinned registry、DEV/SHADOW/SEALED 生命周期门、统一 adapter contract，以及可执行的 consumed Assignment/Coverage development 物化切片。
 
@@ -237,7 +244,8 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 35. SkyDiscover R4/R5 的 15 个 family 已完成固定 commit/source-tree 审计：66 个 Python 文件静态解析通过，各题源码树 SHA-256、依赖、数据边界与 blocker 已写入 registry。R4 中 Cloudcast/EPLB/LLM-SQL 仍缺外部数据 digest/license；Prism/Transaction Scheduling 输入自包含，但仍缺冻结 partition identity 与官方 evaluator 环境 preflight。R5 十题公开暴露 prompt、evaluator、initial program、固定实例和 target，且项目冻结环境不含其 NumPy/SciPy/JAX/Optax 等依赖，因此全部保持 `CATALOGUED`，仅可规划 public replay/stress DEV；未冻结 neighboring hidden distribution 前不得用于 de-novo 或泛化 claim。本轮没有运行官方 evaluator、没有模型调用，也没有消费 fresh/SEALED 资产。详见 [`BENCHMARK_BANK_V1.md`](BENCHMARK_BANK_V1.md)。
 36. CMI Search Value R1 V1/V2 分别以 resource-envelope 与 invalid-descendant terminalization blocker 结算为 `NOT_EVALUABLE`，failure receipt SHA-256 为 `fde8384ea996e1b588f5ba62b04b7fd71d7da85675eedac2d4b96cb0b7a9f438` / `1a40a742f6b2584210eb705146beef44c9d56747230ccd0f244772780324d02a`，两批 cohort 均永久不可重用。V3 在 commit `79164cb`、manifest `5c1395d78efc1b102896471655cc9cf83b7d61585592172712b92a4191233d3b` 上完成全部六个 fresh tasks：`0 win / 6 tie / 0 loss`，median final/AUC delta 均为 `0`，exact-sign `p=1.0`。CMI 在 5/6 eligible tasks 上均被调用且 descendant 均 technically accepted，但 retained、downstream-parent 与 downstream retained contribution 均为 `0`；Search advantage 与 Causal transmission gate 失败。Cost gate 通过：enabled/control tokens `429,442 / 538,217`、evaluator calls `30 / 30`、elapsed `501.892s / 724.453s`。正式 verdict 为 `CMI_SEARCH_VALUE_NOT_ESTABLISHED`，report SHA-256 `de4850ae8c75bec35455e197356bd0dc608d47c7e6983a9a9025617ccea2a39b`。六个 V3 fresh tasks 已消费，不得重跑。详见 [`CMI_SEARCH_VALUE_R1.md`](CMI_SEARCH_VALUE_R1.md)。
 37. CMI Search Transmission Autopsy R1 已用零模型、零 evaluator、零 fresh budget 绑定 V3 六任务 receipts、权威 ledgers 与 R7 report 完成。5/5 invoked CMI descendants 都 valid，但相对 incumbent 与同期 control intervention 均为 `0 positive / 5 negative`；Assignment/Coverage median CMI-minus-incumbent 为 `-0.03908327 / -0.01007647`，median retention-threshold gap 为 `0.04208327 / 0.01507647`。R7/V3 的声明目标、per-family resolution 与 CMI output digest 对齐，当前证据支持 `CMI_DESCENDANT_COMPETITION_FAILURE_DETECTED_ON_CONSUMED_V3_TRACES`，不支持 selection integration defect。V3 的 sequential observation parent proxy 在 5/5 eligible tasks 与权威 `CandidateSpec.parent_ids` 不同；实际 downstream 均从 prefix incumbent 生成，因此 offline forced-retention compounding 不可识别，未执行新 provider continuation。Create-once autopsy record SHA-256 为 `45e960bcad90ee0f777e202f089051662b6cb5450825fe1f97f32fc0f60b8b7d`。详见 [`CMI_SEARCH_TRANSMISSION_AUTOPSY_R1.md`](CMI_SEARCH_TRANSMISSION_AUTOPSY_R1.md)。
-38. 经 D-055 显式 supersede D-054 的“先证明 incumbent-monotonic candidate competition”下一门后，CMI Forced-Lineage Transmission R1 已实现但尚未执行。它只绑定 V3 的完整 5 个 eligible consumed states，三臂分别强制 incumbent、同期 control descendant、CMI descendant 为 Generation 0 parent；后续两代使用完全相同 Local Patch generator/model/prompt/budget/evaluator，且每个 valid child 无视 fitness 继续成为下一代 parent。Generation 0 不计成功；primary 为 CMI lineage 与 matched-control lineage 的 best downstream utility，anytime AUC 从 forced parent 起算。严格 success gate 要求 5/5 primary win、两 family 全正、median primary/AUC 正和 exact two calls。失败则关闭当前 CMI Operator 的 Search integration、fresh budget 与 selection tuning；通过也只产生 consumed-development stepping-stone signal，不开放 fresh。selection policy 本身没有修改。详见 [`CMI_FORCED_LINEAGE_TRANSMISSION_R1.md`](CMI_FORCED_LINEAGE_TRANSMISSION_R1.md)。
+38. 经 D-055 显式 supersede D-054 的“先证明 incumbent-monotonic candidate competition”下一门后，CMI Forced-Lineage Transmission R1 已实现但尚未执行。它只绑定 V3 的完整 5 个 eligible consumed states，三臂分别强制 incumbent、同期 control descendant、CMI descendant 为 Generation 0 parent；后续两代使用完全相同 Local Patch generator/model/prompt/budget/evaluator，且每个 valid child无视 fitness 继续成为下一代 parent。Generation 0 不计成功；primary 为 CMI lineage 与 matched-control lineage 的 best downstream utility，anytime AUC 从 forced parent 起算。严格 success gate 要求 5/5 primary win、两 family 全正、median primary/AUC 正和 exact two calls。该方向现保留为历史 protocol，不再作为默认新增自研 Operator 主线；没有新 fresh budget。详见 [`CMI_FORCED_LINEAGE_TRANSMISSION_R1.md`](CMI_FORCED_LINEAGE_TRANSMISSION_R1.md)。
+39. Research Harness V0 已实现 `ResearchContext` 的 typed extend/isolate/intercept、authority override fail-closed、插件 dependency/provides 校验、原子 boot/rollback/reverse teardown、Profile/HarnessGraph 记录，以及 Direct bootstrap、Ada lineage refinement、EvoX structural meta-strategy 的静态组合。Controller 仍把 replicate/promotion/budget/stagnation/stop 交给原冻结 deterministic policy；candidate 继续进入统一 ledger/evaluator，跨策略生成记录 `CROSS_SEEDED_TO`。这只建立 mechanics；未调用模型、未运行 evaluator、未消费 fresh/SEALED 资产，未建立 Ada/EvoX 官方 runtime 等价性、Hybrid search value、adaptive harness value 或 superiority。详见 [`RESEARCH_HARNESS_V0.md`](RESEARCH_HARNESS_V0.md)。
 
 ## 状态更新规则
 
@@ -251,6 +259,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 - 项目和术语：[`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md)
 - 长期设计决策：[`DECISIONS.md`](DECISIONS.md)
 - 架构路线：[`ARCHITECTURE.md`](ARCHITECTURE.md)
+- Research Harness V0：[`RESEARCH_HARNESS_V0.md`](RESEARCH_HARNESS_V0.md)
 - Local Patch：[`LLM_LOCAL_PATCH_ADMISSION.md`](LLM_LOCAL_PATCH_ADMISSION.md)、[`LLM_LOCAL_PATCH_RELIABILITY.md`](LLM_LOCAL_PATCH_RELIABILITY.md)
 - MVP-0：[`SEARCH_VALUE_MVP0.md`](SEARCH_VALUE_MVP0.md)、[`MVP0_BUDGET_REACHABILITY_REPAIR.md`](MVP0_BUDGET_REACHABILITY_REPAIR.md)
 - SI-1：[`STRATEGY_INTEGRATION_SI1.md`](STRATEGY_INTEGRATION_SI1.md)、[`SHINKA_MECHANISM_MAPPING.md`](SHINKA_MECHANISM_MAPPING.md)

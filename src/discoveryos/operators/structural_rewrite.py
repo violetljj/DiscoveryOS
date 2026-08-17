@@ -227,13 +227,14 @@ class StructuralRewriteOperator(LocalPatchOperator):
         artifacts: ArtifactStore,
         ledger: EvidenceLedger,
         contract: ProblemContract,
+        strategy_id: str = "lineage_preserving_structural_escape",
     ) -> None:
         super().__init__(
             provider=provider,
             artifacts=artifacts,
             ledger=ledger,
             contract=contract,
-            strategy_id="lineage_preserving_structural_escape",
+            strategy_id=strategy_id,
             prompt_template=STRUCTURAL_REWRITE_PROMPT_TEMPLATE,
         )
 

@@ -2,9 +2,9 @@
 
 ## 一句话定义
 
-DiscoveryOS 是一个证据优先的统一算法研究内核：在冻结问题协议和评估权威下，让不同搜索机制共享候选、谱系、预算、证据与执行状态，并用可重放的门控结果约束结论。
+DiscoveryOS 是一个证据优先的 Algorithm Discovery Harness：用极小且稳定的权威内核冻结问题、评估、预算、证据与 claim ceiling，再让可替换 Research Plugins 在同一 Candidate/Research Graph 上组合研究过程。
 
-它的目标不是把 ShinkaEvolve、AdaEvolve、EvoX 等完整 runtime 编排到一起，而是吸收其中可验证的机制，重构为 DiscoveryOS 内部原语。原版系统仅能在隔离的 Benchmark Mode 中作为公平 challenger。
+它的目标不是把 ShinkaEvolve、AdaEvolve、EvoX 等完整 runtime 编排到一起，而是把其中可验证的机制重构为共享 `ResearchContext` 上的插件/原语。原版系统仅能在隔离的 Benchmark Mode 中作为公平 challenger；Pi 与 DeepSeek Harness 只提供架构参考，不是 DiscoveryOS 的运行时依赖。
 
 ## 产品与研究目标
 
@@ -50,6 +50,7 @@ Frozen ProblemContract
 - `GateEngine`：协议有效性、硬约束、科学可行性和 claim ceiling 的唯一裁决入口。
 - `SplitVault`：按 mode/fidelity/candidate freeze 发放数据 capability 的 fail-closed 边界。
 - `ReplayEngine`：检查不可变绑定并重执行冻结 evaluator，以发现数据、代码或输出漂移。
+- `ResearchContext` / `ResearchProfile`：不可变权威服务与可替换 Search 服务的作用域组合，以及内容寻址的静态 Harness 配置。
 
 ## 代码地图
 
@@ -60,6 +61,7 @@ Frozen ProblemContract
 | `src/discoveryos/evaluation/` | evaluator registry、GateEngine、Pareto、winner、replay |
 | `src/discoveryos/operators/` | Random、ASHA、Local Patch、Structural Rewrite、parent/novelty 等机制 |
 | `src/discoveryos/runtime/` | ledger、artifact、vault、scheduler、provider invocation journal、repository runner、search loop |
+| `src/discoveryos/harness/` | typed ResearchContext、插件生命周期、Research Profile、Direct/Ada/EvoX 插件与 state router |
 | `src/discoveryos/memory/` | semantic delta 和 progressive context 基础接口 |
 | `src/discoveryos/mechanism_intelligence.py` | failure phenotype、竞争瓶颈假设、冻结诊断 probe 与 fail-closed 研究状态机；只属于 Search/Research 平面 |
 | `src/discoveryos/benchmarks/` | 冻结 admission/benchmark runner、Benchmark Bank registry/adapter 与任务定义 |
@@ -99,6 +101,7 @@ python -m discoveryos demo-discovery --workspace runs/clearance-demo
 python -m discoveryos status --workspace runs/clearance-demo
 python -m discoveryos demo-certify --workspace runs/clearance-demo
 python -m discoveryos demo-replay --workspace runs/clearance-demo
+python -m discoveryos harness-profile-show
 ```
 
 阶段性 runner、冻结参数和结果必须以对应 `docs/*.md` 为准，不要根据命令名称推断其 admission 权威。
@@ -109,6 +112,7 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - 已确定的设计原因：`DECISIONS.md`
 - 本机依赖和工具位置：`LOCAL_ENVIRONMENT.md`
 - 总体架构路线：`ARCHITECTURE.md`
+- Research Harness V0：`RESEARCH_HARNESS_V0.md`
 - ASHA mechanics admission：`ASHA_ADMISSION.md`
 - Local Patch verdict：`LLM_LOCAL_PATCH_ADMISSION.md`、`LLM_LOCAL_PATCH_RELIABILITY.md`
 - Search-value MVP：`SEARCH_VALUE_MVP0.md`、`MVP0_BUDGET_REACHABILITY_REPAIR.md`

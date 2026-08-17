@@ -2,7 +2,7 @@
 
 ## 固定定位
 
-DiscoveryOS 是一个统一算法研究内核：吸收并重组 AdaEvolve、ShinkaEvolve、EvoX、MLEvolve、DeltaEvolve、PACEvolve、AgentNAS、BOHB/ASHA 等系统中的有效机制，使它们共享统一 Research Graph、Evidence Model、Candidate Store、Budget/Fidelity Controller、Memory 和异步执行底座；原版系统保留为隔离的 external challengers，用于检验统一内核是否真的更强。
+DiscoveryOS 是一个证据优先的 Algorithm Discovery Harness：稳定内核只保留冻结权威、统一 Research/Candidate/Evidence Graph、预算与执行底座；AdaEvolve、EvoX、Shinka、Direct LLM、ASHA 等机制通过 Research Plugins 在同一状态上组合。原版系统保留为隔离 external challengers，用于检验统一 Harness 是否真的更强。
 
 当前正式状态：
 
@@ -10,6 +10,8 @@ DiscoveryOS 是一个统一算法研究内核：吸收并重组 AdaEvolve、Shin
 DISCOVERYOS_KERNEL_ADMITTED
 DISCOVERYOS_ACTION_CONTROLLER_MECHANICS_READY
 DISCOVERYOS_AUTONOMOUS_SEARCH_LOOP_MECHANICS_READY
+RESEARCH_HARNESS_V0_MECHANICS_READY
+HYBRID_SEARCH_VALUE_NOT_EVALUATED
 CMI_R0_PROTOCOL_IMPLEMENTED
 CMI_R0_SYNTHETIC_DIAGNOSTIC_SENSITIVITY_PASSED
 DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
@@ -29,20 +31,21 @@ DiscoveryOS
 这会产生多套 population、candidate DB、memory、budget controller 和 evaluator 语义，破坏统一证据边界。Discovery Mode 的正确形态是：
 
 ```text
-Unified Research Graph / Evidence / Candidate Store
+Frozen authority kernel
+├── ProblemContract / Evaluator / GateEngine / Budget
+├── Candidate + Evidence + Artifact Store
+├── Research Graph / Harness Graph
+└── Runtime / Replay / SplitVault
                          │
-Unified Budget + Fidelity + Async Runtime + Memory
+                  ResearchContext
                          │
-Failure Phenotype + Competing Hypotheses + Diagnostic Probes
-                         │
-Internal mechanism primitives
-├── novelty / parent explore-exploit / diversity pressure
-├── branch budget / stagnation-aware allocation / exploration reserve
-├── strategy spec / meta-strategy mutation / strategy admission
-├── cross-branch reference / progressive history / branch review
-├── semantic-delta memory / crossover / rollback / context
-├── constrained NAS operators
-└── BOHB / ASHA / Hyperband scheduling mechanisms
+                  Research Profile
+├── proposal: Direct LLM
+├── lineage: Ada-style refinement/routing
+├── meta-strategy: EvoX-style structural revision
+├── parent/novelty: Shinka-style primitives
+├── budget/fidelity: ASHA/BOHB primitives
+└── routing/memory: replaceable Search-plane plugins
 ```
 
 这些机制读取和写入同一状态空间，由统一 action-acquisition layer 决定“下一单位资源最应花在哪里”：生成候选、增加 seed、提升 fidelity、转向 device、做 ablation、跨分支迁移还是 structural rewrite。
@@ -62,6 +65,7 @@ adapter 的存在不代表外部系统进入内部控制循环。其职责是隔
 |---|---|---|---|
 | Evidence | frozen evaluator + split binding + receipts | 产生可重放观察 | 自己修改协议或 claim |
 | Search | CMI diagnosis + operator + safe racing + Pareto | 形成瓶颈假设、选择诊断 probe 与下一笔资源 | 修改 evaluator、读取 final blind 或宣布科学胜利 |
+| Harness | Research Profile + plugins + state router | 组合或替换 Search-plane 服务、记录 strategy handoff | 覆盖 authority service、自动提高 claim ceiling |
 | Claim | GateEngine + contract ceiling | 限制可声明范围 | 把 scheduling utility 当作 verdict |
 
 系统中的 scalar 只允许用于调度。协议违规、mechanics failure、hard-constraint failure、科学结果和 claim ceiling 分开记录。
@@ -73,6 +77,7 @@ src/discoveryos/
 ├── contracts/     # frozen schemas, codecs, protocol admission
 ├── graph/         # hypothesis/component/strategy/claim nodes
 ├── evaluation/    # evaluator registry, hard gates, Pareto, replay
+├── harness/       # typed context, plugin lifecycle, profiles, strategy composition
 ├── operators/     # deterministic Action Controller + Random, ASHA, Local Patch, Structural Rewrite
 ├── memory/        # semantic delta and progressive context
 ├── mechanism_intelligence.py # failure phenotype, competing hypotheses, diagnostic probes, fail-closed research state
@@ -100,11 +105,10 @@ ResourceReservation
 
 ## 下一批实现顺序
 
-1. **CMI-R0 最小纵向切片**：已实现 failure phenotype、竞争 bottleneck hypothesis、冻结 diagnostic probe、资源绑定结果与 fail-closed 状态机；synthetic null/positive controls 只验证诊断 mechanics。
-2. **现实 probe protocol**：选择 never-consumed development episodes，在读取输出前冻结 phenotype、竞争 hypotheses、probe semantics、阈值、预算和 fail-closed terminal。先验证 evaluator control、perfect-implementation control 与 functional-basin assay，不生成 Operator。
-3. **Mechanism Brief admission**：只有恰好一个瓶颈 hypothesis 被支持且竞争解释全部被反证，才允许冻结包含 preconditions、causal target、required context、observable fingerprint、interactions 与 failure modes 的 Mechanism Brief。
-4. **Operator Admission Funnel**：新 Operator 依次证明 applicability、realized functional intervention、causal reachability、state-local null/positive controls 和独立 dev value；任一层失败即关闭当前版本。
-5. **Fresh search-value trial**：只有独立 dev value gate 通过后，才申请 never-consumed tasks、matched resources 与新 create-once root。此前不扩展机制数量、远端计算或生产 blind isolation。
-6. **后续组合与学习**：积累多个独立 admitted mechanisms 后，才实现 applicability learning、mechanism composition 与 credit assignment；Meta-Strategy/Advisor 仍需等待基础 search value 成立。
+1. **Research Harness V0**：已实现 typed/scoped context、插件生命周期、静态 Profile、Direct/Ada/EvoX 策略 provenance、state routing 与 cross-seeding graph mechanics。
+2. **Static composition development gate**：冻结 Direct/Ada、EvoX、naive parallel、DOS Harness 四臂 matched-resource protocol；先用合格的 DEV/consumed bank 资产做 mechanics 和效用校准，不用 fresh task debugging。
+3. **Harness adaptation gate**：只有静态组合相对强基线产生正向证据后，才冻结 profile mutation space、反馈、选择、rollback 与资源边界，比较 Static vs Adaptive。
+4. **Memory-conditioned gate**：只有 adaptive value 成立后，才比较 Adaptive Reset vs Adaptive Warm，并保持 task-family/freshness 层级诚实。
+5. **Harness evolution**：最后才允许搜索 Profile/HarnessGraph 本身；frozen outer authority、feedback-fidelity bound 与 backbone capability bound 不得绕过。
 
 每阶段都必须用独立 benchmark 证明增量价值；mechanics smoke、单 seed 或 development improvement 都不允许升级成算法优越性、安全性或产品结论。
