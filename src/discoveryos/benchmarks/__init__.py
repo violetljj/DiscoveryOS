@@ -40,6 +40,13 @@ from .structured_mechanism_mediation import (
     seal_structured_mediation_protocol,
     validate_structured_proposals,
 )
+from .executable_mechanism_contract import (
+    run_implementation_calibration as run_emc_implementation_calibration,
+    run_implementation_validation as run_emc_implementation_validation,
+    run_instrumentation_sensitivity as run_emc_instrumentation_sensitivity,
+    run_provider_preflight as run_emc_provider_preflight,
+    seal_emc_protocol,
+)
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -80,4 +87,9 @@ __all__ = [
     "run_structured_provider_preflight",
     "validate_structured_proposals",
     "run_structured_implementation_calibration",
+    "seal_emc_protocol",
+    "run_emc_instrumentation_sensitivity",
+    "run_emc_provider_preflight",
+    "run_emc_implementation_calibration",
+    "run_emc_implementation_validation",
 ]

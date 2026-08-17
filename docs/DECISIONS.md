@@ -183,3 +183,10 @@
 - **决定**：接受 R3 proposal calibration 与 independent proposal validation 的正向 development evidence：两个 task families 均为 6/6 evaluable/compliant、within categorical variance `0`、between median `2.23607`，因此可写 `STRUCTURED_MECHANISM_OBJECT_CHANNEL_DETECTED_ON_TWO_DEV_STATES`。最终 implementation verdict 必须保持 `GCF_V2_R3_NOT_EVALUABLE_RESOURCE_CEILING`，因为 3/12 calls 超过冻结 30,000-token ceiling；不得把 hidden behavior `0/2` 写成正式 semantic negative。
 - **原因**：Structured Object 已证明比 R1 free-text proposal 更稳定地承载 categorical condition，且 implementation 在 source structure 上 `2/2` 分离；但 resource violation 使完整 mediation evidence 不合规。Behavior between-condition distance 在两个 states 都未超过 within-condition envelope 加 margin，虽是强诊断信号，仍不能绕过资源 gate。
 - **后果**：R3 create-once root 关闭，不提高 ceiling、改 margin/probe、补 replicates 或以 utility record-only 数字追逐 positive。`NO_STRUCTURED_MECHANISM_CHANNEL_ADMITTED`、fresh value trial 与 SI-3 保持关闭。下一候选是新版本 Executable Mechanism Contract，用新 states 和预冻结的 required/forbidden call paths、replacement points、invariants、runtime counters 与 failure semantics 直接约束实现；它仍须独立通过 behavior transmission，不能继承 R3 的 positive proposal verdict为 search value。
+
+## D-027：Executable Mechanism Contract 必须由独立 instrumentation 裁决
+
+- **日期**：2026-08-17
+- **决定**：EMC-R1 不再把 source embedding 或模型自报 counter 当作 executable evidence。Structured Mechanism Object 由 deterministic compiler 在 implementation 调用前转成 required/forbidden function、entrypoint call edge、runtime counter bounds 和 invariants，并绑定 digest。候选不知道 profile probe 内容；独立 harness 从 `algorithm.py` 的真实 call events 生成权威 counter evidence。
+- **原因**：GCF-V2 已检测到 structured object 与 source separation，但 resource violation 使 runtime behavior 未知。若 counter 由候选自行写入或只看函数是否出现，semantic claim 仍可能与实际执行脱节。
+- **后果**：EMC-R1 使用全新 assignment/coverage development states 与 create-once root，按 E0 无模型 sensitivity、E1 单次 provider/resource preflight、E2 六次 calibration、E3 六次 independent validation 顺序执行。60,000-token ceiling 只属于新协议，按 receipt post-check fail closed；不得回改 GCF-V2。任何 positive 仍只支持 two-state contract-transmission development claim，utility、fresh value trial 与 SI-3 不自动开放。

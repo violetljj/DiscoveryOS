@@ -40,6 +40,11 @@ from discoveryos.benchmarks import (
     validate_structured_proposals,
     run_structured_implementation_calibration,
     seal_structured_mediation_protocol,
+    run_emc_implementation_calibration,
+    run_emc_implementation_validation,
+    run_emc_instrumentation_sensitivity,
+    run_emc_provider_preflight,
+    seal_emc_protocol,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
@@ -232,6 +237,22 @@ def build_parser() -> argparse.ArgumentParser:
         command_parser.add_argument("--codex-command", default="codex")
         command_parser.add_argument("--reasoning-effort", required=True)
         if name == "gcf-v2-seal-structured":
+            command_parser.add_argument("--max-workers", type=int, default=2)
+        else:
+            command_parser.add_argument("--manifest-digest", required=True)
+    for name, help_text in (
+        ("emc-r1-seal", "seal the Executable Mechanism Contract protocol before model calls"),
+        ("emc-r1-instrumentation", "run the no-model independent instrumentation sensitivity gate"),
+        ("emc-r1-preflight", "run the one-call EMC provider and resource preflight"),
+        ("emc-r1-calibrate", "run the six-call executable-contract calibration state"),
+        ("emc-r1-validate", "run the independent executable-contract validation state"),
+    ):
+        command_parser = subparsers.add_parser(name, help=help_text)
+        command_parser.add_argument("--workspace", type=Path, default=Path("runs/emc-r1-executable-contract"))
+        command_parser.add_argument("--model", required=True)
+        command_parser.add_argument("--codex-command", default="codex")
+        command_parser.add_argument("--reasoning-effort", required=True)
+        if name == "emc-r1-seal":
             command_parser.add_argument("--max-workers", type=int, default=2)
         else:
             command_parser.add_argument("--manifest-digest", required=True)
@@ -485,6 +506,47 @@ def main(argv: list[str] | None = None) -> int:
                     manifest_digest=args.manifest_digest,
                     proposal_provider=proposal_provider,
                     implementation_provider=implementation_provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+        elif args.command in {
+            "emc-r1-seal",
+            "emc-r1-instrumentation",
+            "emc-r1-preflight",
+            "emc-r1-calibrate",
+            "emc-r1-validate",
+        }:
+            module = __import__(
+                "discoveryos.benchmarks.executable_mechanism_contract",
+                fromlist=["IMPLEMENTATION_SCHEMA"],
+            )
+            provider = CodexExecProvider(
+                command=tuple(shlex.split(args.codex_command, posix=False)),
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+                output_schema=module.IMPLEMENTATION_SCHEMA,
+            )
+            if args.command == "emc-r1-seal":
+                result = seal_emc_protocol(args.workspace, implementation_provider=provider, max_workers=args.max_workers)
+            elif args.command == "emc-r1-instrumentation":
+                result = run_emc_instrumentation_sensitivity(
+                    args.workspace, manifest_digest=args.manifest_digest, implementation_provider=provider
+                )
+            elif args.command == "emc-r1-preflight":
+                result = run_emc_provider_preflight(
+                    args.workspace, manifest_digest=args.manifest_digest, implementation_provider=provider
+                )
+            elif args.command == "emc-r1-calibrate":
+                result = run_emc_implementation_calibration(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    implementation_provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+            else:
+                result = run_emc_implementation_validation(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    implementation_provider=provider,
                     progress=lambda message: print(message, file=sys.stderr, flush=True),
                 )
         elif args.command in {
