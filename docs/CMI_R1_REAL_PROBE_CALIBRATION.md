@@ -3,14 +3,22 @@
 ## 当前状态
 
 ```text
-CMI_R1_REAL_PROBE_CALIBRATION_PROTOCOL_IMPLEMENTED
-CMI_R1_REAL_PROBE_CALIBRATION_NOT_YET_EXECUTED
+CMI_R1_REAL_PROBE_CALIBRATION_PASSED
 NO_REAL_BOTTLENECK_ESTABLISHED
 NO_REAL_MECHANISM_BRIEF_AUTHORIZED
 NO_FRESH_SEARCH_VALUE_BUDGET
 ```
 
 CMI-R1 是现实诊断前的零模型硬门。它不生成候选，而是在两个从未消费的 development episodes 上验证 evaluator、perfect implementation control 和 functional-output assay 是否足以区分预构造差异。
+
+正式 create-once 运行已通过。Manifest digest 为 `930ff7a5974da5d41b7b1d949b5b1fbd373ef4204fb8040f89149e92ef70f65d`，report SHA-256 为 `7de7d2238102045373dd8fddd043b1e746df557e0d2137b0433f291ad394f037`。
+
+| State | Ranked recovery | Headroom | Same-source distance | Baseline/reference distance |
+|---|---:|---:|---:|---:|
+| assignment | `6/7` | `0.20914510` | `0` | `0.41975309` |
+| coverage | `6/7` | `0.10170301` | `0` | `0.27777778` |
+
+两状态全部通过五项预声明检查；因此只得到 `MAY_PREREGISTER_BOUNDED_CMI_REAL_DIAGNOSIS`。
 
 ## 冻结 states
 
