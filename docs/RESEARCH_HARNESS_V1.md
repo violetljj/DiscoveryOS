@@ -16,6 +16,8 @@ STATIC_HARNESS_COMPOSITION_VALUE_NOT_EVALUATED
 P2_DEVELOPMENT_PROTOCOL_NOT_SEALED
 MECHANISM_COMPLETE_PARITY_NOT_ESTABLISHED
 P2_PROTOCOL_PAUSED_PENDING_BOUNDED_PARITY_CLOSURE
+ADA_TRAJECTORY_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
+EVOX_PARITY_SLICE_NOT_IMPLEMENTED
 DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
 ```
 
@@ -123,6 +125,8 @@ The source-bound [`ADA_EVOX_MECHANISM_PARITY_AUDIT.md`](ADA_EVOX_MECHANISM_PARIT
 
 P2 sealing is paused for a bounded, zero-model parity closure: trajectory-conditioned Ada local adaptation and a typed same-run EvoX strategy deployment/switch/rollback slice. The audit explicitly excludes wholesale runtime import, private archives or evaluators, unrestricted strategy-code generation, cross-task memory and fresh assets.
 
+The first slice is implemented and documented in [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md). Its receipt-bound router and generation-context tests establish zero-model mechanism transmission only; they do not establish candidate behavior or value. EvoX parity is still absent, so no P2 Profile is scientifically unlocked.
+
 ## Remaining deliberate legacy boundary
 
 `SearchLoopRunner`, `DeterministicActionController`, ledger projector and unified executor remain stable Kernel/Runtime primitives. Historical protocols can still instantiate them directly to preserve replay behavior. New search work must enter through `HarnessSearchRuntime`; direct construction is compatibility-only and must not become a new default path.
@@ -131,4 +135,4 @@ Parent/Novelty/CMI and old protocol runners remain frozen regression/evidence as
 
 ## Next gate
 
-Before sealing P2, implement only the two bounded slices frozen by the mechanism parity audit and pass their zero-model P0/P1.5 causal-transmission gate on L0-L2 assets. Then revise and re-digest the four Profiles and seal the matched-resource P2 protocol, including exact task instances, child budget split and settlement for naive parallel, provider executable/version/settings, model calls, evaluator-call ceilings, wall/resource envelopes, statistics, winner rule and stop conditions. V1 mechanics do not authorize broader adaptive routing, cross-task memory, Harness evolution, fresh assets or stronger claims.
+Next implement the typed same-run EvoX strategy deployment/switch/rollback slice and pass its zero-model runtime-transmission gate. Then revise and re-digest the four Profiles and seal the matched-resource P2 protocol, including exact task instances, child budget split and settlement for naive parallel, provider executable/version/settings, model calls, evaluator-call ceilings, wall/resource envelopes, statistics, winner rule and stop conditions. V1 mechanics do not authorize broader adaptive routing, cross-task memory, Harness evolution, fresh assets or stronger claims.

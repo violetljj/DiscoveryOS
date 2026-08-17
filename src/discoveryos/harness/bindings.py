@@ -16,6 +16,7 @@ from .plugins import ResearchProfile
 
 _SOURCE_ROOT = Path(__file__).resolve().parents[1]
 _CODE_BUNDLE_PATHS = (
+    "harness/ada_adaptation.py",
     "harness/bindings.py",
     "harness/context.py",
     "harness/plugins.py",

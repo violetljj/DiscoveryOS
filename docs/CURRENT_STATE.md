@@ -20,6 +20,10 @@ P2_DEVELOPMENT_PROTOCOL_NOT_SEALED
 ADA_EVOX_MECHANISM_PARITY_AUDIT_COMPLETE
 MECHANISM_COMPLETE_PARITY_NOT_ESTABLISHED
 P2_PROTOCOL_PAUSED_PENDING_BOUNDED_PARITY_CLOSURE
+ADA_TRAJECTORY_PARITY_SLICE_MECHANICS_READY
+ADA_TRAJECTORY_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
+ADA_SEARCH_VALUE_NOT_EVALUATED
+EVOX_PARITY_SLICE_NOT_IMPLEMENTED
 CORE_CLI_ISOLATED_FROM_HISTORICAL_PROTOCOL_RUNNERS
 STATIC_ALGORITHM_DISCOVERY_PROFILE_AVAILABLE
 DIRECT_ADA_EVOX_PLUGIN_COMPOSITION_READY
@@ -223,9 +227,9 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 
 当前默认研发路线由 D-056/D-057/D-060、[`SYSTEM_PHILOSOPHY.md`](SYSTEM_PHILOSOPHY.md) 与机制等价审计约束：
 
-1. 按 [`ADA_EVOX_MECHANISM_PARITY_AUDIT.md`](ADA_EVOX_MECHANISM_PARITY_AUDIT.md) 只补两个冻结切片：Ada trajectory-conditioned local adaptation；EvoX typed same-run strategy deployment/switch/rollback。不得顺带引入完整 islands/QD archive、private authority、无限 strategy code generation、cross-task memory 或官方 runtime。
-2. 两个切片先在 L0-L2 通过零模型 P0/P1.5：authority/lifecycle/replay/budget fail-closed，以及反事实 control-flow change 和 candidate/evaluation causal transmission。失败则诊断或删除该切片，不靠继续加机制补救。
-3. 通过后重新冻结四臂 Profile digest，再封存 P2 development protocol：明确 task instance/shard、naive-parallel 预算拆分与 settlement、provider/model/settings、token/evaluator/CPU/GPU/wall ceilings、统计门、winner/stop rule 和 claim ceiling。
+1. Ada trajectory slice 已通过零模型 control/generation-context transmission：productive/weak trajectory 会产生不同 receipt、mode、decision 与真实 Harness generation request，绑定漂移 fail closed。它不建立 candidate behavior 或 search value；完整边界见 [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md)。
+2. 下一步只实现 EvoX typed same-run strategy state machine，冻结 `deploy -> observe -> score -> switch/retain -> rollback`、预算、provenance 与 replay；不得顺带引入 private strategy DB、任意代码 runtime 或 cross-task memory。
+3. EvoX 也通过零模型 runtime transmission 后，重新冻结四臂 Profile digest，再封存 P2 development protocol：明确 task instance/shard、naive-parallel 预算拆分与 settlement、provider/model/settings、token/evaluator/CPU/GPU/wall ceilings、统计门、winner/stop rule 和 claim ceiling。
 4. 只有静态 Harness 相对强单策略和朴素组合取得正向、可重放结果，才允许设计 P3 adaptive profile；否则先诊断静态组合。
 5. P3 通过后才允许 P4 memory-conditioned comparison；P4 通过后才允许 P5 Harness evolution。当前不开放 fresh/SEALED 资产或 superiority/generalization claim。
 

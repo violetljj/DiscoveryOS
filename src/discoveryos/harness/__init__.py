@@ -17,6 +17,13 @@ from .plugins import (
     ResearchProfile,
 )
 from .runtime import HarnessSearchRuntime
+from .ada_adaptation import (
+    AdaLocalMode,
+    AdaTrajectoryConfig,
+    AdaTrajectoryPolicy,
+    AdaTrajectoryReceipt,
+    AdaTrajectoryState,
+)
 from .bindings import (
     HarnessRunManifest,
     HarnessRunReplayResult,
@@ -50,6 +57,11 @@ __all__ = [
     "ACTION_CONTROLLER",
     "OPERATOR_REGISTRY",
     "AdaLineageOperator",
+    "AdaLocalMode",
+    "AdaTrajectoryConfig",
+    "AdaTrajectoryPolicy",
+    "AdaTrajectoryReceipt",
+    "AdaTrajectoryState",
     "AuthorityOverrideError",
     "DirectLLMResearchOperator",
     "EvoXMetaStrategyOperator",

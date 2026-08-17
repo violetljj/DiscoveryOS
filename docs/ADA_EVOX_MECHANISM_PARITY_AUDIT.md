@@ -121,3 +121,7 @@ The two slices must pass a zero-model P0/P1.5 gate on L0-L2 assets before four-a
 - no evaluator, GateEngine, winner rule, claim ceiling or fresh-asset change.
 
 If either slice fails causal transmission, it is removed or diagnosed on L0-L2; P2 is not rescued by adding more official features. Once both pass, the four profiles are revised, re-digested and the matched-resource P2 protocol can be sealed. Any positive result remains development composition-value evidence, not official runtime parity or superiority.
+
+## Post-audit implementation status
+
+The Ada trajectory slice is now mechanics-ready and has zero-model control/generation-context transmission evidence; see [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md). This does not establish candidate behavior or search value. EvoX parity remains unimplemented and P2 remains frozen.

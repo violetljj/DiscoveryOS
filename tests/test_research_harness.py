@@ -10,6 +10,9 @@ from discoveryos.domains.clearance_demo import initialize_demo
 from discoveryos.harness import (
     ACTION_CONTROLLER,
     OPERATOR_REGISTRY,
+    AdaLineageOperator,
+    AdaLocalMode,
+    AdaTrajectoryPolicy,
     AuthorityOverrideError,
     HarnessEventSink,
     HarnessRunManifest,
@@ -407,6 +410,83 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
                 self.assertIn("CROSS_SEED_EVOX_TO_ADA", second.reason_codes)
                 self.assertTrue(controller.replay(second, second_state)[0])
 
+    def test_ada_trajectory_state_changes_local_mode_and_is_replay_bound(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            demo = initialize_demo(Path(directory))
+            root, sink = build_root_research_context(
+                contract=demo.contract,
+                ledger=demo.ledger,
+                artifacts=demo.artifacts,
+                experiment_executor=demo.runner.executor,
+                local_provider=_Provider(),
+                structural_provider=_Provider(),
+                base_controller=self._controller(),
+            )
+            with ResearchHarness(standard_research_plugins()).boot(
+                algorithm_discovery_v1_profile(), root, sink
+            ) as session:
+                controller = session.context.get(ACTION_CONTROLLER)
+                registry = session.context.get(OPERATOR_REGISTRY)
+                ada = registry.get("ada_lineage_refinement_v1")
+                self.assertIsInstance(ada, AdaLineageOperator)
+
+                productive_state = self._state(
+                    step=1,
+                    strategy_id="ada_lineage_strategy_v1",
+                    improvements=(0.10,),
+                )
+                productive = controller.decide(productive_state)
+                self.assertIn("ADA_LOCAL_MODE:REFINE", productive.reason_codes)
+                productive_guidance = ada.generation_guidance(
+                    state=productive_state,
+                    decision=productive,
+                )
+
+                weak_state = self._state(
+                    step=1,
+                    strategy_id="ada_lineage_strategy_v1",
+                    improvements=(0.0,),
+                    generations_since_improvement=1,
+                )
+                weak = controller.decide(weak_state)
+                self.assertIn("ADA_LOCAL_MODE:EXPLORE", weak.reason_codes)
+                weak_guidance = ada.generation_guidance(state=weak_state, decision=weak)
+                self.assertNotEqual(productive.decision_id, weak.decision_id)
+                self.assertNotEqual(productive_guidance, weak_guidance)
+                self.assertIn('"sibling_outcomes":["TIED"]', weak_guidance[0])
+
+                unbound = replace(
+                    weak,
+                    reason_codes=tuple(
+                        code
+                        for code in weak.reason_codes
+                        if not code.startswith("ADA_TRAJECTORY_RECEIPT:")
+                    ),
+                )
+                with self.assertRaisesRegex(ValueError, "not bound"):
+                    ada.generation_guidance(state=weak_state, decision=unbound)
+
+    def test_ada_policy_uses_bounded_decayed_improvement_window(self) -> None:
+        policy = AdaTrajectoryPolicy()
+        state = self._state(
+            step=5,
+            strategy_id="ada_lineage_strategy_v1",
+            improvements=(100.0, 0.01, 0.02, 0.03, 0.04),
+        )
+        receipt = policy.project(state, "branch-1")
+        self.assertEqual(AdaLocalMode.REFINE, receipt.mode)
+        self.assertEqual((0.01, 0.02, 0.03, 0.04), receipt.state.recent_improvements)
+        self.assertNotIn(100.0, receipt.state.recent_improvements)
+        with self.assertRaisesRegex(ValueError, "must be finite"):
+            policy.project(
+                self._state(
+                    step=5,
+                    strategy_id="ada_lineage_strategy_v1",
+                    improvements=(float("nan"),),
+                ),
+                "branch-1",
+            )
+
     def test_router_sends_stagnant_ada_lineage_to_evox(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             demo = initialize_demo(Path(directory))
@@ -450,7 +530,14 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
         )
 
     @staticmethod
-    def _state(*, step: int, strategy_id: str, stagnant: bool = False) -> SearchState:
+    def _state(
+        *,
+        step: int,
+        strategy_id: str,
+        stagnant: bool = False,
+        improvements: tuple[float, ...] | None = None,
+        generations_since_improvement: int | None = None,
+    ) -> SearchState:
         candidate = CandidateSearchState(
             candidate_id="candidate-current",
             branch_id="branch-1",
@@ -466,8 +553,16 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
             lineage_root_id="candidate-root",
             parent_candidate_id=candidate.candidate_id,
             algorithm_family="current-family",
-            generations_since_improvement=2 if stagnant else 0,
-            recent_improvements=(0.0, 0.0) if stagnant else (0.1,),
+            generations_since_improvement=(
+                generations_since_improvement
+                if generations_since_improvement is not None
+                else 2 if stagnant else 0
+            ),
+            recent_improvements=(
+                improvements
+                if improvements is not None
+                else (0.0, 0.0) if stagnant else (0.1,)
+            ),
             recent_delta_similarity=0.9 if stagnant else 0.1,
             lineage_receipt_ids=("receipt-root", "receipt-current"),
             failure_signatures=("LOCAL_BASIN_PLATEAU",) if stagnant else (),

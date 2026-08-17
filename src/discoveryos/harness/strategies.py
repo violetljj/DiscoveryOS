@@ -20,6 +20,7 @@ from discoveryos.runtime.ledger import EvidenceLedger
 from discoveryos.runtime.scheduler import ExperimentExecutor
 from discoveryos.util import digest_json
 
+from .ada_adaptation import AdaTrajectoryPolicy, AdaTrajectoryReceipt
 from .bindings import harness_code_bundle_digest
 from .context import ResearchContext, ServiceKey
 from .plugins import (
@@ -88,8 +89,29 @@ class DirectLLMResearchOperator(LocalPatchOperator):
 class AdaLineageOperator(LocalPatchOperator):
     operator_id = "ada_lineage_refinement_v1"
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        trajectory_policy: AdaTrajectoryPolicy | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(strategy_id="ada_lineage_strategy_v1", **kwargs)
+        self.trajectory_policy = trajectory_policy or AdaTrajectoryPolicy()
+
+    def adaptation_receipt(
+        self,
+        state: SearchState,
+        branch_id: str | None,
+    ) -> AdaTrajectoryReceipt:
+        return self.trajectory_policy.project(state, branch_id)
+
+    def generation_guidance(
+        self,
+        *,
+        state: SearchState,
+        decision: SearchDecision,
+    ) -> tuple[str, ...]:
+        return self.trajectory_policy.verify_decision(state, decision).generation_guidance()
 
 
 class EvoXMetaStrategyOperator(StructuralRewriteOperator):
@@ -209,6 +231,10 @@ class HarnessResearchController(DeterministicActionController):
                 strategy_id = self.routing.ada_strategy_id
                 operator_id = self.routing.ada_operator_id
                 reasons = ("HARNESS_ADA_LINEAGE_REFINEMENT",)
+                ada_operator = self.registry.get(self.routing.ada_operator_id)
+                if not isinstance(ada_operator, AdaLineageOperator):
+                    raise ValueError("Ada capability is not backed by an Ada lineage operator")
+                reasons += ada_operator.adaptation_receipt(state, base.branch_id).reason_codes
                 if (
                     self.routing.allow_cross_seed
                     and source is not None

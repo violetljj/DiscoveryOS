@@ -70,9 +70,10 @@ class _Provider:
 
     def __init__(self, responses: list[ProviderGeneration]) -> None:
         self.responses = responses
+        self.requests = []
 
     def generate(self, request):
-        del request
+        self.requests.append(request)
         return self.responses.pop(0)
 
 
@@ -329,6 +330,13 @@ class SearchLoopIntegrationTests(unittest.IsolatedAsyncioTestCase):
                 source_snapshot=source_snapshot,
             )
             self.assertIn("CODE_BUNDLE_MISMATCH", drift_replay.issues)
+
+            self.assertEqual(2, len(local_provider.requests))
+            self.assertNotIn("ADA_TRAJECTORY_RECEIPT_V1", local_provider.requests[0].prompt)
+            self.assertIn("ADA_TRAJECTORY_RECEIPT_V1", local_provider.requests[1].prompt)
+            self.assertIn("ADA_LOCAL_MODE:EXPLORE", local_provider.requests[1].prompt)
+            self.assertIn("sibling_outcomes", local_provider.requests[1].prompt)
+            self.assertIn("TIED", local_provider.requests[1].prompt)
 
             actions = [payload["action"] for payload in ledger.search_action_payloads(spec.run_id)]
             self.assertEqual(

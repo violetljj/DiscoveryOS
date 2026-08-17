@@ -900,7 +900,17 @@ class UnifiedActionExecutor:
             )
             novelty_feedback: list[str] = []
             for attempt in range(1, max_attempts + 1):
-                memory = (*self.projector.semantic_memory(), *novelty_feedback)
+                guidance_builder = getattr(selected_operator, "generation_guidance", None)
+                operator_guidance = (
+                    tuple(guidance_builder(state=state, decision=decision))
+                    if callable(guidance_builder)
+                    else ()
+                )
+                memory = (
+                    *self.projector.semantic_memory(),
+                    *operator_guidance,
+                    *novelty_feedback,
+                )
                 if decision.action is SearchAction.LOCAL_PATCH:
                     generated = selected_operator.propose(
                         parent=source,
