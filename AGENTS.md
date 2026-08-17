@@ -27,6 +27,17 @@ DiscoveryOS 是证据优先的统一算法研究内核。它把外部算法发�
 - replay 必须重新验证绑定并在要求时重执行冻结 evaluator，不能只验证 JSON 能解析或 hash 字段存在。
 - 当前 `SplitVault` 是应用层 fail-closed capability，不是抵御同一 OS 用户恶意代码的安全沙箱。没有独立服务/身份隔离，不得声称 production blind isolation。
 
+## 研究资产、复用与 freshness
+
+- 默认规则是“旧题优先，新题后置”。测试资产分为可反复使用的开发资产和不可再生的科学资产；fresh task 的用途是升级 claim，不是查 bug。硬规则为 `NO_FRESH_TASK_FOR_DEBUGGING` 与 `FRESHNESS_IS_A_CLAIM_UPGRADE_RESOURCE`。
+- 资产等级固定为：L0 Unit/Synthetic（无限复用）→ L1 Historical Failure Corpus（无限复用）→ L2 Consumed Dev Tasks/States（无限复用）→ L3 Locked Dev Holdout（有限开启，开启后按已消费开发资产管理）→ L4 Fresh Admission Tasks（一次性）→ L5 Blind Confirmation（极少且只在 winner 冻结后开启）。不得用低等级证据回答高等级问题。
+- 日常 debugging、mechanics、failure reproduction、operator A/B、causal intervention、ablation、evaluator/budget/controller/parent/novelty 检查、性能 benchmark、deterministic replay 和 regression 默认只使用 L0-L2。刚实现、尚未证明 mechanics 或 causal transmission 的机制不得申请 L4/L5。
+- 每个曾暴露真实 failure mode 的 task/state/receipt 都应作为长期回归资产登记；修复不得覆盖原始收据或改写历史 verdict。Parent starvation、weight collapse、novelty duplicate、functional basin trap、invalid propagation、evaluator mismatch、resource ceiling、contract transmission 等问题在相关机制改变后应重跑绑定的历史挑战。
+- 开启 L4 前必须先在旧资产上形成相称证据链：mechanism works → control-flow changes → causal transmission exists → utility improves → 在多个相关 historical/consumed states 上不退化。通过这条链只获得 fresh admission 资格，不自动获得 search-value、generalization 或 superiority verdict。
+- `新运行 ≠ 新 seed ≠ 新实例 ≠ 新任务分布 ≠ 新任务族 ≠ 新 evaluator regime`。Manifest/receipt 必须分别记录 instance、distribution、task family 和 evaluator regime 的 freshness/consumption 状态；数量统计不得只写 `fresh_tasks=N`。同一 family 的不同 seed 或规模变体通常只支持稳定性或 scaling，不得冒充 task-family generalization。
+- 最强的泛化结论应保留未参与机制形成和调参的 task-family holdout；L5 final blind 只能在冻结 winner 后由 Certification 取得，永远不得回流选择 winner、阈值、prompt、operator 或策略。
+- 复用结果按其资产等级限定 claim。Consumed Assignment 上的正向结果可以表述为 `OPERATOR_VALUE_DETECTED_ON_CONSUMED_ASSIGNMENT_DEV_STATE` 或同等窄结论，不得表述为 unseen-task generalization。重复次数、效应大小或回归全绿都不能单独提高 claim ceiling。
+
 ## 本地执行与性能
 
 - Windows 本地环境的唯一维护入口是 `pwsh -NoProfile -File scripts/project.ps1 <doctor|bootstrap|test|run|rebuild>`。进入仓库先运行 `doctor`；不要裸用全局 `python`、`py -3.11` 或 `pip install`。项目 Python 由 `.python-version` 固定，依赖由 `pyproject.toml` 与 `uv.lock` 决定。
