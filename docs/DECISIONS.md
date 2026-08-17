@@ -232,3 +232,10 @@
 - **决定**：EMC Operator Causal Value R1 使用 Direct/Direct 与 Repair/Repair 两类独立 pair 校准和复核 stochastic envelope，再以 Direct/Repair pair 检验 Operator intervention。两个 assignment/coverage states 只用于 calibration，另外两个预声明 states 只用于 validation。每个 state 在 seal 前必须由 valid baseline 与 valid reference 的冻结 evaluator/probe 差异证明存在 repair applicability；不得在无 headroom state 上把 tie 解释成 Operator 无效。
 - **原因**：EMC-R3 已经回答 executable actuation，继续增加 schema、signature 或 state 只会重复 transmission 证据。下一问题是 downstream value，但强 stochastic generator 的自然波动不能由跨条件 raw difference 直接归因；同条件 null、预冻结 margin 和独立 validation 是最小充分的因果门。
 - **后果**：calibration 运行 16 calls，validation 运行 28 calls，沿用 EMC-R3 的 provider、78,000 per-call ceiling、contract compiler、external profile instrumentation 与 durable invocation journal。Final utility 和 matched-call anytime AUC 是 efficacy gate，validity/replacement/breakthrough 是预注册 guardrail。任何 contract/signature portability failure 使 utility 不可解释；资源/provider failure 为 `NOT_EVALUABLE`；runtime 分离但 value gate 失败则关闭当前 Direct/Repair value claim，不回头修改 EMC。即使 positive，也只得到 two-state development Operator value，不直接建立 DiscoveryOS search value。
+
+## D-034：执行通道继续成立，但关闭当前 Direct/Repair value claim
+
+- **日期**：2026-08-17
+- **决定**：接受 `DIRECT_REPAIR_OPERATOR_CAUSAL_VALUE_NOT_ESTABLISHED_ON_DEV`。Calibration 与 validation 共 44/44 branches 全部 evaluable、资源合规并通过所有 executable contract 层；Direct/Repair runtime signatures 在四个 states 上继续严格分离。六个 validation intervention pairs 的 final utility effect 全在冻结 envelope 内为 tie，两个 states 的 anytime AUC、validity、replacement 和 breakthrough effect 也均为零。
+- **原因**：utility manipulation 可解释且资源/accounting 完整，因此不能再用 generator 不服从、contract 未进入 runtime、instrumentation 失敏或 ceiling 不可评价解释 value null。`p=1.0`、`0/2` beneficial states 与全部 primary efficacy gate failure 直接回答了当前冻结 Operator 选择没有建立因果 value；这不证明所有 Operator 或所有任务上普遍无效。
+- **后果**：当前 Direct/Repair Operator claim 与科学优先级关闭。Consumed root 不改 margin、task、prompt、contract、endpoint 或 replicate 数，不继续扩展 EMC schema/signature，也不开放 fresh search-value budget。未来若提出不同 Operator，必须有新的 mechanism hypothesis、applicability contract、预注册 null calibration 和独立 value surface；不得把本次 transmission positive 复用成 value evidence。

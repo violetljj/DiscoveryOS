@@ -3,7 +3,9 @@
 ## Status
 
 ```text
-EMC_OPERATOR_CAUSAL_VALUE_R1_PROTOCOL_IMPLEMENTED_NOT_RUN
+EMC_OPERATOR_CAUSAL_VALUE_R1_COMPLETE
+DIRECT_REPAIR_OPERATOR_CAUSAL_VALUE_NOT_ESTABLISHED_ON_DEV
+EXECUTABLE_CONTRACT_TRANSMISSION_RECONFIRMED_IN_VALUE_TRIAL
 FRESH_SEARCH_VALUE_BUDGET_NOT_AUTHORIZED
 ```
 
@@ -79,3 +81,21 @@ python -m discoveryos emc-ocv-r1-validate `
 ```
 
 The root is create-once. Tasks, seeds, endpoints, margins, pair counts, ordering, gate and claim ceiling cannot change after seal.
+
+## Results
+
+The protocol was sealed at commit `8af61c2` with `gpt-5.6-sol / medium`, `codex-cli 0.148.0-alpha.9`, manifest digest `d93dad839f3eb200dda6ce73a67aaf7777ff74afc9dd240e8d5a6bf611b03413`, and manifest file SHA-256 `8e72cc4dc13b757af6af0ab2e05a7fb4e67edca5b2e7c9f659dd85a78d99ba64`.
+
+Calibration completed all 16 calls with all source, static-contract, runtime-contract, invariant and 78,000-token resource checks passing. Direct remained `[1,0,0]` and Repair remained `[1,1,0]`. Same-condition nulls froze utility margin `0.006678930388116511` and anytime-AUC margin `0.005`. Calibration used `686,664` tokens; its record SHA-256 is `85bb8fed14e1527dd29c687501662ae6c7e9a386043717edd57c143834b397b3`.
+
+Validation completed all 28 calls with the same complete portability pass. The six Direct/Repair intervention pairs were `0 positive / 6 tie / 0 negative` beyond the registered state envelopes. Both validation states had final utility delta `0`, anytime-AUC delta `0`, validity-rate delta `0`, replacement-rate delta `0`, and breakthrough-probability delta `0`; the one-sided exact-sign result was `p = 1.0`. The primary value gate therefore failed in both states.
+
+Across calibration and validation, the protocol used 44 independent provider requests and `1,951,194` input-plus-output tokens; the maximum call was `69,055 < 78,000`. Journal verification found 44 claims, 44 terminals, 44 unique provider request IDs and 44 draw checkpoints, with zero orphan or duplicate evidence. Final report SHA-256 is `59d357d115eaee4fc085290b70916223da134ac958b4a204a01c52999213fdf4`.
+
+The formal verdict is:
+
+```text
+DIRECT_REPAIR_OPERATOR_CAUSAL_VALUE_NOT_ESTABLISHED_ON_DEV
+```
+
+This is an interpretable scientific null on the frozen two-state validation surface, not a portability or resource failure. The execution channel continued to work, but the current Direct/Repair choice did not produce established downstream value beyond same-condition stochastic null. The current Direct/Repair Operator claim is closed; the result does not justify modifying EMC, adding replicates, or opening fresh search-value budget.
