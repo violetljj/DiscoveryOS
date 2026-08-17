@@ -292,6 +292,30 @@ class BenchmarkBankTests(unittest.TestCase):
             self.assertEqual(0.0, payload["metrics"]["valid"])
             self.assertEqual(0.0, payload["metrics"]["score"])
 
+    def test_ale_r3_catalog_is_pinned_and_cannot_pretend_to_be_execution_ready(self) -> None:
+        registry = load_benchmark_bank(REGISTRY)
+        source = registry["sources"]["ale_bench"]
+        self.assertEqual("0f426173b4e4e73b09b2b3631ae0490f66b75f99", source["dataset_revision"])
+        families = [family for family in registry["families"] if family["source_id"] == "ale_bench"]
+        self.assertEqual(6, len(families))
+        for family in families:
+            audit = family["catalog_audit"]
+            self.assertEqual(64, len(audit["dataset_lfs_sha256"]))
+            self.assertGreater(audit["dataset_size_bytes"], 0)
+            self.assertTrue(audit["private_content_cobundled"])
+        tampered = copy.deepcopy(registry)
+        ahc008 = next(family for family in tampered["families"] if family["family_id"] == "ahc008")
+        ahc008["catalog_audit"]["execution_blockers"] = []
+        with self.assertRaisesRegex(ValueError, "ALE_CATALOG_BLOCKERS_INCOMPLETE:ahc008"):
+            validate_benchmark_bank(tampered)
+        pretend = copy.deepcopy(registry)
+        ahc008 = next(family for family in pretend["families"] if family["family_id"] == "ahc008")
+        ahc008["integration_status"] = "DEVELOPMENT_READY"
+        ahc008["adapter_id"] = "discoveryos.algotune_r2_contract_dev.v1"
+        ahc008["instance_ids"] = ["pretend"]
+        with self.assertRaisesRegex(ValueError, "ALE_EXECUTION_ADMISSION_INCOMPLETE:ahc008"):
+            validate_benchmark_bank(pretend)
+
     def test_registry_rejects_duplicate_or_pretend_admitted_family(self) -> None:
         registry = load_benchmark_bank(REGISTRY)
         duplicate = copy.deepcopy(registry)

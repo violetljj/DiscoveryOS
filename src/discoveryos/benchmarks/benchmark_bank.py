@@ -130,6 +130,37 @@ def validate_benchmark_bank(registry: dict[str, Any]) -> dict[str, Any]:
         except ValueError:
             failures.append(f"INTEGRATION_STATUS_INVALID:{family_id}")
             continue
+        if source_id == "ale_bench":
+            source = sources.get("ale_bench") or {}
+            if not PINNED_REVISION.fullmatch(str(source.get("dataset_revision", ""))):
+                failures.append(f"ALE_DATASET_NOT_COMMIT_PINNED:{family_id}")
+            if source.get("dataset_license") != "CC-BY-ND-4.0":
+                failures.append(f"ALE_DATASET_LICENSE_UNBOUND:{family_id}")
+            if source.get("public_private_packaging") != "SAME_PROBLEM_ZIP":
+                failures.append(f"ALE_PUBLIC_PRIVATE_PACKAGING_UNBOUND:{family_id}")
+            audit = family.get("catalog_audit") or {}
+            if not re.fullmatch(r"[0-9a-f]{64}", str(audit.get("dataset_lfs_sha256", ""))):
+                failures.append(f"ALE_DATASET_LFS_DIGEST_INVALID:{family_id}")
+            if not isinstance(audit.get("dataset_size_bytes"), int) or audit["dataset_size_bytes"] <= 0:
+                failures.append(f"ALE_DATASET_SIZE_INVALID:{family_id}")
+            if audit.get("private_content_cobundled") is not True:
+                failures.append(f"ALE_PRIVATE_CONTENT_BOUNDARY_MISSING:{family_id}")
+            required_blockers = {
+                "PUBLIC_ONLY_EXTRACTION_NOT_IMPLEMENTED",
+                "NATIVE_PROGRAM_BUNDLE_NOT_IMPLEMENTED",
+                "DOCKER_JUDGE_PREFLIGHT_NOT_PASSED",
+            }
+            if status is IntegrationStatus.CATALOGUED and set(audit.get("execution_blockers", [])) != required_blockers:
+                failures.append(f"ALE_CATALOG_BLOCKERS_INCOMPLETE:{family_id}")
+            if status is not IntegrationStatus.CATALOGUED:
+                admission = family.get("admission") or {}
+                required_ale = (
+                    "public_only_extraction_digest",
+                    "native_program_bundle_digest",
+                    "docker_judge_preflight_digest",
+                )
+                if any(not admission.get(key) for key in required_ale):
+                    failures.append(f"ALE_EXECUTION_ADMISSION_INCOMPLETE:{family_id}")
         if status is IntegrationStatus.DEVELOPMENT_READY:
             development_ready += 1
             adapter_id = family.get("adapter_id")

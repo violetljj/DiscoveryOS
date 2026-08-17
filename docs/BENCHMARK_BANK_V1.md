@@ -7,13 +7,14 @@ BENCHMARK_BANK_V1_REGISTRY_IMPLEMENTED
 BENCHMARK_BANK_V1_DEVELOPMENT_SLICE_EXECUTABLE
 BENCHMARK_BANK_V1_SIX_ALGOTUNE_CONTRACT_DEV_FAMILIES_EXECUTABLE
 BENCHMARK_BANK_V1_TEN_ALGOTUNE_R2_CONTRACT_DEV_FAMILIES_EXECUTABLE
+BENCHMARK_BANK_V1_ALE_R3_ARTIFACTS_PINNED_EXECUTION_BLOCKED
 BENCHMARK_BANK_V1_EXTERNAL_SCIENTIFIC_ADMISSION_NOT_ESTABLISHED
 ZERO_FRESH_INSTANCES_CONSUMED
 ```
 
 Benchmark Bank v1 makes the problem family a durable research asset while treating a sealed instance or shard as the consumable scientific unit. It does not declare all listed benchmarks runnable. The registry currently contains 47 core families: two internal consumed families and 16 external contract-derived AlgoTune families are `DEVELOPMENT_READY`; 29 families remain `CATALOGUED`; zero external family is `ADMITTED`.
 
-The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../benchmarks/bank/v1/registry.json). The R0-R2 development bank has registry digest `4a4bf3701cbfa8cc532b98355e78a1985bebde3a2bcaa61c1d02a41c2c8a5b6c`.
+The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../benchmarks/bank/v1/registry.json). The R0-R3 audited bank has registry digest `60c75c914722855392be5db2836bf96c12e9ac711bfcc203322c1445cb746a5b`.
 
 ## Difficulty ladder
 
@@ -123,6 +124,18 @@ The second external batch adds all ten registered R2 families, with two determin
 The adapter is `discoveryos.algotune_r2_contract_dev.v1`; its evaluator regime is `DISCOVERYOS_STDLIB_ALGOTUNE_R2_CONTRACT_DEV_V1`. Each evaluator independently checks the upstream-compatible output structure, input immutability, feasibility and exact objective on deliberately bounded deterministic cases before timing the candidate. Incorrect or suboptimal candidates receive `valid=0` and `score=0`.
 
 These instances exercise structural-search mechanics without adding OR-Tools, CVXPY, POT, NetworkX or PySAT to the DiscoveryOS core environment. They are not scale-equivalent to upstream instances and do not establish official AlgoTune performance, external competitiveness or scientific admission. Their claim ceiling is `EXTERNAL_R2_CONTRACT_DERIVED_DEVELOPMENT_ONLY`.
+
+## ALE R3 audited blocker
+
+The six R3 ALE families bind official code commit `f7d927906dc1dcd860ee086e4560d576438b1354` and Hugging Face dataset commit `0f426173b4e4e73b09b2b3631ae0490f66b75f99`. Every family records the exact Git LFS SHA-256 and byte size of its problem ZIP. Code is Apache-2.0; the dataset is CC-BY-ND-4.0.
+
+They remain `CATALOGUED`, not `DEVELOPMENT_READY`, for three concrete reasons:
+
+1. Each official problem ZIP co-bundles public seeds/tools with private seeds, standings and private-relative results. The stock loader reads both public and private seeds during session construction. A public-only selective extractor with a receipt has not been implemented.
+2. ALE candidates are native/stdin programs evaluated by a Docker/Rust judge, while the current Bank executable contract is Python-module based. A digest-bound native program bundle is required instead of disguising C++/Rust execution as `algorithm.py`.
+3. The local Docker 29.6.2 CLI is installed, but the Docker Desktop Linux daemon was unavailable during the 2026-08-17 preflight. No judge image, generator or evaluator was run.
+
+Registry validation therefore requires all three blockers while an ALE family is catalogued and rejects any execution-ready state without `public_only_extraction_digest`, `native_program_bundle_digest`, and `docker_judge_preflight_digest`. No dataset ZIP was downloaded or opened during this audit, no private seed was read, and no ALE shard was consumed.
 
 ## External sources and exposure boundaries
 
