@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,6 +13,8 @@ from discoveryos.benchmarks.cmi_search_value_r1 import (
     _run_task,
 )
 from discoveryos.benchmarks.search_policy_admission import SearchObservation
+from discoveryos.contracts.models import ResourceUsage
+from discoveryos.contracts.patch import ProviderGeneration
 from discoveryos.benchmarks.cmi_search_value_r1_tasks import cmi_search_value_r1_tasks
 from tests.test_strategy_integration_si1 import _CommentProvider
 
@@ -32,7 +35,60 @@ BRIEF = {
 }
 
 
+class _SecondInvalidPatchProvider(_CommentProvider):
+    def generate(self, request):
+        if self._counter != 1:
+            return super().generate(request)
+        context = json.loads(request.prompt.split("FROZEN_CONTEXT_JSON\n", 1)[1])
+        path, _ = context["mutable_files"][0]
+        self._counter += 1
+        patch = (
+            f"diff --git a/{path} b/{path}\n"
+            f"--- a/{path}\n"
+            f"+++ b/{path}\n"
+            "@@ -999,1 +999,1 @@\n"
+            "-does-not-exist\n"
+            "+replacement\n"
+        )
+        return ProviderGeneration(
+            raw_response=json.dumps(
+                {
+                    "hypothesis": "exercise invalid descendant terminalization",
+                    "expected_effects": [{"metric": "score", "effect": "unchanged"}],
+                    "target_files": [path],
+                    "patch": patch,
+                    "risks": ["Deliberate mechanics fixture."],
+                    "estimated_cost": {"tokens": 2, "cpu_seconds": 0, "gpu_seconds": 0, "device_seconds": 0, "wall_seconds": 0.01},
+                }
+            ),
+            usage=ResourceUsage(llm_input_tokens=1, llm_output_tokens=1, wall_seconds=0.01),
+            latency_seconds=0.01,
+            provider_version=self.provider_version,
+        )
+
+
 class CmiSearchValueR1Tests(unittest.TestCase):
+    def test_invalid_prefix_descendant_is_recorded_and_falls_back_without_source_materialization(self) -> None:
+        item = cmi_search_value_r1_tasks()[0]
+        provider = _SecondInvalidPatchProvider()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository, commit = item.task.initialize_repository(root / "task")
+            report = asyncio.run(
+                _run_task(
+                    root / "run",
+                    item,
+                    repository,
+                    commit,
+                    {"manifest_digest": "test", "frozen_brief": BRIEF},
+                    provider,
+                )
+            )
+        self.assertFalse(report["causal_trace"]["opportunity"])
+        self.assertFalse(report["causal_trace"]["eligible"])
+        self.assertFalse(report["causal_trace"]["invoked"])
+        self.assertEqual("TIE", report["paired"]["outcome"])
+
     def test_over_budget_observation_is_excluded_instead_of_crashing_aggregation(self) -> None:
         observations = (
             SearchObservation("within", None, 100, 1.0, 0.2, True, True, "basin"),

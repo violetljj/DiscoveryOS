@@ -6,7 +6,7 @@ from discoveryos.benchmarks.search_value_mvp0_tasks import SearchValueTask
 from discoveryos.benchmarks.si2_tasks import _assignment_task, _coverage_task
 
 
-PROTOCOL_SALT = "CMI_SEARCH_VALUE_R1_V2_RESOURCE_ENVELOPE_REPAIR"
+PROTOCOL_SALT = "CMI_SEARCH_VALUE_R1_V3_INVALID_DESCENDANT_TERMINALIZATION"
 TASKS_PER_FAMILY = 3
 EVALUATOR_CASES_PER_TASK = 6
 
@@ -16,14 +16,14 @@ def cmi_search_value_r1_tasks() -> tuple[SearchValueTask, ...]:
 
     assignment = tuple(
         _assignment_task(
-            f"cmi_svr2_assignment_{index + 1:02d}",
+            f"cmi_svr3_assignment_{index + 1:02d}",
             _derived_seeds("capacitated_cost_assignment", index),
         )
         for index in range(TASKS_PER_FAMILY)
     )
     coverage = tuple(
         _coverage_task(
-            f"cmi_svr2_coverage_{index + 1:02d}",
+            f"cmi_svr3_coverage_{index + 1:02d}",
             _derived_seeds("budgeted_weighted_coverage", index),
         )
         for index in range(TASKS_PER_FAMILY)

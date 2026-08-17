@@ -53,9 +53,9 @@ from discoveryos.runtime.artifacts import ArtifactStore
 from discoveryos.util import digest_bytes, digest_json, jsonable
 
 
-PROTOCOL_ID = "CMI_SEARCH_VALUE_R1_V2_RESOURCE_ENVELOPE_REPAIR"
-MANIFEST_RECORD = "cmi-search-value-r1-v2-manifest.json"
-REPORT_RECORD = "cmi-search-value-r1-v2-report.json"
+PROTOCOL_ID = "CMI_SEARCH_VALUE_R1_V3_INVALID_DESCENDANT_TERMINALIZATION"
+MANIFEST_RECORD = "cmi-search-value-r1-v3-manifest.json"
+REPORT_RECORD = "cmi-search-value-r1-v3-report.json"
 ARM_NAMES = ("CMI_DISABLED", "CMI_ENABLED")
 TASK_COUNT = 6
 COMMON_PREFIX_STEPS = 2
@@ -99,7 +99,7 @@ def seal_cmi_search_value_r1(
     implementation_paths = _implementation_paths()
     payload = {
         "protocol_id": PROTOCOL_ID,
-        "status": "CMI_SEARCH_VALUE_R1_V2_SEALED_PRE_MODEL",
+        "status": "CMI_SEARCH_VALUE_R1_V3_SEALED_PRE_MODEL",
         "scientific_question": "Does the same bounded search produce greater final value when the only available extra action is the frozen admitted CMI operator?",
         "claim_ceiling": "CMI_SEARCH_VALUE_ON_FRESH_INSTANCES_WITHIN_FROZEN_ASSIGNMENT_COVERAGE_FAMILIES_AND_EVALUATOR_REGIME_ONLY",
         "model_calls_before_seal": 0,
@@ -114,6 +114,13 @@ def seal_cmi_search_value_r1(
             "manifest_digest": "0a82137cdda8d406885b276e20b04308515e78ea5bf461a60c2a5e20e32114e7",
             "failure_receipt_sha256": "fde8384ea996e1b588f5ba62b04b7fd71d7da85675eedac2d4b96cb0b7a9f438",
             "status": "CMI_SEARCH_VALUE_R1_V1_NOT_EVALUABLE_RESOURCE_ENVELOPE",
+            "scientific_outputs_admitted": 0,
+            "cohort_reuse_authorized": False,
+        },
+        "superseded_v2": {
+            "manifest_digest": "83a674e2e1fad3983e0b3166041fa10628fb2763c161c7a9f9d45d71a0f3e090",
+            "failure_receipt_sha256": "1a40a742f6b2584210eb705146beef44c9d56747230ccd0f244772780324d02a",
+            "status": "CMI_SEARCH_VALUE_R1_V2_NOT_EVALUABLE_INVALID_DESCENDANT_TERMINALIZATION",
             "scientific_outputs_admitted": 0,
             "cohort_reuse_authorized": False,
         },
@@ -529,7 +536,11 @@ async def _local_step(
     usage = _sum_usage(
         item for item in (result.record.usage, evidence.resource_usage if evidence is not None else None) if item is not None
     )
-    source = _candidate_source(arm, result.candidate, item.task.entrypoint) if result.candidate is not None else ""
+    source = (
+        _candidate_source(arm, result.candidate, item.task.entrypoint)
+        if result.candidate is not None and valid and feasible
+        else ""
+    )
     return {
         "candidate": result.candidate,
         "candidate_id": result.candidate.candidate_id if result.candidate is not None else result.record.generation_id,
@@ -840,7 +851,7 @@ def _load_and_verify_manifest(workspace: Path, expected_digest: str, provider: P
     payload = {key: value for key, value in manifest.items() if key != "manifest_digest"}
     if manifest.get("manifest_digest") != expected_digest or digest_json(payload) != expected_digest:
         raise RuntimeError("CMI Search Value R1 manifest digest mismatch")
-    if manifest.get("status") != "CMI_SEARCH_VALUE_R1_V2_SEALED_PRE_MODEL" or manifest.get("model_calls_before_seal") != 0:
+    if manifest.get("status") != "CMI_SEARCH_VALUE_R1_V3_SEALED_PRE_MODEL" or manifest.get("model_calls_before_seal") != 0:
         raise RuntimeError("CMI Search Value R1 was not sealed before model execution")
     repository = _repository_snapshot()
     if repository["head_commit"] != manifest["experiment_code_sha"]:

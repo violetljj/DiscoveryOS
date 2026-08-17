@@ -358,3 +358,10 @@
 - **决定**：CMI Search Value R1 V1 在首个 terminal task receipt 前因实际四调用总 token `85,348 > 80,000` 失败，正式标记 `CMI_SEARCH_VALUE_R1_V1_NOT_EVALUABLE_RESOURCE_ENVELOPE`。V1 manifest、partial artifacts 与 failure receipt 保留且不得重跑；V2 使用新 salt 和全新无筛选 cohort，将 per-arm ceiling 提高到 `120,000`，并让超预算 observation 被排除、arm 结算为 non-evaluable 而不是 aggregation crash。
 - **原因**：V1 的手工 paired runner 没有为 provider input token 开销预留完整四调用 horizon；最后一次 generation 已按预算权威正确 fail closed，缺陷只在 terminal reporting。`120,000` 沿用相同每调用量级并覆盖冻结 Control 四调用上界，不改变 primary metric、CMI policy、eligibility、task family、evaluator 或 winner gate。
 - **后果**：V1 不产生 scientific negative 或 positive，已部分执行的 task 和其余 V1 cohort 均不得进入 V2。V1 中暴露的 science metrics 不得用于 V2 设计；V2 唯一允许变化是 salt/task identity、resource envelope 与 overrun terminalization。D-050 的 `80,000` ceiling 被本决定仅对 V2 supersede，其余设计继续有效。
+
+## D-052：V2 invalid descendant 必须结算而不是再次 materialize
+
+- **日期**：2026-08-17
+- **决定**：V2 首个 task 的第二个 prefix descendant 已由冻结 evaluator 记为 `INVALID_MECHANICS/PATCH_APPLY_FAILURE`，但 runner 随后仍调用 source materialization，导致 process-level error。V2 标记 `CMI_SEARCH_VALUE_R1_V2_NOT_EVALUABLE_INVALID_DESCENDANT_TERMINALIZATION`，manifest、partial artifacts 与 failure receipt 全部保留且 cohort 不重用。V3 只允许在 `valid && feasible` 时 materialize source；invalid observation 保留在 trace、不能触发 eligibility、不能替换 parent。
+- **原因**：invalid candidate 是预声明的 mechanics outcome，不应升级为 runner crash。Fake-provider 回归此前只覆盖可应用的 comment patches，没有覆盖“generation 成功但 evaluator patch apply 失败”的真实路径。
+- **后果**：V3 使用新 salt 与全新无筛选 cohort，resource ceiling 保持 `120,000`，所有科学门不变。V3 seal 前必须用 exact runner 和真实 provider 在 consumed development task 上完成多步 preflight，覆盖 valid/invalid descendant 的 terminalization；preflight 结果不得选择 V3 tasks 或改变 science gates。
