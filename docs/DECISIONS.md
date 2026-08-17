@@ -323,3 +323,10 @@
 - **决定**：接受 manifest `c4b0844fc3beae43f624194318611b3899865abe1199ad705e978294ff2ea876` 与 report SHA-256 `95213c5bb419cd995d2ddc588cc0d394698043da2a4c3fdceafcb10dcbae9dfe`。8/8 states 的 treatment 均 escape、产生 resolution 外正 utility effect 并 replacement，两个 family median utility/AUC 为正，validity 不降，runtime guardrail 通过，13 项 gate 全部为真。
 - **原因**：结果排除了 R5 positive 只由两个特定 evaluator seeds 支撑的最小解释，并在完整兼容 SI-2 consumed population 上保持 effect sign。Aggregate evaluator runtime ratio 约 `1.0x`，没有复现 R5 的 `1.51x` aggregate penalty。
 - **后果**：输出 `CMI_FRESH_CAUSAL_VALIDATION_ADMISSION_READY`，仅授权另行冻结极小 fresh causal validation protocol；fresh execution 仍关闭。由于 task families 和历史 heuristic evidence 已可见，不能声明 blind independent replication、概率、显著性、跨 family generalization、search value 或 superiority。
+
+## D-047：Benchmark Bank 复用 problem family，只消费 sealed instance/shard
+
+- **日期**：2026-08-17
+- **决定**：建立长期 `DISCOVERYOS_BENCHMARK_BANK_V1`。Difficulty ladder 固定为 R0 regression、R1 easy search、R2 structural search、R3 long-horizon、R4 real systems、R5 public frontier，共 47 个核心 family；资产生命周期独立采用 DEV、SHADOW、SEALED。默认先从 Bank 选择 family，只有现有覆盖无法测试预声明机制或确需外部泛化时才新增 family。正式 claim 消费 SEALED instance/shard，不报废整个 problem family。
+- **原因**：把“题型见过”与“实例已消费”混为一谈会浪费 fresh evidence，也阻止历史 failure 成为可重复回归资产。相反，只按 seed 数量声称 fresh 又会高估同 family 的泛化。固定 family、轮换实例和分开记录 instance/distribution/task-family/evaluator-regime freshness，能够同时提高研发效率与 claim 可解释性。
+- **后果**：Bank 收录不等于 execution/scientific admission。外部 family 初始一律为 `CATALOGUED`；升级必须绑定 commit、许可证/数据使用审计、adapter/evaluator/environment digest、本机 preflight、资源 envelope、partition identity 与 replay。当前只有 consumed Assignment/Coverage 的本地 development adapter 可执行，claim ceiling 仍为 consumed development。公开 SOTA prompts/verifiers/final programs 视为 contamination exposure；de-novo 或泛化 claim 必须使用预冻结 neighboring hidden distribution。DEV/SHADOW 不得升级 fresh claim，SEALED 不得用于 debugging，final blind 仍只在 winner freeze 后开放。

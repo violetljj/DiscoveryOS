@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "bank_id": "DISCOVERYOS_BENCHMARK_BANK_V1",
+  "status": "REGISTRY_IMPLEMENTED_EXTERNAL_ADAPTERS_NOT_YET_ADMITTED",
+  "claim_ceiling": "BANK_INFRASTRUCTURE_AND_CATALOG_ONLY",
+  "policy": {
+    "default_selection": "BANK_FIRST_BEFORE_NEW_FAMILY",
+    "freshness_unit": "SEALED_INSTANCE_OR_SHARD",
+    "hard_rules": [
+      "NO_FRESH_TASK_FOR_DEBUGGING",
+      "FRESHNESS_IS_A_CLAIM_UPGRADE_RESOURCE"
+    ],
+    "catalogue_is_not_admission": true,
+    "public_solution_exposure_requires_neighboring_sealed_variant": true
+  },
+  "partition_policy": {
+    "DEV": {
+      "purpose": "debugging_mechanics_causal_development_regression",
+      "reuse": "UNBOUNDED",
+      "claim_ceiling": "DEVELOPMENT_ONLY"
+    },
+    "SHADOW": {
+      "purpose": "periodic_outcome_blind_regression",
+      "reuse": "LIMITED_AND_AUDITED",
+      "claim_ceiling": "LOCKED_DEVELOPMENT_HOLDOUT_ONLY"
+    },
+    "SEALED": {
+      "purpose": "fresh_admission_or_winner_frozen_confirmation",
+      "reuse": "CREATE_ONCE_CONSUME_ON_OPEN",
+      "consumption_unit": "SEALED_INSTANCE_OR_SHARD",
+      "claim_ceiling": "FROZEN_PROTOCOL_AND_GATE_DEPENDENT"
+    }
+  },
+  "sources": {
+    "discoveryos": {
+      "repository_url": "https://github.com/violetljj/DiscoveryOS",
+      "revision": "REGISTRY_COMMIT",
+      "license": "repository license",
+      "provenance_status": "LOCAL_IMPLEMENTATION"
+    },
+    "algotune": {
+      "repository_url": "https://github.com/oripress/AlgoTune",
+      "revision": "dff9914c10800c7a031c9e8c3d4d1c8cd1b38906",
+      "license": "MIT",
+      "provenance_status": "UPSTREAM_COMMIT_PINNED"
+    },
+    "ale_bench": {
+      "repository_url": "https://github.com/SakanaAI/ALE-Bench",
+      "revision": "f7d927906dc1dcd860ee086e4560d576438b1354",
+      "license": "Apache-2.0 code; CC-BY-ND-4.0 dataset",
+      "provenance_status": "UPSTREAM_COMMIT_PINNED_LICENSE_SPLIT_REQUIRES_AUDIT"
+    },
+    "skydiscover": {
+      "repository_url": "https://github.com/skydiscover-ai/skydiscover",
+      "revision": "8a840394e19ee4bfb3fb0a62762b902561a7efeb",
+      "license": "Apache-2.0; benchmark-specific dependencies may differ",
+      "provenance_status": "UPSTREAM_COMMIT_PINNED_PER_BENCHMARK_AUDIT_REQUIRED"
+    },
+    "alphaevolve_problems": {
+      "repository_url": "https://github.com/google-deepmind/alphaevolve_repository_of_problems",
+      "revision": "8f447457957deac61e28bf1676746f0753b3b2f8",
+      "license": "Apache-2.0 software; CC-BY-4.0 other materials",
+      "provenance_status": "UPSTREAM_COMMIT_PINNED_PUBLIC_SOLUTIONS_EXPOSED"
+    }
+  },
+  "expected_tier_counts": {"R0": 8, "R1": 8, "R2": 10, "R3": 6, "R4": 5, "R5": 10},
+  "families": [
+    {
+      "family_id": "assignment_consumed_dev",
+      "display_name": "Capacitated Assignment",
+      "difficulty_tier": "R0",
+      "domain": "combinatorial_optimization",
+      "source_id": "discoveryos",
+      "upstream_task": "capacitated_cost_assignment",
+      "integration_status": "DEVELOPMENT_READY",
+      "adapter_id": "discoveryos.internal_consumed_si2.v1",
+      "instance_ids": ["capacitated_assignment_delta", "capacitated_assignment_epsilon", "capacitated_assignment_eta", "capacitated_assignment_zeta_confirmation"],
+      "evidence_role": "CONSUMED_REGRESSION",
+      "fresh_generalization_claim_authorized": false
+    },
+    {
+      "family_id": "set_cover_consumed_dev",
+      "display_name": "Budgeted Weighted Coverage / Set Cover",
+      "difficulty_tier": "R0",
+      "domain": "combinatorial_optimization",
+      "source_id": "discoveryos",
+      "upstream_task": "budgeted_weighted_coverage",
+      "integration_status": "DEVELOPMENT_READY",
+      "adapter_id": "discoveryos.internal_consumed_si2.v1",
+      "instance_ids": ["budgeted_coverage_delta", "budgeted_coverage_epsilon", "budgeted_coverage_eta", "budgeted_coverage_zeta_confirmation"],
+      "evidence_role": "CONSUMED_REGRESSION",
+      "fresh_generalization_claim_authorized": false
+    },
+    {"family_id":"affine_transform_2d","display_name":"Rotate2D / Affine Transform","difficulty_tier":"R0","domain":"numerical","source_id":"algotune","upstream_task":"affine_transform_2d","integration_status":"CATALOGUED","evidence_role":"REGRESSION_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"connected_components","display_name":"Connected Components","difficulty_tier":"R0","domain":"graph","source_id":"algotune","upstream_task":"count_connected_components","integration_status":"CATALOGUED","evidence_role":"REGRESSION_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"dijkstra","display_name":"Dijkstra From Indices","difficulty_tier":"R0","domain":"graph","source_id":"algotune","upstream_task":"dijkstra_from_indices","integration_status":"CATALOGUED","evidence_role":"REGRESSION_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"convolution_1d","display_name":"1D Convolution","difficulty_tier":"R0","domain":"numerical","source_id":"algotune","upstream_task":"convolve_1d","integration_status":"CATALOGUED","evidence_role":"REGRESSION_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"eigenvalues_real","display_name":"Real Eigenvalues","difficulty_tier":"R0","domain":"linear_algebra","source_id":"algotune","upstream_task":"eigenvalues_real","integration_status":"CATALOGUED","evidence_role":"REGRESSION_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"minimum_spanning_tree","display_name":"Minimum Spanning Tree","difficulty_tier":"R0","domain":"graph","source_id":"algotune","upstream_task":"minimum_spanning_tree","integration_status":"CATALOGUED","evidence_role":"REGRESSION_CANDIDATE","fresh_generalization_claim_authorized":false},
+
+    {"family_id":"min_weight_assignment","display_name":"Minimum-Weight Assignment","difficulty_tier":"R1","domain":"combinatorial_optimization","source_id":"algotune","upstream_task":"min_weight_assignment","integration_status":"CATALOGUED","evidence_role":"EASY_SEARCH_VALUE_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"convex_hull","display_name":"Convex Hull","difficulty_tier":"R1","domain":"geometry","source_id":"algotune","upstream_task":"convex_hull","integration_status":"CATALOGUED","evidence_role":"EASY_SEARCH_VALUE_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"kmeans","display_name":"K-Means","difficulty_tier":"R1","domain":"clustering","source_id":"algotune","upstream_task":"kmeans","integration_status":"CATALOGUED","evidence_role":"EASY_SEARCH_VALUE_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"cholesky","display_name":"Cholesky Factorization","difficulty_tier":"R1","domain":"linear_algebra","source_id":"algotune","upstream_task":"cholesky_factorization","integration_status":"CATALOGUED","evidence_role":"EASY_SEARCH_VALUE_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"linear_system_solver","display_name":"Linear System Solver","difficulty_tier":"R1","domain":"linear_algebra","source_id":"algotune","upstream_task":"linear_system_solver","integration_status":"CATALOGUED","evidence_role":"EASY_SEARCH_VALUE_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"fft_convolution","display_name":"FFT Convolution","difficulty_tier":"R1","domain":"signal_processing","source_id":"algotune","upstream_task":"fft_convolution","integration_status":"CATALOGUED","evidence_role":"EASY_SEARCH_VALUE_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"kd_tree","display_name":"KD-Tree","difficulty_tier":"R1","domain":"data_structures","source_id":"algotune","upstream_task":"kd_tree","integration_status":"CATALOGUED","evidence_role":"EASY_SEARCH_VALUE_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"least_squares","display_name":"Least Squares","difficulty_tier":"R1","domain":"linear_algebra","source_id":"algotune","upstream_task":"least_squares","integration_status":"CATALOGUED","evidence_role":"EASY_SEARCH_VALUE_CANDIDATE","fresh_generalization_claim_authorized":false},
+
+    {"family_id":"multi_dim_knapsack","display_name":"Multi-Dimensional Knapsack","difficulty_tier":"R2","domain":"combinatorial_optimization","source_id":"algotune","upstream_task":"multi_dim_knapsack","integration_status":"CATALOGUED","evidence_role":"STRUCTURAL_SEARCH_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"job_shop_scheduling","display_name":"Job-Shop Scheduling","difficulty_tier":"R2","domain":"scheduling","source_id":"algotune","upstream_task":"job_shop_scheduling","integration_status":"CATALOGUED","evidence_role":"STRUCTURAL_SEARCH_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"capacitated_facility_location","display_name":"Capacitated Facility Location","difficulty_tier":"R2","domain":"operations_research","source_id":"algotune","upstream_task":"capacitated_facility_location","integration_status":"CATALOGUED","evidence_role":"STRUCTURAL_SEARCH_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"graph_coloring","display_name":"Graph Coloring","difficulty_tier":"R2","domain":"graph","source_id":"algotune","upstream_task":"graph_coloring_assign","integration_status":"CATALOGUED","evidence_role":"STRUCTURAL_SEARCH_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"max_flow_min_cost","display_name":"Min-Cost Max-Flow","difficulty_tier":"R2","domain":"graph","source_id":"algotune","upstream_task":"max_flow_min_cost","integration_status":"CATALOGUED","evidence_role":"STRUCTURAL_SEARCH_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"earth_movers_distance","display_name":"Earth Mover Distance","difficulty_tier":"R2","domain":"optimization","source_id":"algotune","upstream_task":"earth_movers_distance","integration_status":"CATALOGUED","evidence_role":"STRUCTURAL_SEARCH_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"kcenters","display_name":"K-Centers","difficulty_tier":"R2","domain":"clustering","source_id":"algotune","upstream_task":"kcenters","integration_status":"CATALOGUED","evidence_role":"STRUCTURAL_SEARCH_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"max_clique","display_name":"Maximum Clique","difficulty_tier":"R2","domain":"graph","source_id":"algotune","upstream_task":"max_clique_cpsat","integration_status":"CATALOGUED","evidence_role":"STRUCTURAL_SEARCH_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"max_independent_set","display_name":"Maximum Independent Set","difficulty_tier":"R2","domain":"graph","source_id":"algotune","upstream_task":"max_independent_set_cpsat","integration_status":"CATALOGUED","evidence_role":"STRUCTURAL_SEARCH_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"minimum_dominating_set","display_name":"Minimum Dominating Set","difficulty_tier":"R2","domain":"graph","source_id":"algotune","upstream_task":"min_dominating_set","integration_status":"CATALOGUED","evidence_role":"STRUCTURAL_SEARCH_CANDIDATE","fresh_generalization_claim_authorized":false},
+
+    {"family_id":"ahc008","display_name":"AHC008 Pet Partitioning","difficulty_tier":"R3","domain":"long_horizon_interactive","source_id":"ale_bench","upstream_task":"ahc008","integration_status":"CATALOGUED","evidence_role":"LONG_HORIZON_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"ahc025","display_name":"AHC025 Balance Weighing","difficulty_tier":"R3","domain":"long_horizon_query_budget","source_id":"ale_bench","upstream_task":"ahc025","integration_status":"CATALOGUED","evidence_role":"LONG_HORIZON_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"ahc026","display_name":"AHC026","difficulty_tier":"R3","domain":"long_horizon_heuristic","source_id":"ale_bench","upstream_task":"ahc026","integration_status":"CATALOGUED","evidence_role":"LONG_HORIZON_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"ahc027","display_name":"AHC027","difficulty_tier":"R3","domain":"long_horizon_heuristic","source_id":"ale_bench","upstream_task":"ahc027","integration_status":"CATALOGUED","evidence_role":"LONG_HORIZON_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"ahc039","display_name":"AHC039","difficulty_tier":"R3","domain":"long_horizon_heuristic","source_id":"ale_bench","upstream_task":"ahc039","integration_status":"CATALOGUED","evidence_role":"LONG_HORIZON_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"ahc046","display_name":"AHC046","difficulty_tier":"R3","domain":"long_horizon_heuristic","source_id":"ale_bench","upstream_task":"ahc046","integration_status":"CATALOGUED","evidence_role":"LONG_HORIZON_CANDIDATE","fresh_generalization_claim_authorized":false},
+
+    {"family_id":"cloudcast","display_name":"Cloudcast","difficulty_tier":"R4","domain":"systems_networking","source_id":"skydiscover","upstream_task":"ADRS/cloudcast","integration_status":"CATALOGUED","evidence_role":"REAL_SYSTEMS_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"eplb","display_name":"Expert Parallelism Load Balancer","difficulty_tier":"R4","domain":"systems_moe","source_id":"skydiscover","upstream_task":"ADRS/eplb","integration_status":"CATALOGUED","evidence_role":"REAL_SYSTEMS_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"prism","display_name":"Prism Model Placement","difficulty_tier":"R4","domain":"systems_gpu_placement","source_id":"skydiscover","upstream_task":"ADRS/prism","integration_status":"CATALOGUED","evidence_role":"REAL_SYSTEMS_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"llm_sql","display_name":"LLM-SQL Column Reordering","difficulty_tier":"R4","domain":"systems_caching","source_id":"skydiscover","upstream_task":"ADRS/llm_sql","integration_status":"CATALOGUED","evidence_role":"REAL_SYSTEMS_CANDIDATE","fresh_generalization_claim_authorized":false},
+    {"family_id":"transaction_scheduling","display_name":"Transaction Scheduling","difficulty_tier":"R4","domain":"systems_database","source_id":"skydiscover","upstream_task":"ADRS/txn_scheduling","integration_status":"CATALOGUED","evidence_role":"REAL_SYSTEMS_CANDIDATE","fresh_generalization_claim_authorized":false},
+
+    {"family_id":"circle_packing","display_name":"Circle Packing","difficulty_tier":"R5","domain":"frontier_geometry","source_id":"skydiscover","upstream_task":"math/circle_packing","integration_status":"CATALOGUED","evidence_role":"PUBLIC_SOTA_REPLAY_ONLY","fresh_generalization_claim_authorized":false},
+    {"family_id":"hexagon_packing","display_name":"Hexagon Packing","difficulty_tier":"R5","domain":"frontier_geometry","source_id":"skydiscover","upstream_task":"math/hexagon_packing","integration_status":"CATALOGUED","evidence_role":"PUBLIC_SOTA_REPLAY_ONLY","fresh_generalization_claim_authorized":false},
+    {"family_id":"heilbronn_triangle","display_name":"Heilbronn Triangle","difficulty_tier":"R5","domain":"frontier_geometry","source_id":"skydiscover","upstream_task":"math/heilbronn_triangle","integration_status":"CATALOGUED","evidence_role":"PUBLIC_SOTA_REPLAY_ONLY","fresh_generalization_claim_authorized":false},
+    {"family_id":"heilbronn_convex","display_name":"Heilbronn Convex","difficulty_tier":"R5","domain":"frontier_geometry","source_id":"skydiscover","upstream_task":"math/heilbronn_convex","integration_status":"CATALOGUED","evidence_role":"PUBLIC_SOTA_REPLAY_ONLY","fresh_generalization_claim_authorized":false},
+    {"family_id":"matrix_multiplication","display_name":"Matrix Multiplication","difficulty_tier":"R5","domain":"frontier_algebra","source_id":"skydiscover","upstream_task":"math/matmul","integration_status":"CATALOGUED","evidence_role":"PUBLIC_SOTA_REPLAY_ONLY","fresh_generalization_claim_authorized":false},
+    {"family_id":"autocorrelation_inequality","display_name":"First Autocorrelation Inequality","difficulty_tier":"R5","domain":"frontier_analysis","source_id":"skydiscover","upstream_task":"math/first_autocorr_ineq","integration_status":"CATALOGUED","evidence_role":"PUBLIC_SOTA_REPLAY_ONLY","fresh_generalization_claim_authorized":false},
+    {"family_id":"fourier_uncertainty","display_name":"Fourier Uncertainty Inequality","difficulty_tier":"R5","domain":"frontier_analysis","source_id":"skydiscover","upstream_task":"math/uncertainty_ineq","integration_status":"CATALOGUED","evidence_role":"PUBLIC_SOTA_REPLAY_ONLY","fresh_generalization_claim_authorized":false},
+    {"family_id":"erdos_min_overlap","display_name":"Erdos Minimum Overlap","difficulty_tier":"R5","domain":"frontier_combinatorics","source_id":"skydiscover","upstream_task":"math/erdos_min_overlap","integration_status":"CATALOGUED","evidence_role":"PUBLIC_SOTA_REPLAY_ONLY","fresh_generalization_claim_authorized":false},
+    {"family_id":"sums_differences_finite_sets","display_name":"Sums and Differences of Finite Sets","difficulty_tier":"R5","domain":"frontier_combinatorics","source_id":"skydiscover","upstream_task":"math/sums_diffs_finite_sets","integration_status":"CATALOGUED","evidence_role":"PUBLIC_SOTA_REPLAY_ONLY","fresh_generalization_claim_authorized":false},
+    {"family_id":"min_max_distance_ratio","display_name":"Minimize Max/Min Distance Ratio","difficulty_tier":"R5","domain":"frontier_geometry","source_id":"skydiscover","upstream_task":"math/minimizing_max_min_dist","integration_status":"CATALOGUED","evidence_role":"PUBLIC_SOTA_REPLAY_ONLY","fresh_generalization_claim_authorized":false}
+  ],
+  "reservoirs": [
+    {"reservoir_id":"algotune_remaining","source_id":"algotune","reported_size":154,"unit":"tasks","status":"UNSCREENED_RESERVOIR"},
+    {"reservoir_id":"frontier_cs","source_id":"skydiscover","reported_size":172,"unit":"tasks","status":"UNSCREENED_RESERVOIR"},
+    {"reservoir_id":"ale_bench_remaining","source_id":"ale_bench","reported_size":4,"unit":"core_unselected_tasks","status":"UNSCREENED_RESERVOIR"},
+    {"reservoir_id":"alphaevolve_mathematics","source_id":"alphaevolve_problems","reported_size":67,"unit":"problems","status":"PUBLIC_SOLUTION_EXPOSED_RESERVOIR"}
+  ]
+}

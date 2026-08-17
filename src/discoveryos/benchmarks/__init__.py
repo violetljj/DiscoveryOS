@@ -65,6 +65,7 @@ from .cmi_escape_brief import admit_cmi_escape_brief, seal_cmi_escape_brief
 from .cmi_escape_operator import run_cmi_escape_operator, seal_cmi_escape_operator
 from .cmi_causal_value import run_cmi_causal_value, seal_cmi_causal_value
 from .cmi_replication_admission import run_cmi_replication_admission, seal_cmi_replication_admission
+from .benchmark_bank import load_benchmark_bank, materialize_bank_instance, validate_benchmark_bank
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -132,4 +133,7 @@ __all__ = [
     "run_cmi_causal_value",
     "seal_cmi_replication_admission",
     "run_cmi_replication_admission",
+    "load_benchmark_bank",
+    "materialize_bank_instance",
+    "validate_benchmark_bank",
 ]

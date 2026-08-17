@@ -67,6 +67,9 @@ from discoveryos.benchmarks import (
     seal_cmi_causal_value,
     run_cmi_replication_admission,
     seal_cmi_replication_admission,
+    load_benchmark_bank,
+    materialize_bank_instance,
+    validate_benchmark_bank,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.mechanism_intelligence import run_cmi_r0_synthetic, seal_cmi_r0_protocol
@@ -277,6 +280,23 @@ def build_parser() -> argparse.ArgumentParser:
     cmi_r6_run = subparsers.add_parser("cmi-r6-run-replication", help="run the sealed consumed-distribution CMI replication admission")
     cmi_r6_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-r6-consumed-distribution-replication"))
     cmi_r6_run.add_argument("--manifest-digest", required=True)
+    bank_validate = subparsers.add_parser(
+        "benchmark-bank-validate",
+        help="validate the pinned Benchmark Bank v1 registry without consuming any shard",
+    )
+    bank_validate.add_argument(
+        "--registry", type=Path, default=Path("benchmarks/bank/v1/registry.json")
+    )
+    bank_materialize = subparsers.add_parser(
+        "benchmark-bank-materialize-dev",
+        help="materialize a registered internal consumed development instance",
+    )
+    bank_materialize.add_argument(
+        "--registry", type=Path, default=Path("benchmarks/bank/v1/registry.json")
+    )
+    bank_materialize.add_argument("--family-id", required=True)
+    bank_materialize.add_argument("--instance-id", required=True)
+    bank_materialize.add_argument("--output-dir", type=Path, required=True)
     cib_parent_seal = subparsers.add_parser(
         "cib-seal-parent-dev",
         help="seal consumed development states for a real parent-policy paired trace",
@@ -598,6 +618,15 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.command == "cmi-r6-run-replication":
             result = run_cmi_replication_admission(args.workspace, manifest_digest=args.manifest_digest)
+        elif args.command == "benchmark-bank-validate":
+            result = validate_benchmark_bank(load_benchmark_bank(args.registry))
+        elif args.command == "benchmark-bank-materialize-dev":
+            result = materialize_bank_instance(
+                args.registry,
+                family_id=args.family_id,
+                instance_id=args.instance_id,
+                output_dir=args.output_dir,
+            )
         elif args.command == "cib-seal-parent-dev":
             result = seal_parent_dev_cib_protocol(args.workspace)
         elif args.command == "cib-run-parent-dev":

@@ -80,6 +80,9 @@ CMI_R5_CAUSAL_VALUE_DETECTED_ON_TWO_CONSUMED_DEV_STATES
 CMI_R6_PROTOCOL_IMPLEMENTED
 CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION_PASSED
 CMI_FRESH_CAUSAL_VALIDATION_ADMISSION_READY
+BENCHMARK_BANK_V1_REGISTRY_IMPLEMENTED
+BENCHMARK_BANK_V1_DEVELOPMENT_SLICE_EXECUTABLE
+BENCHMARK_BANK_V1_EXTERNAL_ADAPTERS_NOT_YET_ADMITTED
 NO_ESCAPE_OPERATOR_IMPLEMENTED
 NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 ```
@@ -99,6 +102,7 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 - ASHA mechanics admission；bounded Local Patch、一次 mechanical repair 和 generation provenance。
 - Structural Rewrite mechanics、ledger-backed state projector、deterministic action controller、unified executor 和 anytime settlement。
 - residual-headroom task admission 与 matched-resource Search-Value MVP 协议/runner。
+- Benchmark Bank v1 的 47-family commit-pinned registry、DEV/SHADOW/SEALED 生命周期门、统一 adapter contract，以及可执行的 consumed Assignment/Coverage development 物化切片。
 
 ## 已冻结的关键结果
 
@@ -144,6 +148,7 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 - 可评估的 official external challenger 公平 benchmark；SI-2 的 Shinka adapter 已实现，但正式运行因 Windows Headless availability blocker 为 `NOT_EVALUABLE`。
 - 独立服务/OS identity 的 hostile-worker blind isolation。
 - 产品可用性、安全性、真实世界效果或生产 readiness。
+- Benchmark Bank 中 45 个外部 family 的本地 evaluator/adapters admission；被 catalogued 不等于可执行或科学 admitted。
 
 ## SI-2 Search Causality Autopsy
 
@@ -203,6 +208,7 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 29. CMI-R4 functional-basin-escape Operator mechanics 已在 commit `aed8261` 上封存并通过。Manifest digest 为 `05a7c426aeba12c7a13ca51485799a738835520ff094cf3ab46090d36c8397dc`，report SHA-256 为 `6e284e4efce34d0ed4b461989be40a2aebaa5ad410e130da2a59642ed71c6e13`。Assignment/coverage treatment 的 functional distance 分别为 `0.49382716` / `0.30000000`，独立 descendant-behavior distance 为 `0.41975309` / `0.31111111`；null 均为 `0`，positive controls 为 `0.45679012` / `0.30000000`，全部 public validity 与 Brief-to-generation causal reachability 检查通过。模型、evaluator 与 fresh search-value 调用均为零，共执行 24 个本地 public/probe 进程并消费两个新 development states。该结果只建立 deterministic minimal Operator 的 bounded mechanics；一般 escape probability、causal value、utility/AUC、search value 与 superiority 均未建立，R5 和 fresh budget 仍未授权。详见 [`CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md`](CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md)。
 30. CMI-R5 consumed-development paired causal-value 已在 commit `4465f0e` 上封存并通过。Manifest digest 为 `09260d9c235a22c4a6a348021a834079b9cbb742c040be9af9549d1b0d28ba5b`，report SHA-256 为 `6457625fcf02d9d720a143f62dbf10927adce445863eca8b7b08259070be7b0d`。Assignment/coverage final utility delta 为 `+0.20103693` / `+0.09768933`，two-allocation AUC delta 为 `+0.10051846` / `+0.04884466`；escape rate `0 -> 1`、replacement `0 -> 1`、breakthrough `0 -> 0.5`、两臂 validity 均为 `1`。模型、token 与 fresh tasks 均为零；treatment/control evaluator 总耗时约为 `1.118s` / `0.739s`。正式 verdict 为 `CMI_R5_CAUSAL_VALUE_DETECTED_ON_TWO_CONSUMED_DEV_STATES`，仅适用于该 deterministic escape Operator 相对 behavior-preserving local control 的两个 consumed states；无概率、显著性、一般 CMI value 或 fresh search-value claim，fresh budget 继续关闭。详见 [`CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md`](CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md)。
 31. CMI-R6 consumed-distribution replication 已在 commit `cd8e7f2` 上封存并通过。Manifest digest 为 `c4b0844fc3beae43f624194318611b3899865abe1199ad705e978294ff2ea876`，report SHA-256 为 `95213c5bb419cd995d2ddc588cc0d394698043da2a4c3fdceafcb10dcbae9dfe`。8/8 treatment 均 escape、utility 超过 state resolution 且 replacement，control 为 0/8；无 negative 或 tie，validity 两臂均为 `1`，breakthrough `0 -> 0.375`。Coverage/Assignment median utility delta 为 `0.08027348` / `0.18481032`，median AUC delta 为 `0.04013674` / `0.09240516`；aggregate/max-state evaluator runtime ratio 为 `0.99956x` / `1.25330x`，13 项 gate 全部通过。模型、token 与 fresh tasks 均为零。正式输出 `CMI_FRESH_CAUSAL_VALIDATION_ADMISSION_READY`，只授权另行预注册极小 fresh causal protocol，不授权执行。Task families 与历史 heuristic evidence 可见，因此这仍不是 blind independent replication，不建立概率、显著性、跨 family 泛化或 search value。详见 [`CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md`](CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md)。
+32. Benchmark Bank v1 已实现并验证 47-family registry：R0/R1/R2/R3/R4/R5 分别为 `8/8/10/6/5/10`，四个外部来源绑定审计时 commit。Assignment 与 Coverage 两个 consumed families 可物化并运行 public/evaluator；其余 45 个 external families 仅为 `CATALOGUED`，0 个 external adapter admitted。Registry validation 与物化测试不调用模型、不打开 SEALED shard、不消费 fresh instance，claim ceiling 为 bank infrastructure/catalog 与 consumed development。详见 [`BENCHMARK_BANK_V1.md`](BENCHMARK_BANK_V1.md)。
 
 ## 状态更新规则
 
@@ -235,3 +241,4 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 - CMI-R4 functional basin escape Operator mechanics：[`CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md`](CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md)
 - CMI-R5 consumed development causal value：[`CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md`](CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md)
 - CMI-R6 consumed distribution replication：[`CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md`](CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md)
+- Benchmark Bank v1：[`BENCHMARK_BANK_V1.md`](BENCHMARK_BANK_V1.md)
