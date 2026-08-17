@@ -162,3 +162,10 @@
 - **决定**：GCF-V2 把 proposal 与 implementation 拆成两个独立 provider request。第一阶段只把 task、base source 和自然语言 mechanism brief 转换为 schema-constrained、canonical、content-addressed Mechanism Object；第二阶段只接收 task、base source 和该对象，不得读取原 brief、condition ID 或 proposal raw response。Categorical control-flow fields 是 proposal admission signature；解释文本不能覆盖与冻结 condition contract 冲突的字段。
 - **原因**：GCF-R1 在 proposal `0/2` 的同时出现 implementation/repair/final `2/2`，说明同一 staged call 中的后续代码阶段可能绕过 proposal 并重新解释原 brief。继续用自由文本 proposal 做 parent、novelty 或 research-taste 的中间表示缺少稳定控制证据，也无法区分 proposal mediation 与直接 context reuse。
 - **后果**：新协议使用两个新 development calibration states 和每 condition/state 三次独立 draw。先运行 12-call、8,000-token-per-call proposal gate，只有 2/2 states 的 between-condition categorical separation 超过 within-condition stochastic envelope 且所有对象合规时，才开放 12-call implementation gate。Implementation 的 source 与 hidden behavior 分开裁决，utility 只记录；正 calibration 只获得独立 validation 的预注册资格，不能开放 fresh value trial、SI-3 或 superiority claim。Executable obligations 与 runtime counter enforcement 留给通过该中介门后的 V3，不与 V2 同时建设。
+
+## D-024：GCF-V2 R1 provider/schema 失败按 NOT_EVALUABLE 关闭并以前置 preflight 修复
+
+- **状态**：Accepted; R1 closed; R2 executability repair implemented
+- **决定**：GCF-V2 R1 的 12/12 proposal invocations 全部在 Codex CLI/schema 边界以 exit `1`、0 tokens 失败，记为 `GCF_V2_R1_NOT_EVALUABLE_PROVIDER_SCHEMA`，不得写成 structured proposal semantic failure。R1 root 保持 create-once，不修改 schema、不补跑。R2 使用新 protocol ID、新 workspace 和新 seal；移除官方 Structured Outputs 支持子集未包含的 `uniqueItems`，同时保留 parse 后 uniqueness 检查。
+- **原因**：R1 没有产生任何可评估 Mechanism Object，因而没有进入 condition separation gate。一次 schema transport 缺陷被并发复制成 12 次失败，也证明 scientific schedule 前缺少廉价 executability check。
+- **后果**：R2 在 scientific draws 前冻结并执行一次 non-scientific provider/schema preflight，保存 transport error excerpt；失败即停止，成功才开放原 12-call proposal schedule。该修复只恢复协议可执行性，不改变 task、condition、replicate、proposal admission、implementation isolation、behavior gate 或 claim ceiling。

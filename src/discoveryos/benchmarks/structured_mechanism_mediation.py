@@ -24,10 +24,11 @@ from discoveryos.runtime.artifacts import ArtifactStore
 from discoveryos.util import digest_bytes, digest_json, jsonable
 
 
-PROTOCOL_ID = "GCF_V2_STRUCTURED_MECHANISM_MEDIATION_V1"
-MANIFEST_RECORD = "gcf-v2-structured-mediation-manifest.json"
-PROPOSAL_RECORD = "gcf-v2-structured-proposal-calibration.json"
-IMPLEMENTATION_RECORD = "gcf-v2-structured-implementation-calibration.json"
+PROTOCOL_ID = "GCF_V2_STRUCTURED_MECHANISM_MEDIATION_R2"
+MANIFEST_RECORD = "gcf-v2-r2-structured-mediation-manifest.json"
+PREFLIGHT_RECORD = "gcf-v2-r2-provider-preflight.json"
+PROPOSAL_RECORD = "gcf-v2-r2-structured-proposal-calibration.json"
+IMPLEMENTATION_RECORD = "gcf-v2-r2-structured-implementation-calibration.json"
 CONDITION_A = "CONSTRUCTIVE_GREEDY"
 CONDITION_B = "ITERATIVE_LOCAL_IMPROVEMENT"
 REPLICATES_PER_CONDITION = 3
@@ -118,27 +119,24 @@ MECHANISM_OBJECT_SCHEMA: dict[str, Any] = {
                 "forbidden_fallbacks": {
                     "type": "array",
                     "minItems": 1,
-                    "uniqueItems": True,
                     "items": {"type": "string", "minLength": 1},
                 },
                 "invariants": {
                     "type": "array",
                     "minItems": 3,
-                    "uniqueItems": True,
                     "items": {
+                        "type": "string",
                         "enum": ["api_preserved", "feasibility_preserved", "inputs_immutable", "standard_library_only"]
                     },
                 },
                 "expected_behavioral_signatures": {
                     "type": "array",
                     "minItems": 1,
-                    "uniqueItems": True,
                     "items": {"type": "string", "minLength": 1},
                 },
                 "failure_semantics": {
                     "type": "array",
                     "minItems": 1,
-                    "uniqueItems": True,
                     "items": {"type": "string", "minLength": 1},
                 },
             },
@@ -345,6 +343,8 @@ def seal_structured_mediation_protocol(
             "separate_provider_requests": True,
         },
         "cheap_first_gate": {
+            "provider_schema_preflight_calls": 1,
+            "proposal_blocked_if_preflight_fails": True,
             "proposal_calls": len(schedule),
             "proposal_token_ceiling": PROPOSAL_TOKEN_CEILING,
             "replicates_per_state_condition": REPLICATES_PER_CONDITION,
@@ -383,9 +383,43 @@ def seal_structured_mediation_protocol(
         "manifest_path": str(path),
         "manifest_file_sha256": digest_bytes(path.read_bytes()),
         "proposal_calls_before_gate": len(schedule),
-        "maximum_total_model_calls": len(schedule) * 2,
+        "maximum_total_model_calls": 1 + len(schedule) * 2,
         "fresh_search_value_tasks_consumed": 0,
     }
+
+
+def run_structured_provider_preflight(
+    workspace: Path,
+    *,
+    manifest_digest: str,
+    proposal_provider: PatchProvider,
+    implementation_provider: PatchProvider,
+) -> dict[str, Any]:
+    workspace = workspace.resolve()
+    manifest = _load_manifest(workspace, manifest_digest, proposal_provider, implementation_provider)
+    state = manifest["states"][0]
+    item = {
+        "state_id": state["state_id"],
+        "condition_id": CONDITION_A,
+        "draw_id": "gcf-v2-r2-provider-schema-preflight",
+        "replicate": -1,
+    }
+    draw = _generate_proposal(ArtifactStore(workspace / "protocol-artifacts"), state, item, proposal_provider)
+    passed = draw.evaluable and draw.contract_compliant and draw.token_cost <= PROPOSAL_TOKEN_CEILING
+    record = {
+        "status": "GCF_V2_R2_PROVIDER_PREFLIGHT_PASSED" if passed else "GCF_V2_R2_PROVIDER_PREFLIGHT_FAILED",
+        "protocol_id": PROTOCOL_ID,
+        "manifest_digest": manifest_digest,
+        "passed": passed,
+        "draw": jsonable(draw),
+        "draw_digest": digest_json(jsonable(draw)),
+        "usage": _usage([draw]),
+        "scientific_evidence": False,
+        "proposal_calibration_authorized": passed,
+        "fresh_search_value_tasks_consumed": 0,
+    }
+    path = ArtifactStore(workspace / "result-artifacts").write_record(PREFLIGHT_RECORD, record)
+    return {**record, "record_path": str(path), "record_sha256": digest_bytes(path.read_bytes())}
 
 
 def calibrate_structured_proposals(
@@ -398,6 +432,10 @@ def calibrate_structured_proposals(
 ) -> dict[str, Any]:
     workspace = workspace.resolve()
     manifest = _load_manifest(workspace, manifest_digest, proposal_provider, implementation_provider)
+    preflight_path = workspace / "result-artifacts" / "records" / PREFLIGHT_RECORD
+    preflight = _load_json(preflight_path)
+    if preflight.get("manifest_digest") != manifest_digest or not preflight.get("passed"):
+        raise RuntimeError("GCF-V2 proposal calibration blocked because provider/schema preflight did not pass")
     draws = _execute_proposals(workspace, manifest, proposal_provider, progress)
     analysis = _analyze_proposals(manifest, draws)
     resource_ok = all(draw.token_cost <= PROPOSAL_TOKEN_CEILING for draw in draws.values())
@@ -413,13 +451,16 @@ def calibrate_structured_proposals(
         "status": "GCF_V2_PROPOSAL_CALIBRATION_PASSED" if passed else "GCF_V2_PROPOSAL_CALIBRATION_FAILED",
         "protocol_id": PROTOCOL_ID,
         "manifest_digest": manifest_digest,
+        "preflight_record_sha256": digest_bytes(preflight_path.read_bytes()),
         "passed": passed,
         "all_draws_evaluable": all_evaluable,
         "all_objects_contract_compliant": all_compliant,
         "resource_ceilings_respected": resource_ok,
         "analysis": analysis,
         "draw_bindings": _draw_bindings(workspace, manifest, "proposals"),
-        "usage": _usage(draws.values()),
+        "usage": _combine_usage(preflight["usage"], _usage(draws.values())),
+        "preflight_model_calls": 1,
+        "scientific_proposal_model_calls": len(draws),
         "implementation_calls_authorized": passed,
         "fresh_search_value_tasks_consumed": 0,
     }
@@ -948,13 +989,24 @@ def _generation_success(request: GenerationRequest, generated: Any, evaluable: b
 
 
 def _generation_failure(request: GenerationRequest, error: Exception, usage: ResourceUsage, started: float) -> dict[str, Any]:
-    return {
+    record = {
         "status": "PROVIDER_OR_SCHEMA_FAILURE",
         "generation_id": request.generation_id,
         "failure_signature": getattr(error, "signature", type(error).__name__),
         "usage": jsonable(usage),
         "latency_seconds": time.monotonic() - started,
     }
+    if isinstance(error, GenerationProviderError):
+        raw = error.raw_response or ""
+        transport = error.transport_log or ""
+        record.update(
+            {
+                "raw_response_sha256": digest_bytes(raw.encode("utf-8")),
+                "transport_log_sha256": digest_bytes(transport.encode("utf-8")),
+                "transport_log_excerpt": transport[-2_000:],
+            }
+        )
+    return record
 
 
 def _usage(draws: Iterable[Any]) -> dict[str, Any]:

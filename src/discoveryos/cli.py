@@ -36,6 +36,7 @@ from discoveryos.benchmarks import (
     run_mechanism_brief_validation,
     seal_mechanism_brief_protocol,
     calibrate_structured_proposals,
+    run_structured_provider_preflight,
     run_structured_implementation_calibration,
     seal_structured_mediation_protocol,
 )
@@ -219,11 +220,12 @@ def build_parser() -> argparse.ArgumentParser:
             command_parser.add_argument("--manifest-digest", required=True)
     for name, help_text in (
         ("gcf-v2-seal-structured", "seal cheap-first Structured Mechanism Mediation calibration"),
+        ("gcf-v2-preflight-provider", "validate the frozen proposal schema/provider with one non-scientific call"),
         ("gcf-v2-calibrate-proposals", "run only the frozen structured-proposal calibration gate"),
         ("gcf-v2-run-implementation", "run isolated implementation calibration after proposal admission"),
     ):
         command_parser = subparsers.add_parser(name, help=help_text)
-        command_parser.add_argument("--workspace", type=Path, default=Path("runs/gcf-v2-structured-mediation"))
+        command_parser.add_argument("--workspace", type=Path, default=Path("runs/gcf-v2-structured-mediation-r2"))
         command_parser.add_argument("--model", required=True)
         command_parser.add_argument("--codex-command", default="codex")
         command_parser.add_argument("--reasoning-effort", required=True)
@@ -423,6 +425,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
         elif args.command in {
             "gcf-v2-seal-structured",
+            "gcf-v2-preflight-provider",
             "gcf-v2-calibrate-proposals",
             "gcf-v2-run-implementation",
         }:
@@ -449,6 +452,13 @@ def main(argv: list[str] | None = None) -> int:
                     proposal_provider=proposal_provider,
                     implementation_provider=implementation_provider,
                     max_workers=args.max_workers,
+                )
+            elif args.command == "gcf-v2-preflight-provider":
+                result = run_structured_provider_preflight(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    proposal_provider=proposal_provider,
+                    implementation_provider=implementation_provider,
                 )
             elif args.command == "gcf-v2-calibrate-proposals":
                 result = calibrate_structured_proposals(

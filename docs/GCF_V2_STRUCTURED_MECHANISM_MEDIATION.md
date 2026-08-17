@@ -4,8 +4,8 @@
 
 ```text
 GCF_V2_STRUCTURED_MEDIATION_PROTOCOL_IMPLEMENTED
-GCF_V2_NOT_YET_SEALED
-NO_MODEL_CALLS
+GCF_V2_R1_NOT_EVALUABLE_PROVIDER_SCHEMA
+GCF_V2_R2_NOT_YET_SEALED
 NO_STRUCTURED_MECHANISM_CHANNEL_ADMITTED
 NO_FRESH_VALUE_TRIAL_AUTHORIZED
 ```
@@ -51,13 +51,21 @@ The implementation request cannot receive the original brief, condition ID, or p
 
 ## Cheap-first calibration
 
-Two new development-only tasks are frozen before calls: weighted coverage and balanced graph cut, each with new evaluator seeds. For each state, both mutually exclusive conditions receive three independent proposal draws. The first gate therefore costs 12 calls, each capped at 8,000 input-plus-output tokens.
+R2 first performs one non-scientific provider/schema preflight using the exact proposal provider and schema. A failure blocks the scientific schedule after one call and preserves the CLI transport diagnostic in the receipt.
+
+Two new development-only tasks are frozen before calls: weighted coverage and balanced graph cut, each with new evaluator seeds. For each state, both mutually exclusive conditions receive three independent proposal draws. After preflight, the first scientific gate costs 12 calls, each capped at 8,000 input-plus-output tokens.
 
 The proposal gate requires all draws to be evaluable and contract-compliant, resource ceilings to pass, and between-condition categorical separation to exceed the maximum same-condition stochastic distance in both states. Failure blocks implementation with zero implementation calls.
 
 Only after proposal admission may the 12 corresponding Mechanism Objects receive isolated implementation calls, each capped at 30,000 tokens. Source and hidden-behavior distances are separately compared against their state-local within-condition envelopes plus frozen margins. Utility is recorded but excluded from mediation admission.
 
-The maximum calibration cost is 24 calls. The first stopping point has a predeclared aggregate ceiling of 96,000 tokens, under 18% of the GCF-R1 calibration usage ceiling implied by its observed 536,852-token run.
+The maximum calibration cost is 25 calls including preflight. The first scientific stopping point has a predeclared aggregate ceiling of 96,000 tokens, under 18% of the GCF-R1 calibration usage ceiling implied by its observed 536,852-token run.
+
+## R1 executability closeout
+
+R1 sealed manifest `bdefaf6f50e6cfd2676f9eb32f95d9f42fbd44817b65f5717f90c52565bc22bc` at commit `c4fd8a4`. All 12 scheduled proposal invocations exited at the provider/schema boundary with CLI exit code `1`, zero reported tokens, zero contract-compliant objects, and zero evaluable draws. The create-once calibration record SHA-256 is `4e40a0ce0d8a41731a294154081f4d56210f021c7fa1b7c2f21d9ea914eaad88`.
+
+The official Structured Outputs reference documents a supported JSON Schema subset and does not include `uniqueItems`; R1 used that keyword on four arrays. R1 is therefore closed as `GCF_V2_R1_NOT_EVALUABLE_PROVIDER_SCHEMA`, not as a semantic failure. Implementation remained blocked with zero calls. R2 removes the unsupported keyword, retains manual uniqueness validation after parsing, and adds the one-call preflight. R1 artifacts are not modified or replayed.
 
 ## Verdict boundaries
 
@@ -79,15 +87,19 @@ $env:PYTHONPATH = "src"
 $codexCli = Join-Path $env:USERPROFILE ".codex\.sandbox-bin\codex.exe"
 
 python -m discoveryos gcf-v2-seal-structured `
-  --workspace runs/gcf-v2-structured-mediation `
+  --workspace runs/gcf-v2-structured-mediation-r2 `
   --model gpt-5.6-sol --reasoning-effort medium --codex-command $codexCli --max-workers 2
 
+python -m discoveryos gcf-v2-preflight-provider `
+  --workspace runs/gcf-v2-structured-mediation-r2 --manifest-digest <sealed-digest> `
+  --model gpt-5.6-sol --reasoning-effort medium --codex-command $codexCli
+
 python -m discoveryos gcf-v2-calibrate-proposals `
-  --workspace runs/gcf-v2-structured-mediation --manifest-digest <sealed-digest> `
+  --workspace runs/gcf-v2-structured-mediation-r2 --manifest-digest <sealed-digest> `
   --model gpt-5.6-sol --reasoning-effort medium --codex-command $codexCli
 
 python -m discoveryos gcf-v2-run-implementation `
-  --workspace runs/gcf-v2-structured-mediation --manifest-digest <sealed-digest> `
+  --workspace runs/gcf-v2-structured-mediation-r2 --manifest-digest <sealed-digest> `
   --model gpt-5.6-sol --reasoning-effort medium --codex-command $codexCli
 ```
 

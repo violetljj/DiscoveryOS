@@ -35,6 +35,7 @@ from .mechanism_brief_real import (
 )
 from .structured_mechanism_mediation import (
     calibrate_structured_proposals,
+    run_structured_provider_preflight,
     run_structured_implementation_calibration,
     seal_structured_mediation_protocol,
 )
@@ -75,5 +76,6 @@ __all__ = [
     "run_mechanism_brief_validation",
     "seal_structured_mediation_protocol",
     "calibrate_structured_proposals",
+    "run_structured_provider_preflight",
     "run_structured_implementation_calibration",
 ]

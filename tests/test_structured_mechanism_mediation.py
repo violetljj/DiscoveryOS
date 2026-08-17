@@ -11,6 +11,7 @@ from discoveryos.benchmarks.structured_mechanism_mediation import (
     IMPLEMENTATION_SCHEMA,
     MANIFEST_RECORD,
     MECHANISM_OBJECT_SCHEMA,
+    PREFLIGHT_RECORD,
     PROPOSAL_RECORD,
     ImplementationDraw,
     MechanismObject,
@@ -18,6 +19,7 @@ from discoveryos.benchmarks.structured_mechanism_mediation import (
     _analyze_implementations,
     _analyze_proposals,
     _implementation_prompt_template,
+    calibrate_structured_proposals,
     run_structured_implementation_calibration,
     seal_structured_mediation_protocol,
 )
@@ -90,7 +92,7 @@ class StructuredMechanismMediationTests(unittest.TestCase):
                 implementation_provider=self.implementation_provider,
             )
             self.assertEqual(12, result["proposal_calls_before_gate"])
-            self.assertEqual(24, result["maximum_total_model_calls"])
+            self.assertEqual(25, result["maximum_total_model_calls"])
             manifest = json.loads(
                 (Path(temporary) / "protocol-artifacts" / "records" / MANIFEST_RECORD).read_text(encoding="utf-8")
             )
@@ -100,6 +102,28 @@ class StructuredMechanismMediationTests(unittest.TestCase):
             )
             self.assertIn("natural_language_mechanism_brief", manifest["mediation_isolation"]["implementation_forbidden_context"])
             self.assertEqual(0, manifest["model_calls_before_seal"])
+            self.assertEqual(1, manifest["cheap_first_gate"]["provider_schema_preflight_calls"])
+            self.assertNotIn("uniqueItems", json.dumps(MECHANISM_OBJECT_SCHEMA))
+
+    def test_failed_provider_preflight_blocks_proposal_calibration_without_calls(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            sealed = seal_structured_mediation_protocol(
+                workspace,
+                proposal_provider=self.proposal_provider,
+                implementation_provider=self.implementation_provider,
+            )
+            ArtifactStore(workspace / "result-artifacts").write_record(
+                PREFLIGHT_RECORD,
+                {"manifest_digest": sealed["manifest_digest"], "passed": False},
+            )
+            with self.assertRaisesRegex(RuntimeError, "preflight did not pass"):
+                calibrate_structured_proposals(
+                    workspace,
+                    manifest_digest=sealed["manifest_digest"],
+                    proposal_provider=self.proposal_provider,
+                    implementation_provider=self.implementation_provider,
+                )
 
     def test_proposal_analysis_compares_between_against_within_condition(self) -> None:
         states = [{"state_id": "s1", "task_category": "one"}, {"state_id": "s2", "task_category": "two"}]
