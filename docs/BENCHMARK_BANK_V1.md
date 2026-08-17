@@ -6,13 +6,14 @@
 BENCHMARK_BANK_V1_REGISTRY_IMPLEMENTED
 BENCHMARK_BANK_V1_DEVELOPMENT_SLICE_EXECUTABLE
 BENCHMARK_BANK_V1_SIX_ALGOTUNE_CONTRACT_DEV_FAMILIES_EXECUTABLE
+BENCHMARK_BANK_V1_TEN_ALGOTUNE_R2_CONTRACT_DEV_FAMILIES_EXECUTABLE
 BENCHMARK_BANK_V1_EXTERNAL_SCIENTIFIC_ADMISSION_NOT_ESTABLISHED
 ZERO_FRESH_INSTANCES_CONSUMED
 ```
 
-Benchmark Bank v1 makes the problem family a durable research asset while treating a sealed instance or shard as the consumable scientific unit. It does not declare all listed benchmarks runnable. The registry currently contains 47 core families: two internal consumed families and six external contract-derived AlgoTune families are `DEVELOPMENT_READY`; 39 families remain `CATALOGUED`; zero external family is `ADMITTED`.
+Benchmark Bank v1 makes the problem family a durable research asset while treating a sealed instance or shard as the consumable scientific unit. It does not declare all listed benchmarks runnable. The registry currently contains 47 core families: two internal consumed families and 16 external contract-derived AlgoTune families are `DEVELOPMENT_READY`; 29 families remain `CATALOGUED`; zero external family is `ADMITTED`.
 
-The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../benchmarks/bank/v1/registry.json). The six-family development batch has registry digest `9fe45e27b802b7b07731265c66edcb31026189068b31f313a141c21726ca51bb`.
+The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../benchmarks/bank/v1/registry.json). The R0-R2 development bank has registry digest `4a4bf3701cbfa8cc532b98355e78a1985bebde3a2bcaa61c1d02a41c2c8a5b6c`.
 
 ## Difficulty ladder
 
@@ -101,6 +102,27 @@ python -m discoveryos benchmark-bank-materialize-dev `
 python runs/benchmark-bank-dev/dijkstra-alpha/public_tests.py
 python runs/benchmark-bank-dev/dijkstra-alpha/evaluate.py
 ```
+
+## AlgoTune R2 structural-search development batch
+
+The second external batch adds all ten registered R2 families, with two deterministic DEV instances each:
+
+| Family | Upstream runtime dependency | Local exact DEV method |
+|---|---|---|
+| Multi-Dimensional Knapsack | OR-Tools | resource-state DP; exhaustive objective verifier |
+| Job-Shop Scheduling | OR-Tools | bounded operation-order search |
+| Capacitated Facility Location | CVXPY/HiGHS | bounded assignment search |
+| Graph Coloring | NetworkX + OR-Tools | exact bounded coloring |
+| Min-Cost Max-Flow | NetworkX | residual shortest augmenting paths |
+| Earth Mover Distance | NumPy + POT | uniform-mass assignment DP |
+| K-Centers | NetworkX + PySAT | all-pairs distance plus bounded center enumeration |
+| Maximum Clique | OR-Tools | bounded subset enumeration |
+| Maximum Independent Set | OR-Tools | bounded subset enumeration |
+| Minimum Dominating Set | OR-Tools | bounded subset enumeration |
+
+The adapter is `discoveryos.algotune_r2_contract_dev.v1`; its evaluator regime is `DISCOVERYOS_STDLIB_ALGOTUNE_R2_CONTRACT_DEV_V1`. Each evaluator independently checks the upstream-compatible output structure, input immutability, feasibility and exact objective on deliberately bounded deterministic cases before timing the candidate. Incorrect or suboptimal candidates receive `valid=0` and `score=0`.
+
+These instances exercise structural-search mechanics without adding OR-Tools, CVXPY, POT, NetworkX or PySAT to the DiscoveryOS core environment. They are not scale-equivalent to upstream instances and do not establish official AlgoTune performance, external competitiveness or scientific admission. Their claim ceiling is `EXTERNAL_R2_CONTRACT_DERIVED_DEVELOPMENT_ONLY`.
 
 ## External sources and exposure boundaries
 
