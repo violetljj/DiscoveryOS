@@ -97,7 +97,7 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
 
-默认执行环境是当前本机。高资源任务应先探测实时 CPU、内存、GPU/显存、磁盘和负载，再以有界并行、缓存与断点续跑提高吞吐；远端或云端执行不是默认路径，需要单独授权或冻结协议要求。
+Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。用户已授权将 `ssh -p 16288 root@connect.westb.seetacloud.com` 作为适合远程的 CPU/GPU 密集任务的首选按需 AutoDL Worker；该主机是可能承载其他项目的共享环境，正式派发前必须完成实时资源与占用探测、DiscoveryOS job-scoped 环境/目录/进程/端口/缓存隔离及非科学资产 smoke，结果只能在本地验证绑定与完整性后接纳。当前 D-022 仍是 architecture direction，仓库尚未交付 DiscoveryOS 远程 worker 实现，因此授权与执行优先级不得表述为远程能力已经 implemented。
 
 ## 已交付并有代码/测试支撑
 

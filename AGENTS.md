@@ -42,19 +42,29 @@ DiscoveryOS 是证据优先的统一算法研究内核。它把外部算法发�
 - Bank 中 `CATALOGUED` 只表示名称与来源已登记，禁止执行或进入科学协议；外部 family 只有在 commit、许可证/数据使用、adapter/evaluator/environment digest、本机 preflight、资源 envelope、partition identity 与 replay 全部绑定后才可标为 `ADMITTED`。上游声称提供 evaluator 不能替代本项目 admission。
 - 公开 benchmark 若已暴露 prompt、verifier、initial program、reference/final solution 或公开测试分布，必须记录 contamination exposure，只能作为 replay、stress 或 development 资产；de-novo discovery 或泛化 claim 必须使用事前冻结的 neighboring hidden distribution，且不得从公开结果反推 hidden size、shape、field、constraint 或 workload。
 
-## 本地执行与性能
+## 本地、远程执行与性能
 
 - Windows 本地环境的唯一维护入口是 `pwsh -NoProfile -File scripts/project.ps1 <doctor|bootstrap|test|run|rebuild>`。进入仓库先运行 `doctor`；不要裸用全局 `python`、`py -3.11` 或 `pip install`。项目 Python 由 `.python-version` 固定，依赖由 `pyproject.toml` 与 `uv.lock` 决定。
 - `rebuild` 只允许删除解析后仍严格等于仓库根 `.venv` 且不是 junction/symlink 的目录；不得用它清理 `runs/`、收据、artifact 或任何 consumed evidence。
 
-- 默认在当前本机完成开发、测试、benchmark 和正式研究运行。除非用户明确授权，或冻结协议本身要求特定外部设备/环境，不使用云端、远端 worker 或外部计算服务。
+- DiscoveryOS 的 Control Plane 与 Evidence Authority 默认留在当前本机，包括 controller、Research Graph、Evidence Ledger、冻结协议、Git 主工作副本、结果接纳与 GateEngine 裁决。远端 worker 只属于 Compute Plane，不得直接修改本地账本、取得 final-blind capability 或宣布科学 verdict。
+- 用户已明确授权将 `ssh -p 16288 root@connect.westb.seetacloud.com` 作为当前首选的按需 AutoDL Worker。连接可用、实时资源足够、隔离条件成立且冻结协议允许时，适合远程的 CPU/GPU 密集型测试、benchmark、solver、candidate evaluation、compile、simulation、bootstrap/statistical evaluation 和大批独立实验优先派到该主机；控制、生成、cheap checks、小型串行任务和 evidence settlement 默认留在本机。远端不可用、不适合或隔离条件不成立时回退本机，不得为满足“远端优先”而放宽协议或资源门。
 - 调用本机工具前先查 `docs/LOCAL_ENVIRONMENT.md`，并执行其中的轻量版本检查。路径清单是已验证快照，不替代运行时验证；尤其不要裸用解析到 WindowsApps 的 `codex`。
-- 长时间或高资源任务启动前，先只读探测可用逻辑 CPU、内存、GPU/显存、磁盘空间和当前负载，再选择并发度、batch size、worker pool 和输出位置；不要硬编码某台机器的瞬时配置。
-- 尽量利用本机性能：CPU-bound 独立单元优先采用有界多进程，I/O-bound 工作优先异步/流水化，GPU 工作在协议允许且数值语义不变时采用合适的 batch、预取和混合精度。独立 task/seed/arm 可并行，同一 Git worktree 的写操作和共享 create-once root 不并发。
+- 长时间或高资源任务启动前，无论本机或远端都先只读探测可用逻辑 CPU、cgroup/cpuset/quota、内存上限与余量、GPU/显存、磁盘空间、当前负载、活跃进程和其他任务占用，再选择并发度、batch size、worker pool 和输出位置；不要硬编码某台机器的瞬时配置，也不要在容器中直接相信可能暴露宿主机数量的 `os.cpu_count()`。
+- 尽量利用实际可用性能：CPU-bound 独立单元优先采用有界多进程，I/O-bound 工作优先异步/流水化，GPU 工作在协议允许且数值语义不变时采用合适的 batch、预取和混合精度。独立 task/seed/arm 可并行，同一 Git worktree 的写操作和共享 create-once root 不并发。
 - 并发度以实测吞吐、内存/显存余量和系统可交互性为准，逐级提高并保留安全余量；避免无界并行、内存换页、GPU OOM、磁盘打满或让机器长期失去响应。失败后不得用盲目提高并发重复冲击资源。
 - 优先复用内容寻址缓存、已验证中间产物、断点续跑和 ledger 幂等状态，减少重复模型调用、重复 evaluator 执行和重复数据读取；缓存命中必须校验 contract/code/data/environment digest。
 - 性能优化不得改变冻结 task、evaluator、seed、预算、数值容差或 acceptance gate。正式比较必须把本机资源指纹、worker/batch/concurrency 参数和实际 usage 写入 manifest/receipt，保证 matched-resource 公平与 replay 可解释。
-- 只有本机资源确实成为已测量瓶颈，且当前阶段的 search value 已支持扩展时，才提出远端或分布式执行；迁移必须另行授权并保持同一证据权威。
+- 增加远端节点或扩展为分布式执行仍需证明现有资源是已测量瓶颈，且当前阶段的 search value 支持扩展；新增主机、付费资源或更改冻结执行环境必须另行授权并保持同一证据权威。
+
+### AutoDL 共享 Worker 隔离
+
+- 将首选 AutoDL 主机视为可能同时运行 EvidenceEvolve、MLEvolve 或其他任务的共享环境。每个 DiscoveryOS job 必须绑定 project、commit、job ID、contract/evaluator/data/environment digest 和资源预算，并使用 DiscoveryOS 专属且 job-scoped 的工作目录、worktree、输出根、日志、锁/PID 状态、进程组、临时目录、端口和缓存 namespace。
+- Python/工具环境必须是 DiscoveryOS 专属并绑定依赖 digest；可以安全复用已验证的只读内容寻址环境或缓存，但不得复用、激活、升级、修复或删除其他项目的虚拟环境、worktree、缓存、artifact、receipt、日志、锁文件或后台服务。不得把共享系统 Python 或另一个项目的环境当作正式运行环境。
+- 派发前必须检查 SSH、目标路径归属与权限、已有锁、活跃进程、CPU/cgroup/cpuset/quota、内存、GPU、磁盘、端口和负载；按当前剩余容量设置有界 worker 数和线程数并为其他任务保留余量，禁止默认占满标称 vCPU，也要通过 `OMP_NUM_THREADS`、`MKL_NUM_THREADS` 等避免嵌套超额订阅。
+- 远端运行必须可归属到单一 job，并持久化 start/progress/terminal、PID/进程组、资源用量和输出 digest。端口和共享缓存必须先检查冲突；同一 repo/branch、共享 create-once root 或 SQLite 写路径不得跨任务并发写入。
+- 停止、重试和清理只能针对经 job manifest/PID/路径边界验证后确认属于当前 DiscoveryOS job 的精确对象。禁止使用宽泛 `pkill`/`killall`、模糊进程匹配、共享目录递归删除、未解析变量或 glob 清理；不得停止、覆盖、移动或删除其他任务的任何进程或文件。
+- 远端只返回 digest-bound metrics、logs、artifacts 和 receipts；本地在校验 job/commit/contract/evaluator/data/environment/resource binding 与完整性后才可接纳结果。远端失败、资源争用或隔离不确定时 fail closed，保留当前 job 的诊断证据并回退或等待，不得触碰其他任务。
 
 ### 运行监控与异常响应
 
