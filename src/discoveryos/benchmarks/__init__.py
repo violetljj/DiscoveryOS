@@ -68,6 +68,7 @@ from .cmi_replication_admission import run_cmi_replication_admission, seal_cmi_r
 from .cmi_fresh_causal_validation import run_cmi_fresh_causal_validation, seal_cmi_fresh_causal_validation
 from .cmi_search_value_r1 import run_cmi_search_value_r1, seal_cmi_search_value_r1
 from .cmi_search_transmission_autopsy import audit_cmi_search_transmission
+from .cmi_forced_lineage_r1 import run_cmi_forced_lineage_r1, seal_cmi_forced_lineage_r1
 from .benchmark_bank import load_benchmark_bank, materialize_bank_instance, validate_benchmark_bank
 
 __all__ = [
@@ -141,6 +142,8 @@ __all__ = [
     "seal_cmi_search_value_r1",
     "run_cmi_search_value_r1",
     "audit_cmi_search_transmission",
+    "seal_cmi_forced_lineage_r1",
+    "run_cmi_forced_lineage_r1",
     "load_benchmark_bank",
     "materialize_bank_instance",
     "validate_benchmark_bank",

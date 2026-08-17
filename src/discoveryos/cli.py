@@ -9,6 +9,8 @@ from pathlib import Path
 from discoveryos.benchmarks import (
     audit_si2_search_causality,
     audit_cmi_search_transmission,
+    run_cmi_forced_lineage_r1,
+    seal_cmi_forced_lineage_r1,
     audit_si2_secondary_usage,
     audit_local_patch_invalids,
     replay_local_patch_mechanics,
@@ -326,6 +328,26 @@ def build_parser() -> argparse.ArgumentParser:
     cmi_transmission.add_argument(
         "--output-workspace", type=Path, default=Path("runs/cmi-search-transmission-autopsy-r1")
     )
+    cmi_lineage_seal = subparsers.add_parser(
+        "cmi-forced-lineage-r1-seal",
+        help="seal the three-arm consumed-V3 forced-lineage transmission protocol",
+    )
+    cmi_lineage_seal.add_argument("--workspace", type=Path, default=Path("runs/cmi-forced-lineage-transmission-r1"))
+    cmi_lineage_seal.add_argument("--source-workspace", type=Path, required=True)
+    cmi_lineage_seal.add_argument("--real-provider-preflight", type=Path, required=True)
+    cmi_lineage_seal.add_argument("--real-provider-preflight-sha256", required=True)
+    cmi_lineage_seal.add_argument("--model", required=True)
+    cmi_lineage_seal.add_argument("--codex-command", required=True)
+    cmi_lineage_seal.add_argument("--reasoning-effort", required=True)
+    cmi_lineage_run = subparsers.add_parser(
+        "cmi-forced-lineage-r1-run",
+        help="run the sealed three-arm consumed-V3 forced-lineage protocol",
+    )
+    cmi_lineage_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-forced-lineage-transmission-r1"))
+    cmi_lineage_run.add_argument("--manifest-digest", required=True)
+    cmi_lineage_run.add_argument("--model", required=True)
+    cmi_lineage_run.add_argument("--codex-command", required=True)
+    cmi_lineage_run.add_argument("--reasoning-effort", required=True)
     bank_validate = subparsers.add_parser(
         "benchmark-bank-validate",
         help="validate the pinned Benchmark Bank v1 registry without consuming any shard",
@@ -968,13 +990,33 @@ def main(argv: list[str] | None = None) -> int:
                     provider=provider,
                     progress=lambda message: print(message, file=sys.stderr, flush=True),
                 )
-        elif args.command in {"cmi-search-value-r1-seal", "cmi-search-value-r1-run"}:
+        elif args.command in {
+            "cmi-search-value-r1-seal",
+            "cmi-search-value-r1-run",
+            "cmi-forced-lineage-r1-seal",
+            "cmi-forced-lineage-r1-run",
+        }:
             provider = CodexExecProvider(
                 command=tuple(shlex.split(args.codex_command, posix=False)),
                 model=args.model,
                 reasoning_effort=args.reasoning_effort,
             )
-            if args.command == "cmi-search-value-r1-seal":
+            if args.command == "cmi-forced-lineage-r1-seal":
+                result = seal_cmi_forced_lineage_r1(
+                    args.workspace,
+                    source_workspace=args.source_workspace,
+                    provider_preflight_path=args.real_provider_preflight,
+                    provider_preflight_sha256=args.real_provider_preflight_sha256,
+                    provider=provider,
+                )
+            elif args.command == "cmi-forced-lineage-r1-run":
+                result = run_cmi_forced_lineage_r1(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+            elif args.command == "cmi-search-value-r1-seal":
                 result = seal_cmi_search_value_r1(
                     args.workspace,
                     cmi_r7_workspace=args.cmi_r7_workspace,
