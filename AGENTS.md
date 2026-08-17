@@ -29,6 +29,9 @@ DiscoveryOS 是证据优先的统一算法研究内核。它把外部算法发�
 
 ## 本地执行与性能
 
+- Windows 本地环境的唯一维护入口是 `pwsh -NoProfile -File scripts/project.ps1 <doctor|bootstrap|test|run|rebuild>`。进入仓库先运行 `doctor`；不要裸用全局 `python`、`py -3.11` 或 `pip install`。项目 Python 由 `.python-version` 固定，依赖由 `pyproject.toml` 与 `uv.lock` 决定。
+- `rebuild` 只允许删除解析后仍严格等于仓库根 `.venv` 且不是 junction/symlink 的目录；不得用它清理 `runs/`、收据、artifact 或任何 consumed evidence。
+
 - 默认在当前本机完成开发、测试、benchmark 和正式研究运行。除非用户明确授权，或冻结协议本身要求特定外部设备/环境，不使用云端、远端 worker 或外部计算服务。
 - 调用本机工具前先查 `docs/LOCAL_ENVIRONMENT.md`，并执行其中的轻量版本检查。路径清单是已验证快照，不替代运行时验证；尤其不要裸用解析到 WindowsApps 的 `codex`。
 - 长时间或高资源任务启动前，先只读探测可用逻辑 CPU、内存、GPU/显存、磁盘空间和当前负载，再选择并发度、batch size、worker pool 和输出位置；不要硬编码某台机器的瞬时配置。

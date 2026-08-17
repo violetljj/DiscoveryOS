@@ -1,5 +1,18 @@
 # DiscoveryOS
 
+## Local environment
+
+On Windows, use the repository-owned environment entry point instead of a global Python or ad hoc `pip install` commands:
+
+```powershell
+pwsh -NoProfile -File scripts/project.ps1 doctor
+pwsh -NoProfile -File scripts/project.ps1 bootstrap
+pwsh -NoProfile -File scripts/project.ps1 test
+pwsh -NoProfile -File scripts/project.ps1 run -Module discoveryos -TargetArguments --help
+```
+
+`.python-version` selects Python 3.11.9, `uv.lock` fixes project resolution, and `.venv` is disposable. `rebuild` is limited to the verified project `.venv`; run and evidence directories are never cleanup targets.
+
 DiscoveryOS 是一个“证据优先”的统一算法研究内核。它把其他算法发现系统中有价值的机制重构为共享 Research Graph、Evidence Model、Candidate Store、Budget/Fidelity Controller、Memory 和异步执行底座的内部原语；官方原版系统只作为隔离 external challengers。当前版本从零实现了可运行的 **Phase 0 + Phase 1 垂直切片**：它能冻结研究协议、生成内容寻址候选、异步执行 G0/G1/G2 多保真赛马、先过硬约束再维护 Pareto front，并在 winner 冻结后通过独立命令执行 G7 final-blind 认证。
 
 它不是把 ShinkaEvolve、AdaEvolve、EvoX 等完整 runtime 串在一起，也不让多套 population/memory/budget/evaluator 语义进入 Discovery Mode，更不把调度分数冒充科学结论。外部 adapter 只服务 Benchmark Mode 的隔离公平对照。

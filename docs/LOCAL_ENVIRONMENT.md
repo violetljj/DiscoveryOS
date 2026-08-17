@@ -4,6 +4,17 @@
 
 ## 首选项目入口
 
+Windows 本地环境统一通过以下入口维护；它会检查 `.python-version`、`uv.lock`、项目 `.venv` 和核心导入，不依赖终端当前激活状态：
+
+```powershell
+pwsh -NoProfile -File scripts/project.ps1 doctor
+pwsh -NoProfile -File scripts/project.ps1 bootstrap
+pwsh -NoProfile -File scripts/project.ps1 test
+pwsh -NoProfile -File scripts/project.ps1 run -Module discoveryos -TargetArguments --help
+```
+
+不要向 `.venv` 手工执行 `pip install`。环境损坏时使用 `project.ps1 rebuild`；该命令只会删除经过边界验证的项目 `.venv`，不会接触 `runs/` 或证据资产。
+
 | 用途 | 首选位置 | 已验证状态 |
 |---|---|---|
 | 仓库根 | `E:\DiscoveryOS` | `main` 跟踪 `origin/main` |
