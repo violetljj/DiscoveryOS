@@ -120,3 +120,17 @@
 - **决定**：接受 CIB-R1 verdict `PARENT_INTERVENTION_VALUE_NOT_ESTABLISHED_UNDER_STRONG_STOCHASTIC_GENERATOR`。实际 SI-2 Parent receipts 的 non-incumbent intervention 保持 control-flow 事实，但在冻结强模型 downstream 中没有产生超出 state-local stochastic null 的 behavioral manipulation，九个 intervention pairs 的 final descendant value 全为 tie。因此 Parent 不获得现实机制 admission，也不获得 fresh search-value budget 资格。
 - **原因**：Calibration 与 validation 的 58 个 branches 全部可评估、资源门通过、live sensitivity 成立，排除了 bench 完全失灵或系统失败这一解释。与此同时，`0/3` states 通过 behavioral manipulation、`0/3` 通过 persistence/benefit、exact-sign `p=1.0`，没有支持稳定正向效应的证据。
 - **后果**：SI-3 继续关闭，不在 CIB-R1 consumed states 上改 prompt、margin、operator、state split 或增加 replicate 追逐正结果。该负结论只约束冻结的 consumed-state/model/operator surface；不得扩写为 Parent 普遍无效，但也不得用 mechanics、deterministic replay 或完整系统偶然胜负绕过此 admission。
+
+## D-018：以完整冻结生成合同结算 Parent，而非对机制本体作普遍零效应宣判
+
+- **状态**：Accepted
+- **决定**：将 CIB-R1 的预算与治理状态冻结为 `CAUSALLY_INERT_IN_CURRENT_REAL_GENERATION_REGIME`。作用域同时绑定当前 Parent policy、CIB-R1 prompt/context、三步 batched stochastic generator、冻结 model configuration 和 consumed validation surface；科学决定为 `NOT_ADMITTED`，预算为 `CLOSED`，differentiation claim 撤回，同时保留 implementation、lineage 和历史 control-flow receipt。
+- **原因**：CIB-R1 的 live sensitivity、可评估性和资源门均成立，但 Parent 在 `0/3` states 改变下游 behavior、`0/3` states 产生 benefit，九个 final pairs 全 tie。这足以关闭同一合同上的继续投资，却没有覆盖其他 inheritance contract、模型、prompt binding 或独立 surface。
+- **后果**：禁止在 consumed CIB-R1 surface 上加 seeds、调 Parent probability、事后换 margin、调 prompt 或将 ties 改写为弱正信号。只有新版本 generation/inheritance contract、新 hypothesis、新 calibration 和独立 CIB admission 全部成立时才可重新开放；该状态不得缩写成“Parent 永远无效”。
+
+## D-019：以 Generator Conditioning Fidelity 作为昂贵下游因果预算的前置门
+
+- **状态**：Accepted
+- **决定**：在继续研究 controller、Parent、Failure Evidence 或 Operator value 前，先对 `PARENT_SOURCE`、`FAILURE_EVIDENCE` 和 `MECHANISM_BRIEF` 分别执行单变量 conditioning 诊断。GCF 用 same-condition 独立 stochastic null，逐阶段测量 proposal、implementation、repair、final 的 condition survival，并用冻结 hidden behavioral probe 区分结构响应与语义执行。GCF-0 calibration、GCF-1 detectability、GCF-2 semantic transmission 和 GCF-3 downstream causal value eligibility 分开裁决。
+- **原因**：CIB-R1 只说明 Parent 条件没有在最终 downstream 产生可分辨价值，不能定位条件未进入 proposal、计划未翻译、repair 同质化、结构差异未变成行为，还是 behavior 存活但 utility 为 tie。直接再跑 controller A/B 会继续混淆生成通道与上游策略价值。
+- **后果**：Synthetic identifiability corpus 和 consumed mechanics/development states 可用于 GCF-0 至 GCF-2 诊断，但不得产生 generalization 或 search-value claim。只有现实 channel 在独立 validation states 上通过 GCF-2，才有资格以新 contract、hypothesis、calibration、margin 和独立 surface 预注册 GCF-3 trial；conditioning fidelity 是 downstream value 的必要条件，不是充分条件。

@@ -117,3 +117,4 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - SI-2 fresh search-value trial：`SI2_FRESH_SEARCH_VALUE_TRIAL.md`
 - SI-2 consumed-trace causal diagnosis：`SEARCH_CAUSALITY_AUTOPSY.md`
 - Causal Intervention Bench：`CAUSAL_INTERVENTION_BENCH.md`
+- Generator Conditioning Fidelity：`GENERATOR_CONDITIONING_FIDELITY.md`

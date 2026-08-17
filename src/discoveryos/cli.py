@@ -29,6 +29,9 @@ from discoveryos.benchmarks import (
     calibrate_parent_real_cib,
     run_parent_real_cib,
     seal_parent_real_cib_protocol,
+    parent_cib_r1_settlement,
+    run_synthetic_gcf,
+    seal_synthetic_gcf_protocol,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
@@ -177,6 +180,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     cib_parent_run.add_argument("--workspace", type=Path, default=Path("runs/cib-parent-dev-r1"))
     cib_parent_run.add_argument("--manifest-digest", required=True)
+    subparsers.add_parser(
+        "parent-cib-r1-settlement",
+        help="print the machine-readable narrow Parent settlement bound to CIB-R1",
+    )
+    gcf_seal = subparsers.add_parser(
+        "gcf-seal-synthetic",
+        help="seal the no-model Generator Conditioning Fidelity calibration fixture",
+    )
+    gcf_seal.add_argument("--workspace", type=Path, default=Path("runs/gcf-synthetic-r1"))
+    gcf_run = subparsers.add_parser(
+        "gcf-run-synthetic",
+        help="execute an already-sealed GCF synthetic calibration fixture",
+    )
+    gcf_run.add_argument("--workspace", type=Path, default=Path("runs/gcf-synthetic-r1"))
+    gcf_run.add_argument("--manifest-digest", required=True)
     for name, help_text in (
         ("cib-r1-seal-parent-real", "seal actual consumed SI-2 parent interventions before stochastic calls"),
         ("cib-r1-calibrate-parent-real", "run outcome-blind CIB-R1 stochastic calibration states"),
@@ -325,6 +343,12 @@ def main(argv: list[str] | None = None) -> int:
             result = seal_parent_dev_cib_protocol(args.workspace)
         elif args.command == "cib-run-parent-dev":
             result = run_parent_dev_cib(args.workspace, manifest_digest=args.manifest_digest)
+        elif args.command == "parent-cib-r1-settlement":
+            result = parent_cib_r1_settlement()
+        elif args.command == "gcf-seal-synthetic":
+            result = seal_synthetic_gcf_protocol(args.workspace)
+        elif args.command == "gcf-run-synthetic":
+            result = run_synthetic_gcf(args.workspace, manifest_digest=args.manifest_digest)
         elif args.command in {
             "cib-r1-seal-parent-real",
             "cib-r1-calibrate-parent-real",

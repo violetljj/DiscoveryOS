@@ -23,6 +23,11 @@ from .parent_intervention_real import (
     run_parent_real_cib,
     seal_parent_real_cib_protocol,
 )
+from .conditioning_fidelity import (
+    parent_cib_r1_settlement,
+    run_synthetic_gcf,
+    seal_synthetic_gcf_protocol,
+)
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -52,4 +57,7 @@ __all__ = [
     "seal_parent_real_cib_protocol",
     "calibrate_parent_real_cib",
     "run_parent_real_cib",
+    "parent_cib_r1_settlement",
+    "seal_synthetic_gcf_protocol",
+    "run_synthetic_gcf",
 ]
