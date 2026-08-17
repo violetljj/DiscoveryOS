@@ -50,12 +50,14 @@ EMC_R2_INSTRUMENTATION_SENSITIVITY_PASSED
 EMC_R2_PROVIDER_PREFLIGHT_PASSED
 EMC_R2_CALIBRATION_NOT_EVALUABLE_RESOURCE_AND_DUPLICATE_CALL
 EMC_R2_VALIDATION_BLOCKED_NOT_RUN
-NO_EXECUTABLE_MECHANISM_CONTRACT_ADMITTED
 EMC_PROVIDER_INVOCATION_JOURNAL_MECHANICS_READY
 EMC_RESOURCE_CALIBRATION_R1_PROTOCOL_IMPLEMENTED
 EMC_R3_RESOURCE_CALIBRATED_CONFIRMATION_PROTOCOL_IMPLEMENTED
-EMC_RESOURCE_CALIBRATION_R1_NOT_YET_SEALED
-EMC_R3_NOT_YET_SEALED
+EMC_RESOURCE_CALIBRATION_R1_PASSED
+EMC_R3_INSTRUMENTATION_SENSITIVITY_PASSED
+EMC_R3_CALIBRATION_PASSED
+EMC_R3_EXECUTABLE_CONTRACT_TRANSMISSION_CONFIRMED_ON_TWO_NEW_DEV_STATES
+EMC_OPERATOR_CAUSAL_VALUE_TRIAL_PROTOCOL_AUTHORIZED_NOT_RUN
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -165,7 +167,9 @@ EMC_R3_NOT_YET_SEALED
 17. EMC-R1 在 commit `cc95730` 封存，E0 的 4/4 instrumentation controls 通过；E1 因不存在的 `GenerationKind.STRUCTURAL_REWRITE` 在 provider 前失败，0 provider calls、0 tokens，正式关闭为 `EMC_R1_NOT_EVALUABLE_IMPLEMENTATION_ENUM`。R1 root 不修补。EMC-R2 只把 request kind 修正为已有的 `PROPOSAL` 并换新 protocol/root，其余科学语义不变。
 18. EMC-R2 在 commit `fb643f5` 封存。E0 4/4 通过；E1 以 1 call、19,246 tokens 通过。E2 的六个唯一 checkpoint 均 evaluable、source valid，并 6/6 通过 static contract、独立 runtime counter 与 invariant canary；两条件 signature 稳定为 `[1,0,0]` 和 `[1,1,0]`。但 1/6 calls 使用 61,681 tokens，超过冻结 60,000 ceiling；恢复期间还发生同一 draw 的 create-once writer race，证明至少 1 次重复 provider invocation，实际 usage 至少 8 calls 且超过已入账的 255,420 tokens，精确 usage 不可恢复。正式 verdict 为 `EMC_R2_CALIBRATION_NOT_EVALUABLE_RESOURCE_AND_DUPLICATE_CALL`；E3 validation 0 calls，R2 root 关闭，不提 ceiling、不补跑。完整证据边界见 [`EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md`](EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md)。
 19. R2 后的 mechanics-only 修复为 provider 调用增加独立 durable journal：调用前原子写入 request-bound owner claim，正常返回或 provider failure 后立即持久化 terminal response、usage 与 request identity；已有 terminal 可零调用恢复，只有 claim 而无 terminal 时永久 fail closed，禁止根据 checkpoint 缺失猜测性重发。phase-level audit 还会在创建 worker pool 前因任一 orphan claim 阻断全部新调用。并发与 orphaned-claim 测试证明同一 request 不会重复进入 provider。该修复不修改 R2 root、不补计 R2 usage，也不授权新科学协议或提高 claim ceiling。
-20. EMC Resource Calibration R1 与 EMC-R3 协议已实现但尚未封存。前者是独立四调用、非科学 resource corpus，按预冻结公式从历史最大 `61,681` 与实测最大值推导 ceiling；后者只在该 authority 通过并绑定后，使用两份 never-consumed dev states 顺序运行 E0、E2、E3。任何 positive 最多授权另行设计 Operator causal-value protocol，不直接开放 search-value 执行。详见 [`EMC_R3_RESOURCE_CALIBRATED_CONFIRMATION.md`](EMC_R3_RESOURCE_CALIBRATED_CONFIRMATION.md)。
+20. EMC Resource Calibration R1 在 commit `49462e0` 封存并通过：4/4 non-scientific calls evaluable，token distribution 为 `17,560–53,449`，总计 `140,495`；预冻结公式仍由历史最大 `61,681` 控制，推导 scientific ceiling `78,000`。resource record SHA-256 为 `49d86e376997ff98ffecf319198e3a7589282bf0b086215465655cbb9b2f84bc`。
+21. EMC-R3 在同一 commit 以 manifest digest `aec9e99df6e1b7f214e553a1d4f6115057f5f183791546cf18be2cdc1bdfed64` 封存。E0 4/4 controls 通过；assignment calibration 与独立 coverage validation 均为 6/6 evaluable、source/static/runtime/invariant/resource 全部合规，Direct 与 Repair signatures 在两个 states 上分别稳定为 `[1,0,0]` 与 `[1,1,0]`。12 scientific calls 总计 `500,474` tokens，最大单调用 `57,118 < 78,000`；12 claims、12 terminals、12 draw checkpoints、0 orphan、0 duplicate。
+22. 正式 verdict 为 `EMC_R3_EXECUTABLE_CONTRACT_TRANSMISSION_CONFIRMED_ON_TWO_NEW_DEV_STATES`，claim ceiling 仅为 resource-calibrated two-state development transmission。它证明 structured contract 能够可控且由独立 harness 观察地改变真实调用路径；utility 仍是 record-only，search value、superiority 与 production readiness 均未建立。下一步只授权另行预注册一个 Operator causal-value protocol，尚未运行，也未直接开放 fresh search-value budget。完整边界见 [`EMC_R3_RESOURCE_CALIBRATED_CONFIRMATION.md`](EMC_R3_RESOURCE_CALIBRATED_CONFIRMATION.md)。
 
 ## 状态更新规则
 

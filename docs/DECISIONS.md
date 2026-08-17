@@ -218,3 +218,10 @@
 - **决定**：先封存并运行四调用的 `EMC_RESOURCE_CALIBRATION_R1`，只记录 schema executability、exact token 与 wall distribution。科学 ceiling 在资源调用前冻结为 `ceil(max(61,681, observed_max) * 1.25 / 1,000) * 1,000`，且不得超过 100,000。资源 authority 通过后，EMC-R3 才可绑定其 record SHA-256，在全新 assignment calibration 与 coverage validation states 上各运行 3A+3B。
 - **原因**：R2 已产生正向 actuation diagnostics，但资源 ceiling 与重复调用使其不可评价。新的问题不是补跑 R2，而是在已修复调用权威和独立实测 ceiling 下，对两份 never-consumed states 做 confirmatory transmission。资源测量必须先于科学封存，避免看到 scientific output 后选择 ceiling。
 - **后果**：E0 或 E2 失败立即阻断后续调用。E3 positive 只支持 two-state development transmission，并授权另行预注册 Operator causal-value protocol；它不建立 utility/search value，也不直接发放 fresh search-value budget。任何 resource、provider 或 orphaned invocation failure 都记为 `NOT_EVALUABLE`。
+
+## D-032：确认 resource-calibrated executable actuation，转向 Operator causal value
+
+- **日期**：2026-08-17
+- **决定**：接受 `EMC_RESOURCE_CALIBRATION_R1_PASSED` 与 `EMC_R3_EXECUTABLE_CONTRACT_TRANSMISSION_CONFIRMED_ON_TWO_NEW_DEV_STATES`。资源 corpus 4/4 evaluable，推导 ceiling `78,000`；R3 的 assignment calibration 与独立 coverage validation 各 6/6 通过 source validity、static contract、external runtime counters、invariant canary 与 ceiling。两个 states 上 Direct/Repair signature 均稳定为 `[1,0,0]` / `[1,1,0]`，within-condition categorical variation 为零。
+- **原因**：R3 使用 never-consumed states、独立资源 authority、create-once receipts 和 durable at-most-once journal，修复了 R2 的两项不可评价原因。12 scientific calls 共 `500,474` tokens，最大 `57,118`；审计得到 12 claims、12 terminals、12 checkpoints、0 orphan、0 duplicate，因此 actuation observation 不再受 resource/accounting violation 污染。
+- **后果**：允许另行预注册一个 Operator causal-value protocol，比较已确认可执行的机制是否产生超出同条件 stochastic null 的 utility/value。不得把 EMC-R3 的 record-only utility、两状态 transmission 或 resource compliance 写成 search value、算法优越性或生产能力；fresh search-value execution 仍关闭，直到独立 value gate 通过。

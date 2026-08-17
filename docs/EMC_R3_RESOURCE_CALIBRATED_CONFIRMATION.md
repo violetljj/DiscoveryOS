@@ -5,9 +5,11 @@
 ```text
 EMC_RESOURCE_CALIBRATION_R1_PROTOCOL_IMPLEMENTED
 EMC_R3_RESOURCE_CALIBRATED_CONFIRMATION_PROTOCOL_IMPLEMENTED
-EMC_RESOURCE_CALIBRATION_R1_NOT_YET_SEALED
-EMC_R3_NOT_YET_SEALED
-NO_EXECUTABLE_MECHANISM_CONTRACT_ADMITTED
+EMC_RESOURCE_CALIBRATION_R1_PASSED
+EMC_R3_INSTRUMENTATION_SENSITIVITY_PASSED
+EMC_R3_CALIBRATION_PASSED
+EMC_R3_EXECUTABLE_CONTRACT_TRANSMISSION_CONFIRMED_ON_TWO_NEW_DEV_STATES
+EMC_OPERATOR_CAUSAL_VALUE_TRIAL_PROTOCOL_AUTHORIZED_NOT_RUN
 ```
 
 EMC-R3 does not reopen R1 or R2. It asks a new confirmatory question on two never-consumed development states: under an independently calibrated per-call ceiling and durable at-most-once provider accounting, does the same deterministic Executable Mechanism Contract reproducibly actuate its mutually exclusive runtime paths?
@@ -58,3 +60,17 @@ python -m discoveryos emc-r3-validate --workspace runs/emc-r3-resource-calibrate
 ```
 
 Both roots are create-once. Thresholds, tasks, contracts, replicates and ceilings cannot change after their respective seals.
+
+## Results
+
+Both protocols were sealed at commit `49462e0` with `gpt-5.6-sol / medium` and `codex-cli 0.148.0-alpha.9`.
+
+Resource Calibration R1 used 4/4 evaluable calls with token costs `34,589`, `34,897`, `17,560`, and `53,449` (`140,495` total). Because the frozen historical maximum `61,681` exceeded the observed maximum, the frozen formula produced a `78,000`-token scientific ceiling. Resource result SHA-256 is `49d86e376997ff98ffecf319198e3a7589282bf0b086215465655cbb9b2f84bc`.
+
+EMC-R3 manifest digest is `aec9e99df6e1b7f214e553a1d4f6115057f5f183791546cf18be2cdc1bdfed64`; manifest file SHA-256 is `08de47246f6df358b2b3d7c56c14f7d32e9ae1e0a8bbde593f1c62633afcd129`. E0 passed 4/4 controls with zero model calls; record SHA-256 is `900a7804b53179de47e7f33f6a7a882e0bacaaf1dcad85ac28b339bf505a442c`.
+
+E2 assignment calibration passed 6/6 draws and used `245,080` tokens; record SHA-256 is `451063eba0474da4d1f96cf538b5e98255e74106bf3f31fe7b23c21f5fdea2bc`. E3 independent coverage validation also passed 6/6 and brought scientific usage to 12 calls and `500,474` tokens; validation record SHA-256 is `d6c2d4bb4b89d116014cb25f1d2232e889abd6dd059c10f407b9d55235ee05ec`. The maximum scientific call used `57,118` tokens.
+
+In both states, Direct Construction had the single runtime signature `[1,0,0]` and Post-Construction Repair had `[1,1,0]`; all sources, static obligations, runtime obligations, invariant canaries and resource checks passed. Journal audit found 12 claims, 12 terminals, 12 draw checkpoints, zero orphan claims and no duplicate invocation evidence.
+
+The maximum claim is `RESOURCE_CALIBRATED_EXECUTABLE_CONTRACT_TRANSMISSION_ON_TWO_NEW_DEV_STATES_ONLY`. Assignment utility was identical across both conditions. Coverage utility was record-only and not a frozen causal-value comparison. The result authorizes a separate Operator causal-value protocol but does not establish utility, search value, superiority or production readiness.
