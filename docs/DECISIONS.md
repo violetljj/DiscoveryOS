@@ -197,3 +197,10 @@
 - **决定**：EMC-R1 的 E0 通过后，E1 在 provider 调用前因不存在的 `GenerationKind.STRUCTURAL_REWRITE` 抛出 `AttributeError`。R1 记为 `EMC_R1_NOT_EVALUABLE_IMPLEMENTATION_ENUM`，0 provider calls、0 tokens，不产生 semantic result，也不原地修改 create-once root。EMC-R2 使用已有 `GenerationKind.PROPOSAL`，换新 protocol ID、records、state IDs 与 workspace。
 - **原因**：该失败是封存后暴露的纯 executability blocker，不是 Mechanism Object、contract 或 runtime behavior 的证据。原地修改会破坏 manifest 的 commit/source binding。
 - **后果**：R2 保持 R1 的 objects、compiler、tasks、seeds、probe、replicates、gate、60,000-token ceiling 与 claim ceiling；不得趁版本切换调整科学语义。
+
+## D-029：EMC-R2 calibration 因 ceiling 与重复调用审计失败而关闭
+
+- **日期**：2026-08-17
+- **决定**：R2 的 E0 与 E1 通过；E2 六个唯一 checkpoint 虽全部通过 source validity、static contract、external runtime counters 与 invariant canary，仍以 `EMC_R2_CALIBRATION_NOT_EVALUABLE_RESOURCE_AND_DUPLICATE_CALL` 关闭。原因是 1/6 persisted implementation calls 使用 61,681 tokens，超过冻结 60,000 ceiling；同时 interrupted aggregation 后的恢复与迟到 worker 对同一 create-once record 发生冲突，证明至少多发 1 次未入账 provider invocation。
+- **原因**：资源门和 matched-call accounting 是协议有效性，不因 executable diagnostics 看起来正向而豁免。已入账 7 calls、255,420 tokens 不是实际完整 usage；只能诚实声明至少 8 calls、超过 255,420 tokens，不能猜测未持久化 duplicate 的 tokens。
+- **后果**：E3 validation 保持 0 calls，`NO_EXECUTABLE_MECHANISM_CONTRACT_ADMITTED`，fresh value trial 与 SI-3 继续关闭。R2 root 不提高 ceiling、不改变 resume semantics、不补 replicate 或重跑相同 states。未来若修复，应先做 mechanics-only durable in-flight ownership，且不得用 R2 的 6/6 diagnostics 追逐同一科学 pass。
