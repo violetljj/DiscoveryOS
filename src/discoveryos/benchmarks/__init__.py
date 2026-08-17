@@ -16,6 +16,8 @@ from .search_value_mvp0 import (
 from .strategy_integration_si1 import run_strategy_integration_si1_pilot
 from .si2 import audit_si2_secondary_usage, run_si2_confirmation, run_si2_discovery, seal_si2_protocol
 from .search_causality_autopsy import audit_si2_search_causality
+from .causal_intervention_bench import run_synthetic_cib, seal_synthetic_cib_protocol
+from .parent_intervention_dev import run_parent_dev_cib, seal_parent_dev_cib_protocol
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -38,4 +40,8 @@ __all__ = [
     "run_si2_confirmation",
     "audit_si2_secondary_usage",
     "audit_si2_search_causality",
+    "seal_synthetic_cib_protocol",
+    "run_synthetic_cib",
+    "seal_parent_dev_cib_protocol",
+    "run_parent_dev_cib",
 ]

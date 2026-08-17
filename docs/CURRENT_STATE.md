@@ -18,6 +18,11 @@ SI2_SEARCH_VALUE_NOT_ESTABLISHED
 SI2_VANILLA_WINNER_CONFIRMED_ON_WITHHELD_COHORT
 SI2_EXTERNAL_BASELINE_NOT_EVALUABLE
 SI2_SEARCH_CAUSALITY_AUTOPSY_COMPLETE
+CAUSAL_INTERVENTION_BENCH_MECHANICS_READY
+CIB_SYNTHETIC_SENSITIVITY_ESTABLISHED
+PARENT_CIB_DEVELOPMENT_TRACE_COMPLETE
+PARENT_VALUE_TRANSMISSION_DETECTED_ON_SEMANTICS_PRESERVING_DEV_REPLAY
+NO_REAL_MECHANISM_INTERVENTION_ADMITTED
 NEXT_FRESH_SEARCH_TRIAL_NOT_ADMITTED
 ```
 
@@ -89,12 +94,22 @@ NEXT_FRESH_SEARCH_TRIAL_NOT_ADMITTED
 - CURRENT 的 parent policy 调用 27 次，其中 18 次存在多 parent、6 次选择非 incumbent；novelty 检查 24 次、拒绝 2 次、resample 0 次。它们是直接 control-flow intervention，不是下游 counterfactual causal proof。
 - 当前 SI-2 instrumentation 不能识别 algorithmic root、跨臂 behavioral signature、统一 basin 或无干预反事实，因此下一阶段先补 causal admission，不开放 SI-3 fresh budget。完整边界见 [`SEARCH_CAUSALITY_AUTOPSY.md`](SEARCH_CAUSALITY_AUTOPSY.md)。
 
+## Causal Intervention Bench V1
+
+- 已实现 create-once 的 paired intervention harness，冻结 decision state、policy/default/actual action、behavioral probe、matched downstream budget、独立 stochastic draws 和分层 effect receipts。
+- Null control 使用 state-local `A/A` 独立重复估计 stochastic envelope；positive control 只验证 bench sensitivity，不计入机制收益。Gate 分开识别 intervention 未发生、行为改变但 utility 等价、即时效果未传导和可复现的 intervention value。
+- 首个 no-model synthetic fixture 冻结 3 个 states，运行 27 个 pairs；positive、behavior、immediate、persistence 和 benefit checks 均为 `3/3`，证明 bench 能检测预构造差异，状态为 `CAUSAL_INTERVENTION_BENCH_MECHANICS_READY`。
+- Manifest digest 为 `36906c865a48022ddd61f6257e7698d0a1a71127cd7273a416405de26f4b40ac`，最终 report SHA-256 为 `17261f398218713c29212e6f4b16ef18f20951ab0a7d45455d79981fc38827f2`；模型调用、真实 evaluator 调用和 fresh-task 消耗均为零。
+- Synthetic fixture 的 `INTERVENTION_VALUE_ADMITTED` 只验证 gate 可达，不 admit 现实 Parent、Novelty 或 Memory，也不建立 search value。SI-3 仍保持关闭；完整边界见 [`CAUSAL_INTERVENTION_BENCH.md`](CAUSAL_INTERVENTION_BENCH.md)。
+- 实际 `ShinkaWeightedParentSelectionPolicy` 已接入三个 consumed MVP-0 dev states：3/3 receipts 可重放地选择 non-incumbent parent，18 个 paired receipts 检出 3/3 behavioral、immediate、persistence 和 benefit effects。Parent-dev manifest digest 为 `92558fb944b9062ce88b7f3fd2aa6e86968251cc9ded2365dfe120b55e517ec6`，report SHA-256 为 `50404450613130fba2b9823c2b3e50504dc4e8883506952fb3e3778a9394ad67`。
+- Parent-dev 只建立 `PARENT_VALUE_TRANSMISSION_DETECTED_ON_SEMANTICS_PRESERVING_DEV_REPLAY`：states/sources/seeds 为 mechanics 构造，null 是 deterministic zero-variance，downstream 不生成真实 child。因此它证明实际 policy 的 causal path 可观测，不 admit 现实 Parent value，也不改变 SI-3 gate。
+
 ## 当前下一道门
 
 1. SI-2 已 consumed，禁止在其 9+3 tasks 上调 parent、novelty、prompt、预算或阈值，也不得用同分布重跑改写 `SI2_SEARCH_VALUE_NOT_ESTABLISHED`。
 2. 如仍需 external competitiveness，先在 mechanics-only 环境修复 Windows Headless `spawn EINVAL`，再用新协议版本、新 fresh tasks 和新 create-once root；不得补跑 SI-2 外部空位。
 3. 任何下一代搜索设计必须解释为何三条内部系统在 9/9 tasks 上 final 完全持平，并用新鲜 cohort 证伪；不能把更复杂机制或 confirmation 的 Vanilla 绝对改进误写为 DiscoveryOS superiority。
-4. 新机制进入 fresh trial 前必须先在 mechanics-only sandbox 证明可审计的 intervention effect；先冻结 algorithmic-root/behavioral probes 和默认动作反事实面，再考虑 Adaptive Discovery admission。
+4. 新机制进入 fresh trial 前必须先接入 CIB：用 outcome-blind calibration states 冻结 probe/margin，再在未参与校准的 representative dev states 上用真实 stochastic downstream 证明超出 null、可持续且跨 state 复现的 intervention value。Synthetic sensitivity 和 semantics-preserving Parent replay 都不能替代该 admission。
 5. 在新的 search-value admission 成立前，不扩展远端计算、生产 blind isolation 或更多机制数量。
 
 ## 状态更新规则
@@ -115,3 +130,4 @@ NEXT_FRESH_SEARCH_TRIAL_NOT_ADMITTED
 - SI-1R：[`SI1_PARENT_NOVELTY_REPAIR.md`](SI1_PARENT_NOVELTY_REPAIR.md)
 - SI-2：[`SI2_FRESH_SEARCH_VALUE_TRIAL.md`](SI2_FRESH_SEARCH_VALUE_TRIAL.md)
 - SI-2 causal autopsy：[`SEARCH_CAUSALITY_AUTOPSY.md`](SEARCH_CAUSALITY_AUTOPSY.md)
+- Causal Intervention Bench：[`CAUSAL_INTERVENTION_BENCH.md`](CAUSAL_INTERVENTION_BENCH.md)

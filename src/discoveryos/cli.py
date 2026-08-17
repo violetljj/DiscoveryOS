@@ -22,6 +22,10 @@ from discoveryos.benchmarks import (
     run_si2_confirmation,
     run_si2_discovery,
     seal_si2_protocol,
+    run_synthetic_cib,
+    seal_synthetic_cib_protocol,
+    run_parent_dev_cib,
+    seal_parent_dev_cib_protocol,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
@@ -148,6 +152,28 @@ def build_parser() -> argparse.ArgumentParser:
     si2_causality.add_argument(
         "--output-workspace", type=Path, default=Path("runs/si2-search-causality-autopsy-r3")
     )
+    cib_seal = subparsers.add_parser(
+        "cib-seal-synthetic",
+        help="seal the no-model Causal Intervention Bench synthetic sensitivity fixture",
+    )
+    cib_seal.add_argument("--workspace", type=Path, default=Path("runs/cib-synthetic-r1"))
+    cib_run = subparsers.add_parser(
+        "cib-run-synthetic",
+        help="execute an already-sealed CIB synthetic sensitivity fixture",
+    )
+    cib_run.add_argument("--workspace", type=Path, default=Path("runs/cib-synthetic-r1"))
+    cib_run.add_argument("--manifest-digest", required=True)
+    cib_parent_seal = subparsers.add_parser(
+        "cib-seal-parent-dev",
+        help="seal consumed development states for a real parent-policy paired trace",
+    )
+    cib_parent_seal.add_argument("--workspace", type=Path, default=Path("runs/cib-parent-dev-r1"))
+    cib_parent_run = subparsers.add_parser(
+        "cib-run-parent-dev",
+        help="run the actual parent policy on frozen consumed development states",
+    )
+    cib_parent_run.add_argument("--workspace", type=Path, default=Path("runs/cib-parent-dev-r1"))
+    cib_parent_run.add_argument("--manifest-digest", required=True)
     for name, help_text in (
         ("si2-run-discovery", "execute the already-sealed SI-2 fresh discovery cohort"),
         ("si2-confirm", "run the frozen SI-2 winner on the withheld confirmation cohort"),
@@ -272,6 +298,14 @@ def main(argv: list[str] | None = None) -> int:
                 manifest_digest=args.manifest_digest,
                 output_workspace=args.output_workspace,
             )
+        elif args.command == "cib-seal-synthetic":
+            result = seal_synthetic_cib_protocol(args.workspace)
+        elif args.command == "cib-run-synthetic":
+            result = run_synthetic_cib(args.workspace, manifest_digest=args.manifest_digest)
+        elif args.command == "cib-seal-parent-dev":
+            result = seal_parent_dev_cib_protocol(args.workspace)
+        elif args.command == "cib-run-parent-dev":
+            result = run_parent_dev_cib(args.workspace, manifest_digest=args.manifest_digest)
         elif args.command in {"si2-seal", "si2-run-discovery", "si2-confirm"}:
             command = tuple(shlex.split(args.codex_command, posix=False))
             local_provider = CodexExecProvider(

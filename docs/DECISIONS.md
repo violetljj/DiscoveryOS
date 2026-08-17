@@ -99,3 +99,10 @@
 - **决定**：SI-2 后不再以增加 parent、novelty、branch、generation、prompt 或外部机制作为默认推进路线。每个新搜索机制必须先在不消耗 fresh search-value cohort 的 mechanics-only sandbox 中证明：它在可审计 receipt 中相对冻结默认动作改变了控制流，并通过预冻结的 algorithmic-root、behavioral-signature 或资源效用指标产生可识别差异。下一代 system-level 设计以 `STRONG_AGENT_DIRECT` 为默认一级 operator，只有预注册的 stagnation、uncertainty、basin collapse 或 multi-objective conflict 才升级重搜索。
 - **原因**：SI-2 autopsy 显示 CURRENT 的 parent 与 novelty 确实发生直接 intervention，三臂候选源码和粗 AST 结构也有分化，但 9/9 final improvement 仍完全相同。现有收据无法识别跨臂 algorithmic basin、behavioral signature 或 paired no-intervention counterfactual；继续加机制会扩大事后解释空间，而不能回答哪些干预真正改变搜索命运。
 - **后果**：SI-3 fresh budget 暂不开放。机制 admission receipt 必须绑定 policy invocation、冻结默认动作、实际动作、即时差异和资源成本；algorithmic-root/behavioral probes 必须在模型调用前冻结。Consumed SI-2 只用于诊断，不用于调参或 superiority claim。开发原则为 `Stop adding mechanisms. Start proving interventions.`
+
+## D-015：CIB 用 state-local null、positive sensitivity 和后代持续性判定价值传导
+
+- **状态**：Accepted
+- **决定**：Causal Intervention Bench 的基本单位是同一冻结 decision state 上的 paired branch。Null control 使用 default action `A/A` 的独立 stochastic draws，在每个 state 内形成噪声 envelope；positive control 只证明观测链能检测预构造的行为与 utility 差异。真实 intervention 必须依次证明 behavioral manipulation 超出 null、效果穿过 immediate child、utility 或 matched-cost efficiency 受益，并在至少两个独立 states 上复现。Proposal/algorithmic-root 标签只作解释面，冻结 behavioral signature 是主要 manipulation check。
+- **原因**：SI-2 已证明 source/AST trajectory 分化，但 9/9 final utility 完全持平。只比较 source、只观察即时 child，或没有 null/positive controls，都无法区分机制无效、模型随机噪声、效果未传导和 evaluator/任务不敏感。
+- **后果**：Synthetic fixture 只能把 CIB 提升为 `MECHANICS_READY`，其构造性 `INTERVENTION_VALUE_ADMITTED` 不授予现实机制 admission。Actual Parent policy 在 consumed dev states 上的 semantics-preserving replay 也只能证明 causal path 可执行；为 exercise 选择的 states/sources/seeds、deterministic zero-variance null 和非生成式 downstream 不能替代真实机制 gate。真实机制必须分开 calibration 与 validation states，先冻结 probe/margin 后再验证；通过 CIB 仅获得 SI-3 fresh-budget eligibility 的候选资格，不直接建立 DiscoveryOS search value。SI-3 在此之前保持关闭。
