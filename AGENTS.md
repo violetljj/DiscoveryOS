@@ -2,19 +2,42 @@
 
 本文件是进入本仓库后必须读取的项目级工作约定。它保存长期有效的边界和执行规则，不保存容易过期的实验数字。开始任务前，先按任务读取下列真源：
 
-1. `docs/PROJECT_CONTEXT.md`：项目目标、核心术语、架构和证据模型。
-2. `docs/CURRENT_STATE.md`：已交付能力、当前 verdict、在研工作和下一道门。
-3. `docs/DECISIONS.md`：已经确定、不得在无新证据时悄悄推翻的设计决策。
-4. `docs/LOCAL_ENVIRONMENT.md`：本机常用解释器、工具、硬件和可调用 Codex CLI 的已验证位置。
-5. 与任务直接相关的 admission、protocol 或 evidence 文档；不要无差别加载所有历史材料。
+1. `docs/SYSTEM_PHILOSOPHY.md`：Harness-first 系统定位、Kernel/Plugin/Profile 边界和研究准入阶梯。
+2. `docs/PROJECT_CONTEXT.md`：项目目标、核心术语、架构和证据模型。
+3. `docs/CURRENT_STATE.md`：已交付能力、当前 verdict、在研工作和下一道门。
+4. `docs/DECISIONS.md`：已经确定、不得在无新证据时悄悄推翻的设计决策。
+5. `docs/LOCAL_ENVIRONMENT.md`：本机常用解释器、工具、硬件和可调用 Codex CLI 的已验证位置。
+6. 与任务直接相关的 admission、protocol 或 evidence 文档；不要无差别加载所有历史材料。
 
 如果代码、当前状态和旧文档冲突，先核查 Git 历史、测试及不可变收据，再修正文档；不得选择对预期结论最有利的一份材料。
 
 ## 项目使命
 
-DiscoveryOS 是证据优先的统一算法研究内核。它把外部算法发现系统中有价值的机制重构成共享 Research Graph、Candidate/Evidence Store、Budget/Fidelity Controller、Memory 和 Runtime 上的内部原语。官方外部系统只允许作为隔离的 Benchmark Mode challenger，不能把各自的 population、memory、budget 或 evaluator 语义带进 Discovery Mode。
+DiscoveryOS 是证据优先的 Algorithm Discovery Harness，不是单一搜索算法，也不是多个完整 runtime 的黑盒编排器。它以极小且稳定的权威内核统一 Research Graph、Candidate/Evidence Store、Budget/Fidelity Controller 和 Runtime，再把 proposal、lineage、meta-strategy、routing 与 memory 作为共享 `ResearchContext` 上的可替换 Research Plugins。外部完整系统默认是隔离的 Benchmark Mode challenger；只有把 population、memory、budget、candidate 与 evaluator 语义归一到 DiscoveryOS 权威后，才可能作为 Discovery Mode plugin。
 
 优先交付可运行、可重放、可证伪的纵向切片。不要用规格占位、空接口或机制数量代替实际发现能力；也不要为了治理完整而拖垮探索能力。探索策略可以快速演进，但证据权威、硬门、盲测隔离和 claim ceiling 不可绕过。
+
+## Harness-first 系统约束
+
+- 稳定 Kernel 只包括 `ProblemContract`、Evaluator/`GateEngine`、Candidate/Evidence/Artifact Store、Budget、Research Graph 与 Runtime。扩展 Kernel 必须证明现有 typed plugin/profile 边界无法表达所需的跨策略权威语义，并追加设计决策；便利性、复用频率或官方实现方式都不是理由。
+- proposal、lineage、parent policy、meta-strategy、routing、memory 与 profile adaptation 默认实现为 Research Plugin 或 profile policy。插件可以覆盖 Search-plane service，但不得替换或 intercept contract、evaluator、GateEngine、ledger、artifact、graph 或 budget authority。
+- 所有 candidate 都属于 DiscoveryOS；`operator_id`、`strategy_id`、外部系统名称和 handoff 只表示 provenance。禁止形成具有权威语义的私有 population、score、budget、evaluator、ledger、memory 或 winner。
+- `ResearchProfile` 必须内容寻址并记录插件顺序、配置、依赖、路由和 revision parent。正式比较前冻结 profile digest；任何变更都创建新 revision，不得原地改写既有 profile 或运行收据。
+- Plugin manifest 至少绑定 `requires`/`provides`、source/version/license/digest、配置与预算、scope/lifecycle/dispose、failure semantics、provenance/replay 和 authority scope。未声明 service publication、authority override、scope leakage 或 teardown failure 必须 fail closed。
+- 外部官方引擎只有在 candidate/evidence/budget/graph 全部写回统一 `ResearchContext`、内部状态不具有科学权威、依赖和资源已绑定、生命周期可审计时，才可申请 Discovery plugin admission；否则只能进入 Benchmark Mode。
+- 同进程 context isolation 是组合和防误用边界，不是 hostile-plugin 安全沙箱。没有独立进程、服务身份或 capability 隔离，不得声称 production plugin isolation。
+- Pi 与 DeepSeek Harness 只提供 minimal-kernel、profile、scope 和 lifecycle 的设计参考，不是运行时依赖，也不自动成为 DiscoveryOS 的宿主或 plugin。
+- 默认“复用优先于发明”。新增自研机制必须写明 Direct、Ada、EvoX、Shinka、ASHA/BOHB 类已知机制无法覆盖的具体缺口和可证伪假设；机制数量、命名新颖性或接口完成度不是价值证据。
+
+## Harness 研究准入阶梯
+
+- 顺序固定为：P0 mechanics → P1 单插件 causal/value → P2 静态 profile composition value → P3 adaptive profile value → P4 memory-conditioned value → P5 harness-evolution value。每一级只授权下一阶段协议，不自动建立下一层价值。
+- P0 必须覆盖 typed dependencies、authority override fail-closed、lifecycle rollback、scope、provenance、budget failure 与 deterministic replay；“能调用”不等于 mechanics 完整。
+- P1 必须证明插件改变 control flow 且差异传到候选或 outcome；调用次数、候选数量或局部 mechanics 不能替代 causal/value evidence。
+- P2 必须在冻结任务、模型/settings、token、evaluator calls、计算资源、wall envelope 和 winner rule 下，对强单策略、朴素组合与静态 Harness 做 matched-resource 比较。
+- 只有 P2 的正向可重放结果才允许设计 P3。P3 必须预冻结反馈信号、profile 选择空间、更新频率、outer anchor、rollback 和停止规则，且适应器不能读取受保护 outcome 或改写证据权威。
+- P4 必须独立证明 memory 来源、freshness、污染边界、作用域与增量价值；P5 必须另行冻结 profile mutation、selection、rollback 与 claim ceiling。两者均不得从先前阶段的 mechanics 直接推断。
+- P0-P4 的 debugging 和机制形成默认只使用 L0-L2；fresh/SEALED 资产只服务于事前声明的 claim upgrade，不能用于调 profile、router、memory 或 Harness mutation。
 
 ## 不可变权威边界
 
@@ -79,6 +102,8 @@ DiscoveryOS 是证据优先的统一算法研究内核。它把外部算法发�
 
 - 修改前先运行 `git status --short --branch`，识别用户已有的 staged、modified 和 untracked 工作。共享工作树中不得覆盖、格式化、暂存或提交与本任务无关的改动。
 - 优先做最小、可验证的纵向改动。新机制必须复用统一 candidate/evidence/budget/evaluator 权威，不能另建平行 verdict 或隐式预算系统。
+- 新 Search-plane 能力默认放入 `src/discoveryos/harness/` 或明确的 plugin package；不得为单个策略向 Kernel 添加专用状态、隐藏调度或第二套配置权威。确需扩大 Kernel 时，必须同时更新系统理念、项目上下文与设计决策。
+- Profile、router 或 plugin composition 若进入正式实验，就属于 evidence semantics 的一部分：必须版本化、内容寻址、运行前冻结并写入 manifest/receipt。Harness adaptation 必须保留冻结 outer anchor 和 rollback，且不能修改 evaluator、winner rule、claim ceiling 或任何 consumed evidence。
 - evaluator、协议门、任务选择、数据 split、winner rule 或 claim ceiling 的变化属于证据语义变化，必须显式版本化并新增协议/决策记录；不能把新旧结果混为同一实验。
 - 任何模型调用前，先冻结需要防止事后选择的 task、模型/版本、prompt/settings、预算、evaluator、seed/replicate 和 acceptance gate。已看见候选输出后不得换题、放宽门槛或补免费调用。
 - 失败默认 fail closed，并保留可诊断原因。相同失败重复两次且无新证据时，停止盲目重试，改查假设、状态和持久化证据。
@@ -90,6 +115,7 @@ DiscoveryOS 是证据优先的统一算法研究内核。它把外部算法发�
 验证范围与改动风险成比例：
 
 - 文档变更：检查链接、状态词、路径和 `git diff --check`。
+- Plugin/profile 变更：至少验证 dependency/provides contract、authority override、scope leakage、原子 boot/逆序 rollback/teardown、provenance、budget fail-closed 与 deterministic replay；只跑 happy path 不足以建立 Harness mechanics。
 - 隔离代码变更：运行受影响测试文件或最小 unittest target。
 - module/API、budget、ledger、evaluator 或 gate 变更：运行相关模块测试，并覆盖 replay、idempotency、失败路径和不可变性。
 - 跨模块证据语义、构建系统或正式 admission 变更：运行完整测试套件及协议要求的冻结验证。
@@ -116,9 +142,10 @@ python -m unittest discover -s tests -v
 
 以下变化必须与代码在同一任务、最好同一提交中更新文档：
 
-- 项目定位、模块职责或权威边界变化：更新 `docs/PROJECT_CONTEXT.md` 和必要的 `docs/DECISIONS.md`。
+- 系统理念、Kernel/Plugin/Profile 边界或 Harness 准入阶梯变化：更新 `docs/SYSTEM_PHILOSOPHY.md`、`docs/PROJECT_CONTEXT.md` 和必要的 `docs/DECISIONS.md`。
+- Plugin、profile、routing 或 Harness lifecycle 的实现/claim 变化：更新 `docs/RESEARCH_HARNESS_V0.md`（或其版本化后继）与 `docs/CURRENT_STATE.md`。
 - 新阶段启动、完成、失败、撤回或 claim ceiling 变化：更新 `docs/CURRENT_STATE.md` 及对应协议/结果文档。
 - 新的不可逆协议决策：追加 `docs/DECISIONS.md`，保留旧决策并标注 superseded，禁止静默改史。
 - 状态数字、commit、模型版本和实验结果只写入阶段文档或 `CURRENT_STATE`，不要塞进本文件。
 
-任务结束前确认新成员只阅读本文件及其路由文档，就能回答：系统要解决什么、谁有 verdict 权、当前真正证明了什么、哪些能力尚未证明、下一步允许做什么。
+任务结束前确认新成员只阅读本文件及其路由文档，就能回答：为什么系统是 Harness 而不是单一算法、什么必须属于 Kernel、什么默认属于 Plugin/Profile、谁有 verdict 权、当前真正证明了什么、哪些能力尚未证明、下一步允许做什么。

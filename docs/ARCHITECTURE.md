@@ -4,6 +4,8 @@
 
 DiscoveryOS 是一个证据优先的 Algorithm Discovery Harness：稳定内核只保留冻结权威、统一 Research/Candidate/Evidence Graph、预算与执行底座；AdaEvolve、EvoX、Shinka、Direct LLM、ASHA 等机制通过 Research Plugins 在同一状态上组合。原版系统保留为隔离 external challengers，用于检验统一 Harness 是否真的更强。
 
+系统理念与 Kernel/Plugin/Profile 的长期准入约束以 [`SYSTEM_PHILOSOPHY.md`](SYSTEM_PHILOSOPHY.md) 为准。本文件描述结构与路线，不单独创造新的 evidence authority。
+
 当前正式状态：
 
 ```text
@@ -59,7 +61,7 @@ Frozen authority kernel
 
 adapter 的存在不代表外部系统进入内部控制循环。其职责是隔离运行、contract translation、预算/收据归一化和公平对照；external challenger 不能写入 Discovery Mode 的 candidate DB、memory 或策略状态。
 
-## 不可越权的三条平面
+## 三个权威平面与 Harness 组合层
 
 | 平面 | 当前权威 | 能做什么 | 不能做什么 |
 |---|---|---|---|
@@ -68,7 +70,7 @@ adapter 的存在不代表外部系统进入内部控制循环。其职责是隔
 | Harness | Research Profile + plugins + state router | 组合或替换 Search-plane 服务、记录 strategy handoff | 覆盖 authority service、自动提高 claim ceiling |
 | Claim | GateEngine + contract ceiling | 限制可声明范围 | 把 scheduling utility 当作 verdict |
 
-系统中的 scalar 只允许用于调度。协议违规、mechanics failure、hard-constraint failure、科学结果和 claim ceiling 分开记录。
+Evidence、Search、Claim 是三个权威平面；Harness 是 Search plane 内的组合层，不增加第四种裁决权。系统中的 scalar 只允许用于调度。协议违规、mechanics failure、hard-constraint failure、科学结果和 claim ceiling 分开记录。
 
 ## 当前代码边界
 

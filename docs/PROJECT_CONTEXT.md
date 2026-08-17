@@ -6,6 +6,8 @@ DiscoveryOS 是一个证据优先的 Algorithm Discovery Harness：用极小且�
 
 它的目标不是把 ShinkaEvolve、AdaEvolve、EvoX 等完整 runtime 编排到一起，而是把其中可验证的机制重构为共享 `ResearchContext` 上的插件/原语。原版系统仅能在隔离的 Benchmark Mode 中作为公平 challenger；Pi 与 DeepSeek Harness 只提供架构参考，不是 DiscoveryOS 的运行时依赖。
 
+长期理念以 [`SYSTEM_PHILOSOPHY.md`](SYSTEM_PHILOSOPHY.md) 为准：权威内核最小化、能力默认插件化、所有策略共享一个研究世界、复用优先于发明，并按 P0 mechanics → P5 harness evolution 的证据阶梯推进。
+
 ## 产品与研究目标
 
 系统最终希望持续回答三个不同问题：
@@ -39,6 +41,8 @@ Frozen ProblemContract
 | Evidence | frozen evaluator、data split、digest-bound receipt | 某次观察是否有效、可否重放 | 修改协议或扩大 claim |
 | Search | operator、controller、scheduler、Pareto utility | 下一单位资源花在哪里 | 读取 final blind、宣布科学胜利 |
 | Claim | `ProblemContract` + `GateEngine` | verdict 和最大可声明范围 | 把调度分数包装成结论 |
+
+Harness/Profile 属于 Search plane 的组合层，不是第四个权威平面。它可以选择或替换 Search-plane service，但不能扩大 Evidence 或 Claim 权限。
 
 ## 核心对象
 
@@ -108,6 +112,7 @@ python -m discoveryos harness-profile-show
 
 ## 阅读路由
 
+- 系统理念与长期边界：`SYSTEM_PHILOSOPHY.md`
 - 当前结论和下一步：`CURRENT_STATE.md`
 - 已确定的设计原因：`DECISIONS.md`
 - 本机依赖和工具位置：`LOCAL_ENVIRONMENT.md`

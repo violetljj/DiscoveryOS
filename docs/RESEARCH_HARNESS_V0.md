@@ -22,6 +22,9 @@ work.
 DiscoveryOS is an evidence-first algorithm-discovery harness, not a single
 algorithm-discovery algorithm. The stable kernel owns the scientific authority
 and shared research state. Search behavior is supplied by replaceable plugins.
+The durable philosophy and project-wide admission ladder are defined in
+[`SYSTEM_PHILOSOPHY.md`](SYSTEM_PHILOSOPHY.md); this document records the V0
+implementation and its narrower claim ceiling.
 
 ```text
 Frozen authority services

@@ -393,3 +393,10 @@
 - **决定**：DiscoveryOS 的稳定核心收缩为 `ProblemContract`、Evaluator/GateEngine、Candidate/Evidence/Artifact Store、Budget、Research Graph 和 Runtime。搜索、lineage、meta-strategy、proposal、memory 与 routing 通过 typed `ResearchContext` 上的 Research Plugins 组合。插件可以覆盖 Search-plane service，但不得替换或 intercept contract、evaluator、GateEngine、ledger、artifact、graph 或 budget authority。Pi 与 DeepSeek Harness 只作为 minimal-kernel、profile、scope 和 lifecycle 的设计参考，不成为项目依赖或宿主。
 - **原因**：此前逐个把 Parent、Novelty、GCF、EMC、CMI 等机制固化进主线，导致每个新假设都扩大核心并产生重 admission 成本；CMI 完整搜索价值又未建立。AdaEvolve 的 lineage/adaptive-search 机制与 EvoX 的 meta-strategy/structural shift 更适合作为共享状态上的可替换能力，而不是各自拥有 population、evaluator 和 budget 的黑盒 runtime。
 - **后果**：V0 内置静态 profile 为 Direct bootstrap + Ada lineage + EvoX meta-strategy + deterministic state router。名称表示机制来源和职责，不声称完整复刻官方 runtime。所有 candidate 仍属于 DiscoveryOS，仅记录 operator/strategy provenance；cross-seeding 写入统一图。现有 CMI 证据和协议历史保留，但停止把新增自研 Operator 作为默认主线。下一门是 matched-resource static Harness 比较；在其通过前，Harness adaptation、profile evolution 和 cross-task memory 均保持 protocol-only，不开放 fresh 资产或 superiority claim。
+
+## D-057：固定 Harness-first 项目约束与分阶段准入阶梯
+
+- **日期**：2026-08-18
+- **决定**：将 D-056 的架构方向提升为长期项目约束。稳定 Kernel 限于 `ProblemContract`、Evaluator/`GateEngine`、Candidate/Evidence/Artifact Store、Budget、Research Graph 与 Runtime；proposal、lineage、parent policy、meta-strategy、routing、memory 和 profile adaptation 默认属于 Research Plugin 或 profile policy。所有正式 profile 必须内容寻址并在比较前冻结。研究顺序固定为 P0 mechanics → P1 单插件 causal/value → P2 静态 composition value → P3 adaptive profile value → P4 memory-conditioned value → P5 harness-evolution value，不能用前一级 mechanics 直接授权后一级实现或 claim。
+- **原因**：只有把“最小权威内核”变成可执行的工程与研究门，Harness 定位才不会在新增机制时重新退化为专用 Operator 堆叠或多 runtime 编排。静态组合、适应、记忆和自演化回答的是不同因果问题，也需要不同控制臂、污染边界与 claim ceiling。
+- **后果**：新增 Kernel 能力必须证明 typed plugin/profile 边界无法表达所需跨策略权威语义并追加决策。外部官方引擎只有在 candidate/evidence/budget/graph 归一到统一 `ResearchContext`、内部状态不具科学权威且 lifecycle/replay 可审计时，才可申请 Discovery plugin admission；否则保留为 Benchmark Mode。当前唯一默认科学下一门是 L0-L2 上的 matched-resource 静态四臂比较；在正向结果前，不开放 adaptive routing、cross-task memory、Harness evolution、fresh task 或 superiority/generalization claim。

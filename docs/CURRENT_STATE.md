@@ -8,6 +8,8 @@
 DISCOVERYOS_KERNEL_ADMITTED
 DISCOVERYOS_ACTION_CONTROLLER_MECHANICS_READY
 DISCOVERYOS_AUTONOMOUS_SEARCH_LOOP_MECHANICS_READY
+HARNESS_FIRST_SYSTEM_PHILOSOPHY_FROZEN
+HARNESS_PROJECT_CONSTRAINTS_UPDATED
 RESEARCH_HARNESS_V0_MECHANICS_READY
 STATIC_ALGORITHM_DISCOVERY_PROFILE_AVAILABLE
 DIRECT_ADA_EVOX_PLUGIN_COMPOSITION_READY
@@ -173,6 +175,8 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 ## 明确尚未建立或尚未实现
 
 - 一般性 DiscoveryOS search value、跨任务/模型稳定优势。
+- Direct/Ada/EvoX 插件与各官方完整 runtime 的行为等价性；V0 名称只表示机制来源和角色。
+- 静态 Research Harness 相对强单策略或朴素组合的 composition value；因此 adaptive profile、cross-task memory 与 Harness evolution 的增量价值也均未建立。
 - BOHB/qNEHVI、正式 G3-G6 策略、multi-branch credit、完整 crossover/rollback、learned controller、Meta-Strategy Evolver 和 Advisor。
 - 远端 GPU/device worker、分布式队列、生产级 heartbeat/checkpoint/cache。
 - 可评估的 official external challenger 公平 benchmark；SI-2 的 Shinka adapter 已实现，但正式运行因 Windows Headless availability blocker 为 `NOT_EVALUABLE`。
@@ -206,6 +210,16 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 - 总计 58 model calls、`1,298,797` input+output tokens、29 paired receipts、0 fresh tasks；manifest digest `f14902c185470fb9fcb71bf28a7eb4a3c9562d4109db742d9147f47112fc0b4e`，report SHA-256 `7fbd3db909dc5d8da11bca9d12f164e0f0cb520333cf9aab012945d7afe74f72`。
 
 ## 当前下一道门
+
+当前默认研发路线由 D-056/D-057 与 [`SYSTEM_PHILOSOPHY.md`](SYSTEM_PHILOSOPHY.md) 约束：
+
+1. 先在 L0-L2 上补齐 Direct/Ada、EvoX、naive parallel 与静态 DiscoveryOS Harness 四臂的来源/version/license/digest、plugin lifecycle、authority、provenance、replay 与 matched-resource preflight；不得用 fresh task debugging。
+2. 冻结并运行 P2 static composition development protocol。task、model/settings、token、evaluator calls、CPU/GPU/device time、wall envelope、router/profile digest、winner rule 与 claim ceiling 必须 matched 或显式配平。
+3. 只有静态 Harness 相对强单策略和朴素组合取得正向、可重放结果，才允许设计 P3 adaptive profile；否则先诊断静态组合，不靠增加策略数或自研 Operator 绕过负结果。
+4. P3 通过后才允许 P4 memory-conditioned comparison；P4 通过后才允许 P5 Harness evolution。每层使用独立协议、控制臂、污染边界、rollback 和 claim ceiling。
+5. L4/L5 只在完整 consumed-development 证据链通过并事前声明 claim upgrade 后开启。当前不开放新的 fresh/SEALED 资产，也不建立 Hybrid search value、generalization、superiority 或 production claim。
+
+## 历史阶段边界（继续有效，但不再是默认开发主线）
 
 1. SI-2 已 consumed，禁止在其 9+3 tasks 上调 parent、novelty、prompt、预算或阈值，也不得用同分布重跑改写 `SI2_SEARCH_VALUE_NOT_ESTABLISHED`。
 2. 如仍需 external competitiveness，先在 mechanics-only 环境修复 Windows Headless `spawn EINVAL`，再用新协议版本、新 fresh tasks 和新 create-once root；不得补跑 SI-2 外部空位。
@@ -246,6 +260,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 37. CMI Search Transmission Autopsy R1 已用零模型、零 evaluator、零 fresh budget 绑定 V3 六任务 receipts、权威 ledgers 与 R7 report 完成。5/5 invoked CMI descendants 都 valid，但相对 incumbent 与同期 control intervention 均为 `0 positive / 5 negative`；Assignment/Coverage median CMI-minus-incumbent 为 `-0.03908327 / -0.01007647`，median retention-threshold gap 为 `0.04208327 / 0.01507647`。R7/V3 的声明目标、per-family resolution 与 CMI output digest 对齐，当前证据支持 `CMI_DESCENDANT_COMPETITION_FAILURE_DETECTED_ON_CONSUMED_V3_TRACES`，不支持 selection integration defect。V3 的 sequential observation parent proxy 在 5/5 eligible tasks 与权威 `CandidateSpec.parent_ids` 不同；实际 downstream 均从 prefix incumbent 生成，因此 offline forced-retention compounding 不可识别，未执行新 provider continuation。Create-once autopsy record SHA-256 为 `45e960bcad90ee0f777e202f089051662b6cb5450825fe1f97f32fc0f60b8b7d`。详见 [`CMI_SEARCH_TRANSMISSION_AUTOPSY_R1.md`](CMI_SEARCH_TRANSMISSION_AUTOPSY_R1.md)。
 38. 经 D-055 显式 supersede D-054 的“先证明 incumbent-monotonic candidate competition”下一门后，CMI Forced-Lineage Transmission R1 已实现但尚未执行。它只绑定 V3 的完整 5 个 eligible consumed states，三臂分别强制 incumbent、同期 control descendant、CMI descendant 为 Generation 0 parent；后续两代使用完全相同 Local Patch generator/model/prompt/budget/evaluator，且每个 valid child无视 fitness 继续成为下一代 parent。Generation 0 不计成功；primary 为 CMI lineage 与 matched-control lineage 的 best downstream utility，anytime AUC 从 forced parent 起算。严格 success gate 要求 5/5 primary win、两 family 全正、median primary/AUC 正和 exact two calls。该方向现保留为历史 protocol，不再作为默认新增自研 Operator 主线；没有新 fresh budget。详见 [`CMI_FORCED_LINEAGE_TRANSMISSION_R1.md`](CMI_FORCED_LINEAGE_TRANSMISSION_R1.md)。
 39. Research Harness V0 已实现 `ResearchContext` 的 typed extend/isolate/intercept、authority override fail-closed、插件 dependency/provides 校验、原子 boot/rollback/reverse teardown、Profile/HarnessGraph 记录，以及 Direct bootstrap、Ada lineage refinement、EvoX structural meta-strategy 的静态组合。Controller 仍把 replicate/promotion/budget/stagnation/stop 交给原冻结 deterministic policy；candidate 继续进入统一 ledger/evaluator，跨策略生成记录 `CROSS_SEEDED_TO`。这只建立 mechanics；未调用模型、未运行 evaluator、未消费 fresh/SEALED 资产，未建立 Ada/EvoX 官方 runtime 等价性、Hybrid search value、adaptive harness value 或 superiority。详见 [`RESEARCH_HARNESS_V0.md`](RESEARCH_HARNESS_V0.md)。
+40. Harness-first 系统理念与项目约束已固化到 [`SYSTEM_PHILOSOPHY.md`](SYSTEM_PHILOSOPHY.md)、`AGENTS.md` 与 D-057：Kernel whitelist、plugin/profile 默认边界、外部 engine 接入条件和 P0-P5 准入阶梯成为长期规则。此次仅更新治理与默认研发路线，没有修改代码、evaluator、GateEngine、协议资产、既有 receipt 或科学 verdict；不提高 Research Harness V0 的 mechanics claim ceiling。
 
 ## 状态更新规则
 
@@ -257,6 +272,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 ## 相关文档
 
 - 项目和术语：[`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md)
+- 系统理念与 Harness-first 约束：[`SYSTEM_PHILOSOPHY.md`](SYSTEM_PHILOSOPHY.md)
 - 长期设计决策：[`DECISIONS.md`](DECISIONS.md)
 - 架构路线：[`ARCHITECTURE.md`](ARCHITECTURE.md)
 - Research Harness V0：[`RESEARCH_HARNESS_V0.md`](RESEARCH_HARNESS_V0.md)
