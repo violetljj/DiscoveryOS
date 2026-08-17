@@ -141,3 +141,17 @@
 - **决定**：第一个现实 GCF channel 固定为 `MECHANISM_BRIEF`，优先于 Failure Evidence 和 Parent Source。使用 CIB-R1 的 2 个 calibration 与 3 个跨任务族 validation consumed states，只改变 constructive greedy 与 iterative local improvement 两份互斥 brief；generator 输出 proposal、implementation、repair、final 四个阶段，确定性 AST/文本 probe 与冻结 hidden behavior probe 对 state-local A/A、B/B stochastic null 作 paired comparison。
 - **原因**：明确 mechanism instruction 是最直接、最可能被 generator 执行的上游控制信号。如果它不能穿过 staged generator 并形成 hidden behavior separation，继续优化 parent、planner、memory 或 scheduler 缺少必要的执行通道基础。增加框架功能或单元测试数量不能替代这一现实识别问题。
 - **后果**：协议共冻结 66 个独立 model calls；calibration proposal detectability 失败即阻断 validation。GCF-2 只要求跨至少 2/3 validation states 的 final structural 与 hidden-behavior separation，utility 只记录、不参与 transmission admission。正结果仅允许另行预注册独立 GCF-3 value trial；负结果转向 generator interface/execution contract，不依次调 prompt、brief、margin 或 consumed state 追逐通过。
+
+## D-021：GCF-R1 因 proposal calibration 失败而阻断 validation
+
+- **状态**：Accepted
+- **决定**：接受 `GCF_R1_CALIBRATION_FAILED` 与 `MECHANISM_BRIEF_REAL_SEMANTIC_TRANSMISSION_NOT_ESTABLISHED`。24 个 calibration branches 全部 evaluable、final valid 且资源合规，但 constructive greedy 与 iterative local improvement 的 proposal signature 在 `0/2` states 超过 same-condition null 加冻结 margin，因此严格执行预注册 blocker，不运行后续 42 个 validation calls。
+- **原因**：两个 calibration states 的 proposal A/B distance 都小于各自 null envelope，无法证明冻结 proposal detector 对现实 channel 有足够 sensitivity。Implementation、repair 和 final 结构 separation 虽为 `2/2`，hidden behavior 只有 `1/2`，又没有独立 validation，不能绕过 calibration gate 拼成 positive transmission claim。
+- **后果**：GCF-R1 consumed root 关闭，不改 proposal probe、margin、prompt、brief、state 或 replicate 数追逐通过。后续若继续，应提出新版本 structured proposal 或 executable mechanism contract，用新 calibration evidence 验证；在现实 GCF-2 admission 前保持 fresh value trial 和 SI-3 关闭。
+
+## D-022：本地 control plane 与按需远端 compute plane 分离
+
+- **状态**：Accepted as architecture direction; not implemented
+- **决定**：DiscoveryOS controller、Research Graph、Evidence Ledger、planner、LLM generation、长期 candidate/artifact 状态与 verdict 权威保留在本地；经用户授权的 AutoDL/其他远端只作为 ephemeral evaluator worker。远端 job 必须绑定 Git commit、candidate bundle、contract/evaluator/data/environment digest、预算和输出 schema，返回 create-once result bundle，由本地验证后写 ledger；远端不得直接写权威 ledger 或取得 final-blind capability。
+- **原因**：CPU-heavy、独立 candidate evaluation 适合弹性并行，而 generation、规划和长期证据状态不应随临时 worker 生命周期漂移。Commit-pinned checkout 与 digest-bound result 能避免本地代码变化后无法解释远端分数。
+- **后果**：该方向目前是 protocol/architecture only，不是吞吐或 search-value improvement。实现顺序从单个 commit-pinned、fail-closed worker 的纵向切片开始，验证 transport、身份、资源计量、超时、幂等、结果签名和本地 admission 后，才扩展 32C 或多节点 worker pool。已经 seal 的实验不得中途迁移环境；只有新协议可在首个 model/evaluator call 前冻结远端环境。

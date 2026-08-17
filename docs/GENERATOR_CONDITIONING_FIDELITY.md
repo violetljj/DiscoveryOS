@@ -105,4 +105,4 @@ No real generator call is part of these entrypoints. A future real GCF protocol 
 
 ## First real diagnosis
 
-The first real use is preregistered in [`GCF_R1_REAL_MECHANISM_BRIEF.md`](GCF_R1_REAL_MECHANISM_BRIEF.md). It changes only a mutually exclusive constructive-greedy versus iterative-local-improvement brief over the five consumed CIB-R1 states. Its committed protocol must be sealed before any model call. This is the point where GCF stops accumulating framework features and begins testing a real channel hypothesis.
+The first real use is closed in [`GCF_R1_REAL_MECHANISM_BRIEF.md`](GCF_R1_REAL_MECHANISM_BRIEF.md). It changed only a mutually exclusive constructive-greedy versus iterative-local-improvement brief over the five consumed CIB-R1 states. Calibration failed at proposal detectability (`0/2` states), so the frozen gate blocked validation with zero validation calls. Later-stage structural separation remains development diagnosis and does not admit the real channel. This is the point where GCF stopped accumulating framework features and began eliminating a real channel hypothesis.

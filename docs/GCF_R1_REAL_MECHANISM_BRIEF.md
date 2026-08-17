@@ -1,11 +1,12 @@
 # GCF-R1 Real Mechanism Brief Transmission
 
-## Preregistered status
+## Final status
 
 ```text
-GCF_R1_REAL_MECHANISM_BRIEF_PROTOCOL_IMPLEMENTED
-NOT_YET_SEALED
-NO_MODEL_CALLS_AUTHORIZED_BEFORE_SEAL
+GCF_R1_REAL_MECHANISM_BRIEF_CALIBRATION_COMPLETE
+GCF_R1_CALIBRATION_FAILED
+MECHANISM_BRIEF_REAL_SEMANTIC_TRANSMISSION_NOT_ESTABLISHED
+GCF_R1_VALIDATION_BLOCKED_NOT_RUN
 NO_FRESH_TASK_ACCESS
 ```
 
@@ -14,6 +15,28 @@ GCF-R1 is the first real Generator Conditioning Fidelity diagnosis. It is an exp
 > Holding task, base source, model, prompt, budget, evaluator, and stochastic distribution fixed, does changing one mechanism brief produce stagewise structural and hidden-behavior separation beyond same-condition stochastic null?
 
 Passing can establish `MECHANISM_BRIEF_SEMANTIC_TRANSMISSION_DETECTED` on consumed development states. It cannot establish mechanism utility, search value, system superiority, or production readiness, and it does not itself open a fresh trial.
+
+The create-once manifest digest is `86730bb50c2790581d5b08c8115a2f745391d42c6831bd89c905bd1c3a07469e`; its file SHA-256 is `0ecb203d8b508d521486d7f22864ef009955fbaa8e4db0057076fa42d2097ca5`. The final calibration record SHA-256 is `4b9423cb1f4f46fa8e3669ad58156b770df8ca0790553c47207caf61ce28731a`.
+
+## Result
+
+Calibration completed all 24 planned branches. Every provider response was evaluable, every final source executed validly, and every resource ceiling passed. The run used `536,852` input-plus-output tokens and summed provider wall time was `2,078.002` seconds. No fresh task was consumed.
+
+The frozen proposal gate failed in both calibration states:
+
+```text
+proposal detectable       0/2 states
+implementation detectable 2/2 states
+repair detectable         2/2 states
+final detectable          2/2 states
+hidden behavior changed   1/2 states
+```
+
+For `capacitated_assignment_delta`, proposal A/B distance was `0.58814` versus a same-condition null envelope of `0.63274`; for `capacitated_assignment_eta`, it was `0.25247` versus null `0.63756`. Neither exceeded null plus the frozen `0.05` margin. The preregistered calibration gate required proposal detectability in `2/2` states, so validation was blocked before any validation model call. A fail-closed invocation returned exit code `2`, and the validation branch record count remained zero.
+
+The later-stage calibration observations are real but remain development diagnostics: implementation, repair, and final structural distances exceeded their state-local nulls in both states, while hidden behavior exceeded null plus margin in only one. They show that the result is not equivalent to “the generator produced identical code” or “all conditioning was absent.” They cannot establish cross-family semantic transmission because the independent validation surface was never opened.
+
+The bounded verdict is therefore `MECHANISM_BRIEF_REAL_SEMANTIC_TRANSMISSION_NOT_ESTABLISHED`, with `DO_NOT_OPEN_FRESH_VALUE_TRIAL`. This is experimental-capability evidence, not an algorithm search result. The consumed calibration surface must not be rerun with a changed proposal probe, margin, prompt, brief, or replicate count to recover a pass.
 
 ## Consumed state split
 
@@ -99,3 +122,7 @@ python -m discoveryos gcf-r1-run-mechanism-brief `
 ```
 
 The ignored run root is create-once and resumable by branch checkpoint. After sealing, code, model, settings, schema, prompt, states, conditions, margins, schedule, and evidence bindings must not change.
+
+## Next allowed hypothesis
+
+The observed pattern localizes the next question to the generator interface: unconstrained natural-language proposal text was noisier within condition than across briefs even though generated code structure separated. A future protocol may test a new versioned structured proposal representation or explicit executable mechanism contract on new calibration evidence. It must not modify or replay this consumed root, and it must still obtain independent behavioral validation before any value trial.

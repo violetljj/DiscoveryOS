@@ -32,6 +32,9 @@ PARENT_SCIENTIFIC_PRIORITY_WITHDRAWN
 GENERATOR_CONDITIONING_FIDELITY_PROTOCOL_IMPLEMENTED
 NO_REAL_CONDITIONING_CHANNEL_ADMITTED
 GCF_R1_REAL_MECHANISM_BRIEF_PROTOCOL_IMPLEMENTED
+GCF_R1_CALIBRATION_FAILED
+MECHANISM_BRIEF_REAL_SEMANTIC_TRANSMISSION_NOT_ESTABLISHED
+GCF_R1_VALIDATION_BLOCKED_NOT_RUN
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -130,7 +133,8 @@ GCF_R1_REAL_MECHANISM_BRIEF_PROTOCOL_IMPLEMENTED
 6. CIB-R1 已完成：58/58 branches evaluable、资源门通过且 fresh task 消耗为零，但 Parent 在 3/3 validation states 未产生超出 stochastic null 的 downstream behavioral manipulation，9 个 intervention pairs 的 final descendant delta 全为 tie。Parent 不获得现实机制 admission，SI-3 继续关闭；不得在这些 consumed states 上换 margin、prompt、operator 或增加 replicate 翻案。
 7. Parent 现以 `CAUSALLY_INERT_IN_CURRENT_REAL_GENERATION_REGIME` 关闭当前冻结生成合同下的科学优先级和预算；该状态保留 Parent implementation、lineage 和历史 control-flow receipt，不宣称 Parent 机制普遍零效应。重新开放必须同时具备新版本 generation/inheritance contract、新 hypothesis、新 calibration 和独立 CIB admission。
 8. 下一允许的诊断路线是 Generator Conditioning Fidelity。先分别检查 Parent source、Failure evidence 和 Mechanism brief 在 proposal、implementation、repair、final 与 hidden behavior 中是否超过 same-condition stochastic null；只有 GCF-2 semantic transmission 通过的现实 channel 才可预注册独立 GCF-3 downstream causal-value trial。当前仅实现并测试 synthetic identifiability fixture，尚无现实 channel admission，也未授权 fresh trial。
-9. GCF-R1 已选择 `MECHANISM_BRIEF` 为第一个现实 channel，并预注册 constructive greedy 与 iterative local improvement 的 66-call consumed-state staged diagnosis。协议代码与 tests 已实现，但在 committed implementation 被 seal 前不得调用模型；完整冻结面见 [`GCF_R1_REAL_MECHANISM_BRIEF.md`](GCF_R1_REAL_MECHANISM_BRIEF.md)。
+9. GCF-R1 已完成 calibration 并按冻结门 fail closed：24/24 branches evaluable、final source valid 且资源门通过；proposal detectability 为 `0/2`，因此 42-call validation 被阻断且实际调用为零。Implementation/repair/final 结构 separation 在 `2/2` calibration states 超过 null，hidden behavior 仅 `1/2`，只能作为 development diagnosis，不能建立现实 channel semantic transmission。不得在 consumed calibration root 上调 proposal probe、margin、prompt、brief 或 replicates 翻案。
+10. 下一允许的 GCF 假设应版本化 generator interface，例如 structured proposal 或 explicit executable mechanism contract，并使用新 calibration evidence；不是继续完善通用框架，也不是绕过独立 behavior validation 直接开 fresh value trial。
 
 ## 状态更新规则
 
