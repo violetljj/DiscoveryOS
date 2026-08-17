@@ -6,7 +6,7 @@
 RESEARCH_HARNESS_V1_EXECUTION_BACKBONE_MECHANICS_READY
 MANIFEST_BOUND_RESEARCH_PROFILE_READY
 P2_STATIC_COMPOSITION_PROFILES_READY
-CAPABILITY_AWARE_ROUTING_READY
+CAPABILITY_CONTRACT_ROUTING_V1_1_READY
 PROFILE_TO_SEARCH_RUN_REPLAY_BINDING_READY
 LIVE_BUDGET_EVALUATOR_AUTHORITY_BOUND
 SEPARATE_LOCAL_AND_STRUCTURAL_PROVIDERS_READY
@@ -52,6 +52,7 @@ Every `PluginManifest` now binds:
 - implementation digest;
 - authority scope;
 - failure semantics and replay contract;
+- declared Search-plane capabilities;
 - typed `requires` and `provides` services.
 
 Every `PluginSelection` freezes the expected manifest digest. Profile boot fails closed on a mismatch, and the profile id includes those bindings plus config and order. Plugin graph nodes use manifest digests rather than only `plugin_id@version`.
@@ -67,7 +68,9 @@ V1 now exposes four frozen arm definitions through `static_composition_profiles(
 - `naive_parallel_v1`: two isolated child profiles, one lineage and one structural, both with cross-seeding disabled; a formal runner must split the total arm budget before either child starts and apply the frozen winner rule only after both settle;
 - `harness_static_v1`: Direct + Ada + EvoX in one shared research state with deterministic cross-strategy handoff.
 
-Every child profile boots through `HarnessSearchRuntime`; no baseline requires a compatibility-only direct `SearchLoopRunner` path. `HarnessResearchController` is capability-aware and fails closed when a selected action has no loaded capability. It never silently substitutes a different action class.
+Every child profile boots through `HarnessSearchRuntime`; no baseline requires a compatibility-only direct `SearchLoopRunner` path. In the V1.1 closure, each operator plugin binds one or more typed roles from `BOOTSTRAP_PROPOSAL`, `LOCAL_REFINEMENT`, `STRUCTURAL_ESCAPE` and `META_STRATEGY` into both its manifest digest and strategy descriptor. `HarnessResearchController` resolves those roles without containing Direct/Ada/EvoX operator or strategy ids. Missing capabilities and multiple providers for the same capability fail closed; the router never silently substitutes a different action class. Cross-strategy handoff is also derived from the source and target capabilities rather than source-system names.
+
+This is a composition contract, not package discovery or a plugin marketplace. `standard_research_plugins()` remains the static built-in catalog, and a Profile currently admits at most one provider for each routed capability unless a future, separately versioned selection policy is frozen. Because capability declarations enter manifest digests, this closure creates new Profile identities; earlier run manifests and receipts remain bound to their original code/manifest identities and are not rewritten.
 
 This code defines the arms but does not yet seal a task wave or make model calls. In particular, the naive-parallel parent settlement and matched budget split remain responsibilities of the forthcoming frozen P2 protocol runner.
 
@@ -111,6 +114,8 @@ Focused tests establish:
 - authority inheritance and override rejection;
 - atomic boot, reverse rollback and teardown;
 - Direct/Ada/EvoX registry composition and deterministic routing;
+- a previously unknown operator id routes solely from its declared capability;
+- duplicate capability providers fail closed instead of depending on plugin names or load order;
 - all four P2 arm definitions, capability-aware subset routing, disabled naive handoff and matched reservation surfaces;
 - create-once Profile-to-Run binding and fail-closed replay under code-bundle drift;
 - Profile → Harness runtime → unified executor → evaluator/ledger settlement;

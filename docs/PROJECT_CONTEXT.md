@@ -65,7 +65,7 @@ Harness/Profile 属于 Search plane 的组合层，不是第四个权威平面�
 | `src/discoveryos/evaluation/` | evaluator registry、GateEngine、Pareto、winner、replay |
 | `src/discoveryos/operators/` | Random、ASHA、Local Patch、Structural Rewrite、parent/novelty 等机制 |
 | `src/discoveryos/runtime/` | ledger、artifact、vault、scheduler、provider invocation journal、repository runner、search loop |
-| `src/discoveryos/harness/` | typed ResearchContext、插件生命周期、Research Profile、Direct/Ada/EvoX 插件与 state router |
+| `src/discoveryos/harness/` | typed ResearchContext、插件生命周期、Research Profile、manifest-bound capability contract、Direct/Ada/EvoX 内置插件与 capability router |
 | `src/discoveryos/memory/` | semantic delta 和 progressive context 基础接口 |
 | `src/discoveryos/mechanism_intelligence.py` | failure phenotype、竞争瓶颈假设、冻结诊断 probe 与 fail-closed 研究状态机；只属于 Search/Research 平面 |
 | `src/discoveryos/benchmarks/` | Benchmark Bank、协议中性 task types/adapter，以及惰性隔离的冻结历史 protocol runner |

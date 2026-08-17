@@ -69,6 +69,8 @@ P0 mechanics
 
 当前默认 V1 profile 是 Direct bootstrap + Ada lineage + EvoX meta-strategy + deterministic router，并通过 `HarnessSearchRuntime` 接入统一搜索循环。下一科学问题是：在冻结任务与 matched resources 下，这个静态组合是否优于强单策略和朴素并行组合。
 
+V1.1 的 Router 只认识 `BOOTSTRAP_PROPOSAL`、`LOCAL_REFINEMENT`、`STRUCTURAL_ESCAPE` 与 `META_STRATEGY` 能力，不认识 Direct/Ada/EvoX identity。能力声明进入 Plugin Manifest 与 Profile digest；缺失或重复 provider 均 fail closed。当前内置插件 catalog 仍静态注册，这不等于 package discovery 或插件市场已经成熟。
+
 在该问题得到正向、可重放证据前：
 
 - 不把 adaptive routing、cross-task memory 或 Harness evolution 作为默认实现主线；

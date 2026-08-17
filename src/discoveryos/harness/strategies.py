@@ -28,6 +28,7 @@ from .plugins import (
     PluginActivation,
     PluginManifest,
     PluginSelection,
+    ResearchCapability,
     ResearchPlugin,
     ResearchProfile,
 )
@@ -52,6 +53,7 @@ def _plugin_manifest(
     plugin_id: str,
     *,
     source_system: str,
+    capabilities: tuple[ResearchCapability, ...] = (),
     requires: tuple[ServiceKey[Any], ...],
     provides: tuple[ServiceKey[Any], ...],
 ) -> PluginManifest:
@@ -65,6 +67,7 @@ def _plugin_manifest(
         authority_scope="SEARCH_PLANE_ONLY",
         failure_semantics="ACTIVATION_OR_GENERATION_FAIL_CLOSED",
         replay_contract="PROFILE_MANIFEST_AND_DECISION_DIGEST_V1",
+        capabilities=capabilities,
         requires=requires,
         provides=provides,
     )
@@ -77,6 +80,13 @@ class StrategyDescriptor:
     operator_id: str
     source_system: str
     mechanism: str
+    capabilities: tuple[ResearchCapability, ...]
+
+    def __post_init__(self) -> None:
+        if not self.strategy_id or not self.operator_id or not self.capabilities:
+            raise ValueError("strategy descriptors require identity and capabilities")
+        if len(set(self.capabilities)) != len(self.capabilities):
+            raise ValueError("strategy descriptors cannot repeat capabilities")
 
 
 class DirectLLMResearchOperator(LocalPatchOperator):
@@ -150,6 +160,15 @@ class OperatorRegistry:
         except StopIteration as error:
             raise KeyError(operator_id) from error
 
+    def descriptor_for_strategy(self, strategy_id: str | None) -> StrategyDescriptor | None:
+        return next((item for item in self.strategies if item.strategy_id == strategy_id), None)
+
+    def provider_for(self, capability: ResearchCapability) -> StrategyDescriptor | None:
+        matches = tuple(item for item in self.strategies if capability in item.capabilities)
+        if len(matches) > 1:
+            raise ValueError(f"profile has ambiguous providers for capability: {capability.value}")
+        return matches[0] if matches else None
+
 
 OPERATOR_REGISTRY = ServiceKey("research_operator_registry", OperatorRegistry)
 ACTION_CONTROLLER = ServiceKey("research_action_controller", DeterministicActionController)
@@ -157,18 +176,12 @@ ACTION_CONTROLLER = ServiceKey("research_action_controller", DeterministicAction
 
 @dataclass(frozen=True, slots=True)
 class HarnessRoutingConfig:
-    direct_bootstrap_steps: int = 1
-    ada_strategy_id: str = "ada_lineage_strategy_v1"
-    ada_operator_id: str = AdaLineageOperator.operator_id
-    evox_strategy_id: str = "evox_meta_strategy_v1"
-    evox_operator_id: str = EvoXMetaStrategyOperator.operator_id
-    direct_strategy_id: str = "direct_llm_strategy_v1"
-    direct_operator_id: str = DirectLLMResearchOperator.operator_id
+    bootstrap_steps: int = 1
     allow_cross_seed: bool = True
 
     def __post_init__(self) -> None:
-        if self.direct_bootstrap_steps < 0:
-            raise ValueError("direct bootstrap steps cannot be negative")
+        if self.bootstrap_steps < 0:
+            raise ValueError("bootstrap steps cannot be negative")
 
 
 class HarnessResearchController(DeterministicActionController):
@@ -190,23 +203,16 @@ class HarnessResearchController(DeterministicActionController):
         self.base = base
         self.registry = registry
         self.routing = routing or HarnessRoutingConfig()
-        registered = {operator_id for operator_id, _ in registry.operators}
-        if not registered:
+        if not registry.operators:
             raise ValueError("harness router requires at least one research operator")
-        known = {
-            self.routing.direct_operator_id,
-            self.routing.ada_operator_id,
-            self.routing.evox_operator_id,
-        }
-        if not registered.issubset(known):
-            raise ValueError("harness router received an unsupported operator capability")
-        self.registered = frozenset(registered)
+        for capability in ResearchCapability:
+            registry.provider_for(capability)
 
     @property
     def digest(self) -> str:
         return digest_json(
             {
-                "policy": "discoveryos_research_harness_router_v1_capability_aware",
+                "policy": "discoveryos_research_harness_router_v1_1_capability_contract",
                 "base_controller": self.base.digest,
                 "routing": self.routing,
                 "strategies": self.registry.strategies,
@@ -220,45 +226,59 @@ class HarnessResearchController(DeterministicActionController):
         reasons: tuple[str, ...] = ()
         if base.action is SearchAction.LOCAL_PATCH:
             source = self._candidate(state, base.candidate_id)
+            bootstrap = self.registry.provider_for(ResearchCapability.BOOTSTRAP_PROPOSAL)
+            refinement = self.registry.provider_for(ResearchCapability.LOCAL_REFINEMENT)
             if (
-                state.step < self.routing.direct_bootstrap_steps
-                and self.routing.direct_operator_id in self.registered
+                state.step < self.routing.bootstrap_steps
+                and bootstrap is not None
             ):
-                strategy_id = self.routing.direct_strategy_id
-                operator_id = self.routing.direct_operator_id
-                reasons = ("HARNESS_DIRECT_BOOTSTRAP",)
-            elif self.routing.ada_operator_id in self.registered:
-                strategy_id = self.routing.ada_strategy_id
-                operator_id = self.routing.ada_operator_id
-                reasons = ("HARNESS_ADA_LINEAGE_REFINEMENT",)
-                ada_operator = self.registry.get(self.routing.ada_operator_id)
-                if not isinstance(ada_operator, AdaLineageOperator):
-                    raise ValueError("Ada capability is not backed by an Ada lineage operator")
-                reasons += ada_operator.adaptation_receipt(state, base.branch_id).reason_codes
+                strategy_id = bootstrap.strategy_id
+                operator_id = bootstrap.operator_id
+                reasons = ("HARNESS_BOOTSTRAP_PROPOSAL",)
+            elif refinement is not None:
+                strategy_id = refinement.strategy_id
+                operator_id = refinement.operator_id
+                reasons = ("HARNESS_LOCAL_REFINEMENT",)
+                refinement_operator = self.registry.get(refinement.operator_id)
+                adaptation_receipt = getattr(refinement_operator, "adaptation_receipt", None)
+                if adaptation_receipt is not None:
+                    reasons += adaptation_receipt(state, base.branch_id).reason_codes
                 if (
                     self.routing.allow_cross_seed
                     and source is not None
-                    and source.strategy_id == self.routing.evox_strategy_id
+                    and self._source_has_capability(
+                        source.strategy_id,
+                        ResearchCapability.STRUCTURAL_ESCAPE,
+                        ResearchCapability.META_STRATEGY,
+                    )
                 ):
-                    reasons += ("CROSS_SEED_EVOX_TO_ADA",)
-            elif self.routing.direct_operator_id in self.registered:
-                strategy_id = self.routing.direct_strategy_id
-                operator_id = self.routing.direct_operator_id
-                reasons = ("HARNESS_DIRECT_ONLY",)
+                    reasons += ("CROSS_SEED_STRUCTURAL_TO_LOCAL",)
+            elif bootstrap is not None:
+                strategy_id = bootstrap.strategy_id
+                operator_id = bootstrap.operator_id
+                reasons = ("HARNESS_BOOTSTRAP_ONLY",)
             else:
                 raise ValueError("profile cannot execute a local refinement action")
         elif base.action is SearchAction.STRUCTURAL_ESCAPE:
             source = self._candidate(state, base.candidate_id)
-            if self.routing.evox_operator_id not in self.registered:
+            structural = self.registry.provider_for(ResearchCapability.STRUCTURAL_ESCAPE)
+            if structural is None:
                 raise ValueError("profile cannot execute a structural escape action")
-            strategy_id = self.routing.evox_strategy_id
-            operator_id = self.routing.evox_operator_id
-            reasons = ("HARNESS_EVOX_META_STRATEGY",)
-            if self.routing.allow_cross_seed and source is not None and source.strategy_id in {
-                self.routing.ada_strategy_id,
-                self.routing.direct_strategy_id,
-            }:
-                reasons += ("CROSS_SEED_LINEAGE_TO_EVOX",)
+            strategy_id = structural.strategy_id
+            operator_id = structural.operator_id
+            reasons = ("HARNESS_STRUCTURAL_ESCAPE",)
+            if ResearchCapability.META_STRATEGY in structural.capabilities:
+                reasons += ("HARNESS_META_STRATEGY",)
+            if (
+                self.routing.allow_cross_seed
+                and source is not None
+                and self._source_has_capability(
+                    source.strategy_id,
+                    ResearchCapability.BOOTSTRAP_PROPOSAL,
+                    ResearchCapability.LOCAL_REFINEMENT,
+                )
+            ):
+                reasons += ("CROSS_SEED_LOCAL_TO_STRUCTURAL",)
         return self._copy_decision(
             base,
             state,
@@ -270,6 +290,16 @@ class HarnessResearchController(DeterministicActionController):
     @staticmethod
     def _candidate(state: SearchState, candidate_id: str | None):
         return next((item for item in state.candidates if item.candidate_id == candidate_id), None)
+
+    def _source_has_capability(
+        self,
+        strategy_id: str | None,
+        *capabilities: ResearchCapability,
+    ) -> bool:
+        descriptor = self.registry.descriptor_for_strategy(strategy_id)
+        return descriptor is not None and any(
+            capability in descriptor.capabilities for capability in capabilities
+        )
 
     def _copy_decision(
         self,
@@ -319,14 +349,22 @@ class _OperatorPlugin(ResearchPlugin):
             ledger=context.get(LEDGER),
             contract=context.get(CONTRACT),
         )
+        if self.descriptor.capabilities != self.manifest.capabilities:
+            raise ValueError(
+                f"{self.manifest.plugin_id} descriptor capabilities differ from its manifest"
+            )
         registry = context.get(OPERATOR_REGISTRY) if context.has(OPERATOR_REGISTRY) else OperatorRegistry()
-        return PluginActivation({OPERATOR_REGISTRY: registry.add(operator, self.descriptor)})
+        return PluginActivation(
+            {OPERATOR_REGISTRY: registry.add(operator, self.descriptor)},
+            capabilities=self.descriptor.capabilities,
+        )
 
 
 class DirectLLMPlugin(_OperatorPlugin):
     manifest = _plugin_manifest(
         "direct_llm",
         source_system="DiscoveryOS Direct LLM",
+        capabilities=(ResearchCapability.BOOTSTRAP_PROPOSAL,),
         requires=(LOCAL_PATCH_PROVIDER, ARTIFACTS, LEDGER, CONTRACT),
         provides=(OPERATOR_REGISTRY,),
     )
@@ -338,6 +376,7 @@ class DirectLLMPlugin(_OperatorPlugin):
         DirectLLMResearchOperator.operator_id,
         "generic_llm",
         "direct bounded hypothesis and patch proposal",
+        (ResearchCapability.BOOTSTRAP_PROPOSAL,),
     )
 
 
@@ -345,6 +384,7 @@ class AdaLineagePlugin(_OperatorPlugin):
     manifest = _plugin_manifest(
         "ada_lineage",
         source_system="AdaEvolve mechanism role / DiscoveryOS implementation",
+        capabilities=(ResearchCapability.LOCAL_REFINEMENT,),
         requires=(LOCAL_PATCH_PROVIDER, ARTIFACTS, LEDGER, CONTRACT, OPERATOR_REGISTRY),
         provides=(OPERATOR_REGISTRY,),
     )
@@ -356,6 +396,7 @@ class AdaLineagePlugin(_OperatorPlugin):
         AdaLineageOperator.operator_id,
         "AdaEvolve",
         "lineage refinement and promising-route exploitation",
+        (ResearchCapability.LOCAL_REFINEMENT,),
     )
 
 
@@ -363,6 +404,10 @@ class EvoXMetaStrategyPlugin(_OperatorPlugin):
     manifest = _plugin_manifest(
         "evox_meta_strategy",
         source_system="EvoX mechanism role / DiscoveryOS implementation",
+        capabilities=(
+            ResearchCapability.STRUCTURAL_ESCAPE,
+            ResearchCapability.META_STRATEGY,
+        ),
         requires=(STRUCTURAL_PATCH_PROVIDER, ARTIFACTS, LEDGER, CONTRACT, OPERATOR_REGISTRY),
         provides=(OPERATOR_REGISTRY,),
     )
@@ -374,6 +419,7 @@ class EvoXMetaStrategyPlugin(_OperatorPlugin):
         EvoXMetaStrategyOperator.operator_id,
         "EvoX",
         "stagnation-triggered strategy revision and structural basin shift",
+        (ResearchCapability.STRUCTURAL_ESCAPE, ResearchCapability.META_STRATEGY),
     )
 
 
@@ -408,7 +454,7 @@ def lineage_static_v1_profile() -> ResearchProfile:
             PluginSelection.create(
                 "state_router",
                 StateRouterPlugin.manifest.digest,
-                {"direct_bootstrap_steps": 1, "allow_cross_seed": False},
+                {"bootstrap_steps": 1, "allow_cross_seed": False},
             ),
         ),
     )
@@ -423,7 +469,7 @@ def structural_static_v1_profile() -> ResearchProfile:
             PluginSelection.create(
                 "state_router",
                 StateRouterPlugin.manifest.digest,
-                {"direct_bootstrap_steps": 1, "allow_cross_seed": False},
+                {"bootstrap_steps": 1, "allow_cross_seed": False},
             ),
         ),
     )
@@ -449,7 +495,7 @@ def harness_static_v1_profile() -> ResearchProfile:
             PluginSelection.create(
                 "state_router",
                 StateRouterPlugin.manifest.digest,
-                {"direct_bootstrap_steps": 1},
+                {"bootstrap_steps": 1},
             ),
         ),
     )

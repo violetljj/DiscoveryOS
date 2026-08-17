@@ -14,7 +14,7 @@ RESEARCH_HARNESS_V0_MECHANICS_READY
 RESEARCH_HARNESS_V1_EXECUTION_BACKBONE_MECHANICS_READY
 MANIFEST_BOUND_RESEARCH_PROFILE_READY
 P2_STATIC_COMPOSITION_PROFILES_READY
-CAPABILITY_AWARE_HARNESS_ROUTING_READY
+CAPABILITY_CONTRACT_ROUTING_V1_1_READY
 PROFILE_TO_SEARCH_RUN_REPLAY_BINDING_READY
 P2_DEVELOPMENT_PROTOCOL_NOT_SEALED
 ADA_EVOX_MECHANISM_PARITY_AUDIT_COMPLETE
@@ -146,7 +146,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 - 可执行代码 bundle、临时 Git worktree runner、路径策略、超时进程树终止和 run receipts。
 - ASHA mechanics admission；bounded Local Patch、一次 mechanical repair 和 generation provenance。
 - Structural Rewrite mechanics、ledger-backed state projector、deterministic action controller、unified executor 和 anytime settlement。
-- Research Harness V1：typed/scoped `ResearchContext`、manifest-bound `ResearchProfile`、不可覆盖的 authority services、真实 `ExperimentExecutor` 预算/评估权威、独立 local/structural provider、原子插件启动/逆序清理，以及 Profile → unified executor → ledger-backed search loop 的默认执行闭环。四个 P2 arm 已成为一等定义；Router 可按已加载能力工作，naive parallel 由两个禁用 handoff 的隔离 child profile 表达。每次新运行必须以 create-once `HarnessRunManifest` 绑定 Profile、SearchRunSpec、传递代码 bundle、Git/source tree、provider、contract/evaluator/environment、预算、seed、winner rule 与 claim ceiling，并写入 `PROFILE_EXECUTED_SEARCH_RUN` 图边。V1 仍未封存或运行 static composition search-value 比较，也未启用 Harness adaptation。
+- Research Harness V1/V1.1：typed/scoped `ResearchContext`、manifest-bound `ResearchProfile`、不可覆盖的 authority services、真实 `ExperimentExecutor` 预算/评估权威、独立 local/structural provider、原子插件启动/逆序清理，以及 Profile → unified executor → ledger-backed search loop 的默认执行闭环。四个 P2 arm 已成为一等定义；插件 manifest 与 strategy descriptor 共同声明 `BOOTSTRAP_PROPOSAL`、`LOCAL_REFINEMENT`、`STRUCTURAL_ESCAPE`、`META_STRATEGY`，Router 不再包含 Direct/Ada/EvoX operator/strategy id，并对缺失或重复 capability provider fail closed。未知 operator id 可仅凭能力契约接入；naive parallel 仍由两个禁用 handoff 的隔离 child profile 表达。每次新运行必须以 create-once `HarnessRunManifest` 绑定 Profile、SearchRunSpec、传递代码 bundle、Git/source tree、provider、contract/evaluator/environment、预算、seed、winner rule 与 claim ceiling，并写入 `PROFILE_EXECUTED_SEARCH_RUN` 图边。内置 catalog 仍为静态注册，不声称 package discovery/plugin marketplace 已完成。V1.1 只建立组合 mechanics，未封存或运行 static composition search-value 比较，也未启用 Harness adaptation。
 - residual-headroom task admission 与 matched-resource Search-Value MVP 协议/runner。
 - Benchmark Bank v1 的 47-family commit-pinned registry、DEV/SHADOW/SEALED 生命周期门、统一 adapter contract，以及可执行的 consumed Assignment/Coverage development 物化切片。
 
@@ -275,7 +275,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 38. 经 D-055 显式 supersede D-054 的“先证明 incumbent-monotonic candidate competition”下一门后，CMI Forced-Lineage Transmission R1 已实现但尚未执行。它只绑定 V3 的完整 5 个 eligible consumed states，三臂分别强制 incumbent、同期 control descendant、CMI descendant 为 Generation 0 parent；后续两代使用完全相同 Local Patch generator/model/prompt/budget/evaluator，且每个 valid child无视 fitness 继续成为下一代 parent。Generation 0 不计成功；primary 为 CMI lineage 与 matched-control lineage 的 best downstream utility，anytime AUC 从 forced parent 起算。严格 success gate 要求 5/5 primary win、两 family 全正、median primary/AUC 正和 exact two calls。该方向现保留为历史 protocol，不再作为默认新增自研 Operator 主线；没有新 fresh budget。详见 [`CMI_FORCED_LINEAGE_TRANSMISSION_R1.md`](CMI_FORCED_LINEAGE_TRANSMISSION_R1.md)。
 39. Research Harness V0 已实现 `ResearchContext` 的 typed extend/isolate/intercept、authority override fail-closed、插件 dependency/provides 校验、原子 boot/rollback/reverse teardown、Profile/HarnessGraph 记录，以及 Direct bootstrap、Ada lineage refinement、EvoX structural meta-strategy 的静态组合。Controller 仍把 replicate/promotion/budget/stagnation/stop 交给原冻结 deterministic policy；candidate 继续进入统一 ledger/evaluator，跨策略生成记录 `CROSS_SEEDED_TO`。这只建立 mechanics；未调用模型、未运行 evaluator、未消费 fresh/SEALED 资产，未建立 Ada/EvoX 官方 runtime 等价性、Hybrid search value、adaptive harness value 或 superiority。详见 [`RESEARCH_HARNESS_V0.md`](RESEARCH_HARNESS_V0.md)。
 40. Harness-first 系统理念与项目约束已固化到 [`SYSTEM_PHILOSOPHY.md`](SYSTEM_PHILOSOPHY.md)、`AGENTS.md` 与 D-057：Kernel whitelist、plugin/profile 默认边界、外部 engine 接入条件和 P0-P5 准入阶梯成为长期规则。此次仅更新治理与默认研发路线，没有修改代码、evaluator、GateEngine、协议资产、既有 receipt 或科学 verdict；不提高 Research Harness V0 的 mechanics claim ceiling。
-41. Research Harness V1 已把 manifest-bound Profile 接入实际 `SearchLoopRunner`：插件 registry 决定统一 executor 的 generation operators，root context 绑定真实 `ExperimentExecutor` 预算/评估权威，local 与 structural provider 分离，运行 terminal 后逆序 teardown。Core CLI 与 benchmark package 改为 lazy compatibility surface，历史协议 runner 不再进入默认 import path；旧直接命令仍可重放。协议中性 task 类型已从 MVP-0 模块抽出。针对性闭环、lifecycle、CLI isolation 与 Benchmark Bank 测试通过。该重构 0 model calls、0 evaluator science runs、0 fresh/SEALED assets，不改变任何既有 verdict；详见 [`RESEARCH_HARNESS_V1.md`](RESEARCH_HARNESS_V1.md)。
+41. Research Harness V1 已把 manifest-bound Profile 接入实际 `SearchLoopRunner`；V1.1 又把原本仍写死 Direct/Ada/EvoX identity 的 Router 收口为 manifest-bound capability contract。插件 registry 决定统一 executor 的 generation operators，root context 绑定真实 `ExperimentExecutor` 预算/评估权威，local 与 structural provider 分离，运行 terminal 后逆序 teardown。未知 operator identity 的 capability routing、重复 provider fail-closed、Profile 子集、lifecycle、replay binding、CLI isolation 与 Benchmark Bank 测试均有覆盖。内置插件发现仍是静态 catalog。该重构 0 model calls、0 evaluator science runs、0 fresh/SEALED assets，不改变任何既有 verdict；详见 [`RESEARCH_HARNESS_V1.md`](RESEARCH_HARNESS_V1.md)。
 
 ## 状态更新规则
 

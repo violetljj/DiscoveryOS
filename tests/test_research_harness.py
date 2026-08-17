@@ -15,17 +15,21 @@ from discoveryos.harness import (
     AdaTrajectoryPolicy,
     AuthorityOverrideError,
     HarnessEventSink,
+    HarnessResearchController,
     HarnessRunManifest,
     HarnessSearchRuntime,
+    OperatorRegistry,
     PluginActivation,
     PluginManifest,
     PluginSelection,
     ProviderBinding,
+    ResearchCapability,
     ResearchContext,
     ResearchHarness,
     ResearchProfile,
     ServiceKey,
     SourceSnapshot,
+    StrategyDescriptor,
     algorithm_discovery_v1_profile,
     build_root_research_context,
     harness_code_bundle_digest,
@@ -43,6 +47,7 @@ from discoveryos.operators.action_controller import (
     SearchState,
 )
 from discoveryos.operators.asha import RungDefinition
+from discoveryos.operators.local_patch import LocalPatchOperator
 from discoveryos.runtime.ledger import EvidenceLedger
 from discoveryos.runtime.search_loop import SearchRunSpec
 from discoveryos.util import digest_json
@@ -83,6 +88,22 @@ class ResearchContextTests(unittest.TestCase):
 
 
 class ResearchHarnessLifecycleTests(unittest.TestCase):
+    def test_manifest_binds_declared_capabilities_and_rejects_duplicates(self) -> None:
+        manifest = self._manifest("capability-bound")
+        capable = replace(
+            manifest,
+            capabilities=(ResearchCapability.LOCAL_REFINEMENT,),
+        )
+        self.assertNotEqual(manifest.digest, capable.digest)
+        with self.assertRaisesRegex(ValueError, "duplicate research capabilities"):
+            replace(
+                manifest,
+                capabilities=(
+                    ResearchCapability.LOCAL_REFINEMENT,
+                    ResearchCapability.LOCAL_REFINEMENT,
+                ),
+            )
+
     def test_profile_boot_rejects_a_plugin_manifest_binding_mismatch(self) -> None:
         class BoundPlugin:
             manifest = self._manifest("bound")
@@ -152,6 +173,33 @@ class ResearchHarnessLifecycleTests(unittest.TestCase):
                 ),
                 event_types,
             )
+
+    def test_profile_boot_rejects_activation_capability_drift(self) -> None:
+        class DriftedPlugin:
+            manifest = replace(
+                self._manifest("drifted"),
+                capabilities=(ResearchCapability.LOCAL_REFINEMENT,),
+            )
+
+            def activate(self, context, config):
+                del context, config
+                return PluginActivation(
+                    {},
+                    capabilities=(ResearchCapability.BOOTSTRAP_PROPOSAL,),
+                )
+
+        with tempfile.TemporaryDirectory() as directory:
+            ledger = EvidenceLedger(Path(directory) / "ledger.sqlite3")
+            profile = ResearchProfile(
+                "capability-drift",
+                (PluginSelection.create("drifted", DriftedPlugin.manifest.digest),),
+            )
+            with self.assertRaisesRegex(RuntimeError, "capabilities.*differ"):
+                ResearchHarness((DriftedPlugin(),)).boot(
+                    profile,
+                    ResearchContext.root({}),
+                    HarnessEventSink(ledger),
+                )
 
     @staticmethod
     def _manifest(plugin_id, *, requires=(), provides=()):
@@ -323,7 +371,7 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
                         decision = controller.decide(
                             self._state(step=1, strategy_id="evox_meta_strategy_v1")
                         )
-                        self.assertNotIn("CROSS_SEED_EVOX_TO_ADA", decision.reason_codes)
+                        self.assertNotIn("CROSS_SEED_STRUCTURAL_TO_LOCAL", decision.reason_codes)
                     else:
                         decision = controller.decide(
                             self._state(
@@ -332,7 +380,7 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
                                 stagnant=True,
                             )
                         )
-                        self.assertNotIn("CROSS_SEED_LINEAGE_TO_EVOX", decision.reason_codes)
+                        self.assertNotIn("CROSS_SEED_LOCAL_TO_STRUCTURAL", decision.reason_codes)
 
             profile = arms["harness_static_v1"][0]
             root, sink = build_root_research_context(
@@ -348,7 +396,7 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
                 decision = session.context.get(ACTION_CONTROLLER).decide(
                     self._state(step=3, strategy_id="ada_lineage_strategy_v1", stagnant=True)
                 )
-                self.assertIn("CROSS_SEED_LINEAGE_TO_EVOX", decision.reason_codes)
+                self.assertIn("CROSS_SEED_LOCAL_TO_STRUCTURAL", decision.reason_codes)
 
     def test_standard_profile_composes_three_strategies_without_replacing_authority(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -383,6 +431,73 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
             finally:
                 session.close()
 
+    def test_router_accepts_an_unknown_operator_by_declared_capability(self) -> None:
+        class CounterfactualBootstrapOperator(LocalPatchOperator):
+            operator_id = "counterfactual_bootstrap_v1"
+
+        with tempfile.TemporaryDirectory() as directory:
+            demo = initialize_demo(Path(directory))
+            operator = CounterfactualBootstrapOperator(
+                provider=_Provider(),
+                artifacts=demo.artifacts,
+                ledger=demo.ledger,
+                contract=demo.contract,
+                strategy_id="counterfactual_strategy_v1",
+            )
+            descriptor = StrategyDescriptor(
+                strategy_id="counterfactual_strategy_v1",
+                role="counterfactual_branch",
+                operator_id=operator.operator_id,
+                source_system="future-plugin",
+                mechanism="counterfactual branch proposal",
+                capabilities=(ResearchCapability.BOOTSTRAP_PROPOSAL,),
+            )
+            registry = OperatorRegistry().add(operator, descriptor)
+            controller = HarnessResearchController(self._controller(), registry)
+
+            decision = controller.decide(self._state(step=0, strategy_id="baseline"))
+
+            self.assertEqual("counterfactual_bootstrap_v1", decision.operator_id)
+            self.assertEqual("counterfactual_strategy_v1", decision.strategy_id)
+            self.assertIn("HARNESS_BOOTSTRAP_PROPOSAL", decision.reason_codes)
+            self.assertTrue(controller.replay(decision, self._state(step=0, strategy_id="baseline"))[0])
+
+    def test_router_fails_closed_on_ambiguous_capability_providers(self) -> None:
+        class FirstBootstrapOperator(LocalPatchOperator):
+            operator_id = "first_bootstrap_v1"
+
+        class SecondBootstrapOperator(LocalPatchOperator):
+            operator_id = "second_bootstrap_v1"
+
+        with tempfile.TemporaryDirectory() as directory:
+            demo = initialize_demo(Path(directory))
+            registry = OperatorRegistry()
+            for operator_type, strategy_id in (
+                (FirstBootstrapOperator, "first_strategy_v1"),
+                (SecondBootstrapOperator, "second_strategy_v1"),
+            ):
+                operator = operator_type(
+                    provider=_Provider(),
+                    artifacts=demo.artifacts,
+                    ledger=demo.ledger,
+                    contract=demo.contract,
+                    strategy_id=strategy_id,
+                )
+                registry = registry.add(
+                    operator,
+                    StrategyDescriptor(
+                        strategy_id=strategy_id,
+                        role="bootstrap",
+                        operator_id=operator.operator_id,
+                        source_system="test",
+                        mechanism="ambiguous test provider",
+                        capabilities=(ResearchCapability.BOOTSTRAP_PROPOSAL,),
+                    ),
+                )
+
+            with self.assertRaisesRegex(ValueError, "ambiguous providers.*BOOTSTRAP_PROPOSAL"):
+                HarnessResearchController(self._controller(), registry)
+
     def test_router_bootstraps_direct_then_cross_seeds_evox_to_ada(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             demo = initialize_demo(Path(directory))
@@ -407,7 +522,7 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
                 second = controller.decide(second_state)
                 self.assertEqual(SearchAction.LOCAL_PATCH, second.action)
                 self.assertEqual("ada_lineage_strategy_v1", second.strategy_id)
-                self.assertIn("CROSS_SEED_EVOX_TO_ADA", second.reason_codes)
+                self.assertIn("CROSS_SEED_STRUCTURAL_TO_LOCAL", second.reason_codes)
                 self.assertTrue(controller.replay(second, second_state)[0])
 
     def test_ada_trajectory_state_changes_local_mode_and_is_replay_bound(self) -> None:
@@ -507,7 +622,7 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
                 decision = controller.decide(state)
                 self.assertEqual(SearchAction.STRUCTURAL_ESCAPE, decision.action)
                 self.assertEqual("evox_meta_strategy_v1", decision.strategy_id)
-                self.assertIn("CROSS_SEED_LINEAGE_TO_EVOX", decision.reason_codes)
+                self.assertIn("CROSS_SEED_LOCAL_TO_STRUCTURAL", decision.reason_codes)
                 self.assertTrue(controller.replay(decision, state)[0])
 
     @staticmethod

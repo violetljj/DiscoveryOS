@@ -23,6 +23,15 @@ class HarnessEventType(str, Enum):
     SEARCH_FAILED = "SEARCH_FAILED"
 
 
+class ResearchCapability(str, Enum):
+    """Search-plane roles that a plugin can publish to a Profile."""
+
+    BOOTSTRAP_PROPOSAL = "BOOTSTRAP_PROPOSAL"
+    LOCAL_REFINEMENT = "LOCAL_REFINEMENT"
+    STRUCTURAL_ESCAPE = "STRUCTURAL_ESCAPE"
+    META_STRATEGY = "META_STRATEGY"
+
+
 @dataclass(frozen=True, slots=True)
 class HarnessEvent:
     event_type: HarnessEventType
@@ -51,6 +60,7 @@ class PluginManifest:
     authority_scope: str
     failure_semantics: str
     replay_contract: str
+    capabilities: tuple[ResearchCapability, ...] = ()
     requires: tuple[ServiceKey[Any], ...] = ()
     provides: tuple[ServiceKey[Any], ...] = ()
 
@@ -73,6 +83,8 @@ class PluginManifest:
             raise ValueError("plugin implementation digest must be a lowercase SHA-256 digest")
         if len(set(self.provides)) != len(self.provides):
             raise ValueError("plugin cannot declare duplicate provided services")
+        if len(set(self.capabilities)) != len(self.capabilities):
+            raise ValueError("plugin cannot declare duplicate research capabilities")
 
     @property
     def digest(self) -> str:
@@ -87,6 +99,7 @@ class PluginManifest:
                 "authority_scope": self.authority_scope,
                 "failure_semantics": self.failure_semantics,
                 "replay_contract": self.replay_contract,
+                "capabilities": tuple(item.value for item in self.capabilities),
                 "requires": tuple((key.name, key.authority) for key in self.requires),
                 "provides": tuple((key.name, key.authority) for key in self.provides),
             }
@@ -156,6 +169,7 @@ class ResearchProfile:
 class PluginActivation:
     services: Mapping[ServiceKey[Any], object]
     dispose: Callable[[], None] = lambda: None
+    capabilities: tuple[ResearchCapability, ...] = ()
 
 
 class ResearchPlugin(Protocol):
@@ -228,6 +242,11 @@ class ResearchHarness:
                         f"plugin {selection.plugin_id} is missing services: {','.join(sorted(missing))}"
                     )
                 activation = plugin.activate(context, selection.config_dict())
+                if activation.capabilities != plugin.manifest.capabilities:
+                    raise RuntimeError(
+                        f"plugin {selection.plugin_id} activated capabilities that differ "
+                        "from its manifest"
+                    )
                 undeclared = set(activation.services) - set(plugin.manifest.provides)
                 if undeclared:
                     raise RuntimeError(
@@ -255,6 +274,9 @@ class ResearchHarness:
                         "authority_scope": plugin.manifest.authority_scope,
                         "failure_semantics": plugin.manifest.failure_semantics,
                         "replay_contract": plugin.manifest.replay_contract,
+                        "capabilities": tuple(
+                            capability.value for capability in plugin.manifest.capabilities
+                        ),
                         "requires": tuple(key.name for key in plugin.manifest.requires),
                         "provides": tuple(key.name for key in plugin.manifest.provides),
                     },
