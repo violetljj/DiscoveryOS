@@ -7,9 +7,11 @@ from pathlib import Path
 
 from discoveryos.benchmarks.cmi_search_value_r1 import (
     _aggregate,
+    _bounded_observations,
     _load_r7_authority,
     _run_task,
 )
+from discoveryos.benchmarks.search_policy_admission import SearchObservation
 from discoveryos.benchmarks.cmi_search_value_r1_tasks import cmi_search_value_r1_tasks
 from tests.test_strategy_integration_si1 import _CommentProvider
 
@@ -31,6 +33,13 @@ BRIEF = {
 
 
 class CmiSearchValueR1Tests(unittest.TestCase):
+    def test_over_budget_observation_is_excluded_instead_of_crashing_aggregation(self) -> None:
+        observations = (
+            SearchObservation("within", None, 100, 1.0, 0.2, True, True, "basin"),
+            SearchObservation("over", "within", 120_001, 2.0, 0.3, True, True, "basin"),
+        )
+        self.assertEqual((observations[0],), _bounded_observations(observations))
+
     def test_checked_in_r7_authority_uses_the_frozen_success_gate(self) -> None:
         workspace = Path(__file__).resolve().parents[2] / "DiscoveryOS" / "runs" / "cmi-r7-fresh-causal-replication"
         if not workspace.is_dir():

@@ -296,7 +296,7 @@ def build_parser() -> argparse.ArgumentParser:
         "cmi-search-value-r1-seal",
         help="seal the paired fresh CMI-enabled versus CMI-disabled search protocol",
     )
-    cmi_svr1_seal.add_argument("--workspace", type=Path, default=Path("runs/cmi-search-value-r1"))
+    cmi_svr1_seal.add_argument("--workspace", type=Path, default=Path("runs/cmi-search-value-r1-v2"))
     cmi_svr1_seal.add_argument("--cmi-r7-workspace", type=Path, default=Path("runs/cmi-r7-fresh-causal-replication"))
     cmi_svr1_seal.add_argument("--cmi-r7-report-sha256", required=True)
     cmi_svr1_seal.add_argument("--model", required=True)
@@ -306,7 +306,7 @@ def build_parser() -> argparse.ArgumentParser:
         "cmi-search-value-r1-run",
         help="consume the sealed fresh CMI search-value cohort once",
     )
-    cmi_svr1_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-search-value-r1"))
+    cmi_svr1_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-search-value-r1-v2"))
     cmi_svr1_run.add_argument("--manifest-digest", required=True)
     cmi_svr1_run.add_argument("--model", required=True)
     cmi_svr1_run.add_argument("--codex-command", required=True)

@@ -53,14 +53,14 @@ from discoveryos.runtime.artifacts import ArtifactStore
 from discoveryos.util import digest_bytes, digest_json, jsonable
 
 
-PROTOCOL_ID = "CMI_SEARCH_VALUE_R1_V1"
-MANIFEST_RECORD = "cmi-search-value-r1-manifest.json"
-REPORT_RECORD = "cmi-search-value-r1-report.json"
+PROTOCOL_ID = "CMI_SEARCH_VALUE_R1_V2_RESOURCE_ENVELOPE_REPAIR"
+MANIFEST_RECORD = "cmi-search-value-r1-v2-manifest.json"
+REPORT_RECORD = "cmi-search-value-r1-v2-report.json"
 ARM_NAMES = ("CMI_DISABLED", "CMI_ENABLED")
 TASK_COUNT = 6
 COMMON_PREFIX_STEPS = 2
 DOWNSTREAM_STEPS = 1
-TOKEN_CEILING = 80_000
+TOKEN_CEILING = 120_000
 WALL_CEILING = 1_800.0
 FUNCTIONAL_DISTANCE_MAXIMUM = 0.10
 SIGN_TEST_ALPHA = 0.10
@@ -99,7 +99,7 @@ def seal_cmi_search_value_r1(
     implementation_paths = _implementation_paths()
     payload = {
         "protocol_id": PROTOCOL_ID,
-        "status": "CMI_SEARCH_VALUE_R1_SEALED_PRE_MODEL",
+        "status": "CMI_SEARCH_VALUE_R1_V2_SEALED_PRE_MODEL",
         "scientific_question": "Does the same bounded search produce greater final value when the only available extra action is the frozen admitted CMI operator?",
         "claim_ceiling": "CMI_SEARCH_VALUE_ON_FRESH_INSTANCES_WITHIN_FROZEN_ASSIGNMENT_COVERAGE_FAMILIES_AND_EVALUATOR_REGIME_ONLY",
         "model_calls_before_seal": 0,
@@ -110,6 +110,13 @@ def seal_cmi_search_value_r1(
             for path in implementation_paths
         },
         "cmi_r7_authority": authority["binding"],
+        "superseded_v1": {
+            "manifest_digest": "0a82137cdda8d406885b276e20b04308515e78ea5bf461a60c2a5e20e32114e7",
+            "failure_receipt_sha256": "fde8384ea996e1b588f5ba62b04b7fd71d7da85675eedac2d4b96cb0b7a9f438",
+            "status": "CMI_SEARCH_VALUE_R1_V1_NOT_EVALUABLE_RESOURCE_ENVELOPE",
+            "scientific_outputs_admitted": 0,
+            "cohort_reuse_authorized": False,
+        },
         "frozen_brief": authority["manifest"]["frozen_brief"],
         "freshness": {
             "instance_fresh": True,
@@ -674,8 +681,9 @@ def _arm_summary(
     evaluator_calls: int,
 ) -> dict[str, Any]:
     headroom = _si2_headroom_evidence(item, repository)[0]
-    metrics = compute_policy_metrics(headroom, observations, token_budget=TOKEN_CEILING, wall_budget=WALL_CEILING)
-    metrics.update(_extra_metrics(observations, TOKEN_CEILING, headroom))
+    bounded_observations = _bounded_observations(observations)
+    metrics = compute_policy_metrics(headroom, bounded_observations, token_budget=TOKEN_CEILING, wall_budget=WALL_CEILING)
+    metrics.update(_extra_metrics(bounded_observations, TOKEN_CEILING, headroom))
     return {
         "metrics": metrics,
         "observations": [jsonable(item) for item in observations],
@@ -687,6 +695,14 @@ def _arm_summary(
             "wall_ceiling_respected": usage.wall_seconds <= WALL_CEILING,
         },
     }
+
+
+def _bounded_observations(observations: tuple[SearchObservation, ...]) -> tuple[SearchObservation, ...]:
+    return tuple(
+        item
+        for item in observations
+        if item.cumulative_tokens <= TOKEN_CEILING and item.cumulative_wall_seconds <= WALL_CEILING
+    )
 
 
 def _aggregate(manifest: dict[str, Any], results: list[dict[str, Any]]) -> dict[str, Any]:
@@ -824,7 +840,7 @@ def _load_and_verify_manifest(workspace: Path, expected_digest: str, provider: P
     payload = {key: value for key, value in manifest.items() if key != "manifest_digest"}
     if manifest.get("manifest_digest") != expected_digest or digest_json(payload) != expected_digest:
         raise RuntimeError("CMI Search Value R1 manifest digest mismatch")
-    if manifest.get("status") != "CMI_SEARCH_VALUE_R1_SEALED_PRE_MODEL" or manifest.get("model_calls_before_seal") != 0:
+    if manifest.get("status") != "CMI_SEARCH_VALUE_R1_V2_SEALED_PRE_MODEL" or manifest.get("model_calls_before_seal") != 0:
         raise RuntimeError("CMI Search Value R1 was not sealed before model execution")
     repository = _repository_snapshot()
     if repository["head_commit"] != manifest["experiment_code_sha"]:

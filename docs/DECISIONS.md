@@ -351,3 +351,10 @@
 - **决定**：在六个由 salt 无筛选派生的 fresh Assignment/Coverage instances 上，先运行两步完全共享的 Local Patch 搜索前缀。只有冻结 applicability 成立时，Control 才继续默认 Local Patch、Treatment 才调用 R7 admitted CMI；随后两臂各运行同一 downstream Local Patch。若不 eligible，两臂共享 exact fallback 且 task 保留为 tie。每臂 token ceiling 为 `80,000`，并发固定为 1。
 - **原因**：共享前缀消除 intervention 前的 provider stochastic variance，并减少重复模型调用；自然 opportunity frequency 仍由未筛选任务决定。加入 downstream step 可区分“CMI 生成一个更好候选”与“CMI 候选被搜索保留并改变后续 parent/最终结果”。
 - **后果**：Search advantage 不能单独产生 CMI claim。只有 paired final/AUC/sign、`opportunity -> eligibility -> invocation -> accepted -> retained/downstream contribution` 和 cost 三门同时通过，才可输出限于同两 family/evaluator regime 的 CMI search value。未触发、未 retained 或无 downstream contribution 时，即使 Treatment aggregate 更高也不得归因给 CMI。六个实例只在 create-once run 开始后消费；协议封存后只允许 validity/executability blocker 修复，不允许改机制、threshold、task、gate 或 operator schedule。
+
+## D-051：V1 resource-envelope blocker 只允许版本化资源修复
+
+- **日期**：2026-08-17
+- **决定**：CMI Search Value R1 V1 在首个 terminal task receipt 前因实际四调用总 token `85,348 > 80,000` 失败，正式标记 `CMI_SEARCH_VALUE_R1_V1_NOT_EVALUABLE_RESOURCE_ENVELOPE`。V1 manifest、partial artifacts 与 failure receipt 保留且不得重跑；V2 使用新 salt 和全新无筛选 cohort，将 per-arm ceiling 提高到 `120,000`，并让超预算 observation 被排除、arm 结算为 non-evaluable 而不是 aggregation crash。
+- **原因**：V1 的手工 paired runner 没有为 provider input token 开销预留完整四调用 horizon；最后一次 generation 已按预算权威正确 fail closed，缺陷只在 terminal reporting。`120,000` 沿用相同每调用量级并覆盖冻结 Control 四调用上界，不改变 primary metric、CMI policy、eligibility、task family、evaluator 或 winner gate。
+- **后果**：V1 不产生 scientific negative 或 positive，已部分执行的 task 和其余 V1 cohort 均不得进入 V2。V1 中暴露的 science metrics 不得用于 V2 设计；V2 唯一允许变化是 salt/task identity、resource envelope 与 overrun terminalization。D-050 的 `80,000` ceiling 被本决定仅对 V2 supersede，其余设计继续有效。
