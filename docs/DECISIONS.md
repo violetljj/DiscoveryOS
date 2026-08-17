@@ -344,3 +344,38 @@
 - **决定**：接受 manifest `df1d2dd26730a5487e8e1e685339b7fd35430abd509cb4ea0433aa6458228209` 与 report SHA-256 `3072e74c1a0114920f98c7930097a5488dd8a50763709a073513a1ef4dca763f`。6/6 exact fresh states 均 technically evaluable，且唯一 primary endpoint `utility_delta > resolution` 全部为真；0 negative、0 tie，两 family 各 3/3 positive，cost guardrails 全通过。
 - **原因**：结果在没有 fresh 后调参、没有 state replacement、零模型和 matched deterministic pairs 下复现了 R5/R6 的 causal sign。Control 为 0/6 escape/replacement，Treatment 为 6/6；aggregate/max-state evaluator runtime ratio 为 `1.04189x` / `1.61769x`，不支持“靠明显增加 evaluator cost 换效果”的解释。
 - **后果**：输出 `CMI_OPERATOR_ADMITTED_ON_FRESH_ASSIGNMENT_COVERAGE_STATES` 与 `CMI_ENABLED_SEARCH_VS_IDENTICAL_SEARCH_WITHOUT_CMI_PREREGISTRATION_AUTHORIZED`。六个 exact states 永久 consumed；不增加 R7.x replay，不修改 CMI、threshold 或 gate。Operator admission 仍限于同两 family 和同 evaluator regime，不能写成 DiscoveryOS search core 已增强。下一科学问题是完整搜索系统的 CMI-on/off matched comparison。
+
+## D-050：CMI Search Value R1 使用共享前缀后的唯一组件分叉
+
+- **日期**：2026-08-17
+- **决定**：在六个由 salt 无筛选派生的 fresh Assignment/Coverage instances 上，先运行两步完全共享的 Local Patch 搜索前缀。只有冻结 applicability 成立时，Control 才继续默认 Local Patch、Treatment 才调用 R7 admitted CMI；随后两臂各运行同一 downstream Local Patch。若不 eligible，两臂共享 exact fallback 且 task 保留为 tie。每臂 token ceiling 为 `80,000`，并发固定为 1。
+- **原因**：共享前缀消除 intervention 前的 provider stochastic variance，并减少重复模型调用；自然 opportunity frequency 仍由未筛选任务决定。加入 downstream step 可区分“CMI 生成一个更好候选”与“CMI 候选被搜索保留并改变后续 parent/最终结果”。
+- **后果**：Search advantage 不能单独产生 CMI claim。只有 paired final/AUC/sign、`opportunity -> eligibility -> invocation -> accepted -> retained/downstream contribution` 和 cost 三门同时通过，才可输出限于同两 family/evaluator regime 的 CMI search value。未触发、未 retained 或无 downstream contribution 时，即使 Treatment aggregate 更高也不得归因给 CMI。六个实例只在 create-once run 开始后消费；协议封存后只允许 validity/executability blocker 修复，不允许改机制、threshold、task、gate 或 operator schedule。
+
+## D-051：V1 resource-envelope blocker 只允许版本化资源修复
+
+- **日期**：2026-08-17
+- **决定**：CMI Search Value R1 V1 在首个 terminal task receipt 前因实际四调用总 token `85,348 > 80,000` 失败，正式标记 `CMI_SEARCH_VALUE_R1_V1_NOT_EVALUABLE_RESOURCE_ENVELOPE`。V1 manifest、partial artifacts 与 failure receipt 保留且不得重跑；V2 使用新 salt 和全新无筛选 cohort，将 per-arm ceiling 提高到 `120,000`，并让超预算 observation 被排除、arm 结算为 non-evaluable 而不是 aggregation crash。
+- **原因**：V1 的手工 paired runner 没有为 provider input token 开销预留完整四调用 horizon；最后一次 generation 已按预算权威正确 fail closed，缺陷只在 terminal reporting。`120,000` 沿用相同每调用量级并覆盖冻结 Control 四调用上界，不改变 primary metric、CMI policy、eligibility、task family、evaluator 或 winner gate。
+- **后果**：V1 不产生 scientific negative 或 positive，已部分执行的 task 和其余 V1 cohort 均不得进入 V2。V1 中暴露的 science metrics 不得用于 V2 设计；V2 唯一允许变化是 salt/task identity、resource envelope 与 overrun terminalization。D-050 的 `80,000` ceiling 被本决定仅对 V2 supersede，其余设计继续有效。
+
+## D-052：V2 invalid descendant 必须结算而不是再次 materialize
+
+- **日期**：2026-08-17
+- **决定**：V2 首个 task 的第二个 prefix descendant 已由冻结 evaluator 记为 `INVALID_MECHANICS/PATCH_APPLY_FAILURE`，但 runner 随后仍调用 source materialization，导致 process-level error。V2 标记 `CMI_SEARCH_VALUE_R1_V2_NOT_EVALUABLE_INVALID_DESCENDANT_TERMINALIZATION`，manifest、partial artifacts 与 failure receipt 全部保留且 cohort 不重用。V3 只允许在 `valid && feasible` 时 materialize source；invalid observation 保留在 trace、不能触发 eligibility、不能替换 parent。
+- **原因**：invalid candidate 是预声明的 mechanics outcome，不应升级为 runner crash。Fake-provider 回归此前只覆盖可应用的 comment patches，没有覆盖“generation 成功但 evaluator patch apply 失败”的真实路径。
+- **后果**：V3 使用新 salt 与全新无筛选 cohort，resource ceiling 保持 `120,000`，所有科学门不变。V3 seal 前必须用 exact runner 和真实 provider 在 consumed development task 上完成多步 preflight，覆盖 valid/invalid descendant 的 terminalization；preflight 结果不得选择 V3 tasks 或改变 science gates。
+
+## D-053：接受 CMI Search Value R1 V3 的未建立结果
+
+- **日期**：2026-08-17
+- **决定**：接受 manifest `5c1395d78efc1b102896471655cc9cf83b7d61585592172712b92a4191233d3b` 与 report SHA-256 `de4850ae8c75bec35455e197356bd0dc608d47c7e6983a9a9025617ccea2a39b`。六个 exact fresh tasks 全部 evaluable，paired result 为 `0 win / 6 tie / 0 loss`，median final/AUC delta 均为 `0`，exact-sign `p=1.0`，正式 verdict 为 `CMI_SEARCH_VALUE_NOT_ESTABLISHED`。
+- **原因**：CMI 在五个 eligible tasks 上均实际调用且 descendant technically accepted，但全部未 retained，也未成为 downstream parent 或产生 downstream retained contribution；因此 Search advantage 与 Causal transmission 两门均失败。Cost gate 独立通过，不能把结果归因于 enabled arm 资源不足或 evaluator 调用不匹配。
+- **后果**：保留 R7 的 `ADMITTED OPERATOR` 状态，但不得再声称或暗示 CMI 已提升 DiscoveryOS 完整搜索价值。六个 V3 tasks 永久 consumed；不对本 cohort 重跑、补 seed、改 threshold 或事后修改 gate。后续若研究，应作为新的机制/调度问题重新走 consumed-development 证据链，而不是延长 R1。
+
+## D-054：CMI transmission autopsy 先裁决 candidate competition，不改 selection
+
+- **日期**：2026-08-17
+- **决定**：接受绑定 V3 manifest/report、六个 task receipts、真实 treatment/shared-prefix ledgers 与 R7 report 的零调用 autopsy。5/5 invoked CMI descendants 都 valid，但全部低于 incumbent 与同期 control intervention；Assignment/Coverage median CMI-minus-incumbent 为 `-0.03908327 / -0.01007647`，正式诊断为 `CMI_DESCENDANT_COMPETITION_FAILURE_DETECTED_ON_CONSUMED_V3_TRACES`。当前不接受 selection integration defect，也不开放 forced-retention 或 fresh search budget。
+- **原因**：R7/V3 的声明目标、per-category score resolution 与 CMI Operator output digest 对齐，未观察到 selection objective mismatch。V3 冻结 selection 只是拒绝了低于阈值的候选。原 task report 的 `observations[].parent_id` 是顺序代理；权威 `CandidateSpec.parent_ids` 证明 5/5 downstream candidates 都从 prefix incumbent 生成，现有缓存中没有 CMI-parent descendant，无法离线识别 forced-retention 后的 compounding effect。
+- **后果**：Autopsy record SHA-256 为 `45e960bcad90ee0f777e202f089051662b6cb5450825fe1f97f32fc0f60b8b7d`，claim ceiling 仅为 consumed V3 trace diagnostic。下一允许问题是另行冻结 consumed-task 的 incumbent-conditioned/monotonic CMI candidate-competition protocol；必须先证明 CMI 能保留强 incumbent 的已有价值并超过 frozen retention threshold，才可提出 lineage continuation 或 selection integration。不得把 R7 local causal value、V3 token 较少或离线不可识别改写为 search value、效率优势或 selection failure。

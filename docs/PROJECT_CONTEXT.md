@@ -132,4 +132,6 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - Consumed development causal value / CMI-R5：`CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md`
 - Consumed distribution replication / CMI-R6：`CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md`
 - Fresh-state causal replication / CMI-R7：`CMI_R7_FRESH_CAUSAL_REPLICATION.md`
+- Complete-search CMI on/off value trial：`CMI_SEARCH_VALUE_R1.md`
+- CMI consumed-trace search transmission autopsy：`CMI_SEARCH_TRANSMISSION_AUTOPSY_R1.md`
 - 长期 Benchmark Bank、family/shard 生命周期与 adapter admission：`BENCHMARK_BANK_V1.md`
