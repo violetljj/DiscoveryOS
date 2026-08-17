@@ -7,6 +7,7 @@ from pathlib import Path
 
 from discoveryos.benchmarks.cmi_search_value_r1 import (
     _aggregate,
+    _load_r7_authority,
     _run_task,
 )
 from discoveryos.benchmarks.cmi_search_value_r1_tasks import cmi_search_value_r1_tasks
@@ -30,6 +31,16 @@ BRIEF = {
 
 
 class CmiSearchValueR1Tests(unittest.TestCase):
+    def test_checked_in_r7_authority_uses_the_frozen_success_gate(self) -> None:
+        workspace = Path(__file__).resolve().parents[2] / "DiscoveryOS" / "runs" / "cmi-r7-fresh-causal-replication"
+        if not workspace.is_dir():
+            self.skipTest("ignored CMI-R7 authority is not present in this checkout")
+        authority = _load_r7_authority(
+            workspace,
+            "3072e74c1a0114920f98c7930097a5488dd8a50763709a073513a1ef4dca763f",
+        )
+        self.assertTrue(authority["report"]["success_gate"]["passed"])
+
     def test_population_is_fixed_balanced_and_unique(self) -> None:
         tasks = cmi_search_value_r1_tasks()
         self.assertEqual(6, len(tasks))

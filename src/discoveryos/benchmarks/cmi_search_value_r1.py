@@ -784,7 +784,7 @@ def _load_r7_authority(workspace: Path, expected_report_sha256: str) -> dict[str
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if (
         report.get("verdict") != "CMI_R7_FRESH_CAUSAL_REPLICATION_PASSED"
-        or not report.get("primary_gate", {}).get("passed")
+        or not report.get("success_gate", {}).get("passed")
         or not report.get("cmi_enabled_search_comparison_preregistration_authorized")
         or report.get("manifest_digest") != manifest.get("manifest_digest")
     ):
