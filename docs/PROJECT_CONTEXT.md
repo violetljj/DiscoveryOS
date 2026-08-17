@@ -127,3 +127,4 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - Causal Mechanism Intelligence / CMI-R0：`CAUSAL_MECHANISM_INTELLIGENCE_R0.md`
 - Real probe calibration / CMI-R1：`CMI_R1_REAL_PROBE_CALIBRATION.md`
 - Bounded real diagnosis / CMI-R2：`CMI_R2_BOUNDED_REAL_DIAGNOSIS.md`
+- Functional basin escape Mechanism Brief / CMI-R3：`CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md`

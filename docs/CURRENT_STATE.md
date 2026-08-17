@@ -71,6 +71,10 @@ CMI_R2_REAL_DIAGNOSIS_COMPLETE
 CMI_R2_FUNCTIONAL_BASIN_LOCK_SUPPORTED_ON_TWO_DEV_STATES
 CMI_R2_DEVELOPMENT_MECHANISM_BRIEF_AUTHORIZED
 NO_NEW_OPERATOR_AUTHORIZED
+CMI_R3_PROTOCOL_IMPLEMENTED
+CMI_R3_NOT_YET_SEALED
+NO_ESCAPE_OPERATOR_IMPLEMENTED
+NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -188,6 +192,7 @@ NO_NEW_OPERATOR_AUTHORIZED
 25. CMI-R0 已实现最小诊断纵向切片：`FailurePhenotypeReceipt`、`BottleneckHypothesis`、`DiagnosticProbeResult` 与确定性 fail-closed 状态机。Create-once synthetic run 的 manifest digest 为 `a6f3986da9f234bcbb417e3c2cbb5ea9b0e69cb3303b2e6706149c84d4788984`，report SHA-256 为 `bac3c68811d4f903cb080004378dfdaabe05e9e2e3784816b53bd86f406c8001`；null 保持 `NO_ACTIONABLE_BOTTLENECK`，positive control 唯一恢复预构造的 `H5_STRUCTURAL_BASIN_LOCK`。全程 0 model calls、0 evaluator calls、0 fresh tasks。该结果只证明诊断器能区分预构造输入，不建立现实 bottleneck、不授权现实 Mechanism Brief 或新 Operator，也不开放 fresh search-value budget。完整边界见 [`CAUSAL_MECHANISM_INTELLIGENCE_R0.md`](CAUSAL_MECHANISM_INTELLIGENCE_R0.md)。
 26. CMI-R1 real probe calibration 已正式通过。Manifest digest 为 `930ff7a5974da5d41b7b1d949b5b1fbd373ef4204fb8040f89149e92ef70f65d`，report SHA-256 为 `7de7d2238102045373dd8fddd043b1e746df557e0d2137b0433f291ad394f037`。Assignment 与 coverage 均恢复 `6/7` ranked controls，reference headroom 分别为 `0.20914510` / `0.10170301`，same-source functional distance 均为 `0`，baseline/reference distance 为 `0.41975309` / `0.27777778`。全程 0 model/provider calls、0 fresh search-value tasks；只授权另行预注册 bounded real diagnosis，不建立现实 bottleneck。详见 [`CMI_R1_REAL_PROBE_CALIBRATION.md`](CMI_R1_REAL_PROBE_CALIBRATION.md)。
 27. CMI-R2 bounded real diagnosis 已完成。Manifest digest 为 `e7729e2d186ce60acd00bf56f61b783c4d8025a8c2babe67c9824da9226d2a0f`，controls SHA-256 为 `7add4d0ec5aa490544b9a1e948b13b420a281b654a6599355b27018ae7ed7dad`，report SHA-256 为 `0dabc1d1fb9850266e5cbdb58a5868bffc45144c408d2d269df17504e47d3dfb`。6/6 calls evaluable/valid，合计 `116,729` tokens；evaluator sensitivity 与 valid-source rate 均为 `1.0`，反证 evaluator insensitivity 与 implementation bottleneck。每 state 的三个 source SHA-256 各不相同，但 evaluator score 与冻结 functional signature 各自完全相同，六个 within-state pair distances 全为 `0`；因此 `H5_STRUCTURAL_BASIN_LOCK` 在这两个 dev states 上被唯一支持，状态机输出 `MECHANISM_BRIEF_ALLOWED`。该结论不授权 Operator、value trial 或 fresh search-value budget。详见 [`CMI_R2_BOUNDED_REAL_DIAGNOSIS.md`](CMI_R2_BOUNDED_REAL_DIAGNOSIS.md)。
+28. CMI-R3 functional-basin escape Mechanism Brief 协议已实现但尚未正式封存。它只绑定 R2 不可变 report/controls，以零模型门检查 applicability、非平凡 intervention fingerprint、causal reachability、state-local null/positive controls 和失败语义；不同 source 文本本身不构成干预。通过后也只允许另行冻结新 dev states 上的 Operator protocol，不授权 Operator、value trial 或 fresh search-value budget。详见 [`CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md`](CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md)。
 
 ## 状态更新规则
 
@@ -216,3 +221,4 @@ NO_NEW_OPERATOR_AUTHORIZED
 - CMI-R0 Causal Mechanism Intelligence：[`CAUSAL_MECHANISM_INTELLIGENCE_R0.md`](CAUSAL_MECHANISM_INTELLIGENCE_R0.md)
 - CMI-R1 real probe calibration：[`CMI_R1_REAL_PROBE_CALIBRATION.md`](CMI_R1_REAL_PROBE_CALIBRATION.md)
 - CMI-R2 bounded real diagnosis：[`CMI_R2_BOUNDED_REAL_DIAGNOSIS.md`](CMI_R2_BOUNDED_REAL_DIAGNOSIS.md)
+- CMI-R3 functional basin escape brief：[`CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md`](CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md)

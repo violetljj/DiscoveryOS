@@ -59,6 +59,8 @@ from discoveryos.benchmarks import (
     run_cmi_real_controls,
     run_cmi_real_diagnosis,
     seal_cmi_real_diagnosis,
+    admit_cmi_escape_brief,
+    seal_cmi_escape_brief,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.mechanism_intelligence import run_cmi_r0_synthetic, seal_cmi_r0_protocol
@@ -237,6 +239,14 @@ def build_parser() -> argparse.ArgumentParser:
             command_parser.add_argument("--max-workers", type=int, default=2)
         else:
             command_parser.add_argument("--manifest-digest", required=True)
+    cmi_r3_seal = subparsers.add_parser("cmi-r3-seal-brief", help="seal the zero-model functional-basin escape Mechanism Brief")
+    cmi_r3_seal.add_argument("--workspace", type=Path, default=Path("runs/cmi-r3-functional-basin-escape-brief"))
+    cmi_r3_seal.add_argument("--cmi-r2-workspace", type=Path, default=Path("runs/cmi-r2-bounded-real-diagnosis"))
+    cmi_r3_seal.add_argument("--cmi-r2-report-sha256", required=True)
+    cmi_r3_seal.add_argument("--cmi-r2-controls-sha256", required=True)
+    cmi_r3_admit = subparsers.add_parser("cmi-r3-admit-brief", help="admit the sealed Mechanism Brief using bound zero-model controls")
+    cmi_r3_admit.add_argument("--workspace", type=Path, default=Path("runs/cmi-r3-functional-basin-escape-brief"))
+    cmi_r3_admit.add_argument("--manifest-digest", required=True)
     cib_parent_seal = subparsers.add_parser(
         "cib-seal-parent-dev",
         help="seal consumed development states for a real parent-policy paired trace",
@@ -522,6 +532,15 @@ def main(argv: list[str] | None = None) -> int:
                 result = run_cmi_real_controls(args.workspace, manifest_digest=args.manifest_digest, provider=provider)
             else:
                 result = run_cmi_real_diagnosis(args.workspace, manifest_digest=args.manifest_digest, provider=provider, progress=lambda message: print(message, file=sys.stderr, flush=True))
+        elif args.command == "cmi-r3-seal-brief":
+            result = seal_cmi_escape_brief(
+                args.workspace,
+                cmi_r2_workspace=args.cmi_r2_workspace,
+                cmi_r2_report_sha256=args.cmi_r2_report_sha256,
+                cmi_r2_controls_sha256=args.cmi_r2_controls_sha256,
+            )
+        elif args.command == "cmi-r3-admit-brief":
+            result = admit_cmi_escape_brief(args.workspace, manifest_digest=args.manifest_digest)
         elif args.command == "cib-seal-parent-dev":
             result = seal_parent_dev_cib_protocol(args.workspace)
         elif args.command == "cib-run-parent-dev":

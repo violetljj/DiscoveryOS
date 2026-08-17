@@ -267,3 +267,10 @@
 - **决定**：接受 CMI-R2 的 two-state development diagnosis：evaluator insensitivity 与 implementation bottleneck 被反证，`H5_STRUCTURAL_BASIN_LOCK` 被唯一支持，允许另行冻结 development Mechanism Brief。
 - **原因**：六个独立 Direct calls 全部 evaluable/valid 且资源合规；evaluator recovery 与 valid-source rate 均为 `1.0`。每 state 的三个源码 hash 不同，但各自 evaluator score 与 functional signature 完全相同，六个预注册 pairwise distances 全为 `0`，低于支持阈值 `0.10`。因此差异停留在源码层，未进入冻结功能行为面。
 - **后果**：可以提出以 functional basin escape 为 causal target 的 Mechanism Brief，但不能从两状态诊断外推一般 representation ceiling，也不能直接实现 Operator、运行 value trial 或开放 fresh search-value budget。下一协议必须冻结 escape preconditions、required context、intervention fingerprint、null/positive controls 与 failure modes。
+
+## D-039：functional basin escape 必须先通过零模型 Mechanism Brief admission
+
+- **日期**：2026-08-17
+- **决定**：CMI-R3 只绑定 CMI-R2 的不可变 report 与 controls，以零模型门冻结 functional-output-basin causal target、适用前提、所需上下文、干预指纹、因果可达链、null/positive controls、禁止替代和失败语义。source 文本不同不是充分指纹；候选必须有效且在 state-local probe 上距 incumbent envelope 大于 `0.10`。
+- **原因**：R2 已证明不同 source 可保持完全相同的 functional signature，因此在实现 Operator 前必须先排除 source-only、rewrite/repair 和 evaluator-changing 的伪干预。
+- **后果**：Brief admission 只允许另行设计 create-once Operator protocol；它不证明 Operator 存在或有效，不授权 value trial 或 fresh search-value budget，也不得重跑 consumed R2 states。
