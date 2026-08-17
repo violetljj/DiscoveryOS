@@ -56,6 +56,9 @@ from discoveryos.benchmarks import (
     seal_operator_causal_value_protocol,
     run_cmi_probe_calibration,
     seal_cmi_probe_calibration,
+    run_cmi_real_controls,
+    run_cmi_real_diagnosis,
+    seal_cmi_real_diagnosis,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.mechanism_intelligence import run_cmi_r0_synthetic, seal_cmi_r0_protocol
@@ -216,6 +219,24 @@ def build_parser() -> argparse.ArgumentParser:
     )
     cmi_r1_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-r1-real-probe-calibration"))
     cmi_r1_run.add_argument("--manifest-digest", required=True)
+    for name, help_text in (
+        ("cmi-r2-seal", "seal a six-call bounded real bottleneck diagnosis"),
+        ("cmi-r2-controls", "run zero-model controls before CMI-R2 provider calls"),
+        ("cmi-r2-run", "run the sealed six-call CMI-R2 diagnosis"),
+    ):
+        command_parser = subparsers.add_parser(name, help=help_text)
+        command_parser.add_argument("--workspace", type=Path, default=Path("runs/cmi-r2-bounded-real-diagnosis"))
+        command_parser.add_argument("--model", required=True)
+        command_parser.add_argument("--codex-command", default="codex")
+        command_parser.add_argument("--reasoning-effort", required=True)
+        if name == "cmi-r2-seal":
+            command_parser.add_argument("--cmi-r1-workspace", type=Path, default=Path("runs/cmi-r1-real-probe-calibration"))
+            command_parser.add_argument("--cmi-r1-report-sha256", required=True)
+            command_parser.add_argument("--resource-workspace", type=Path, default=Path("runs/emc-resource-calibration-r1"))
+            command_parser.add_argument("--resource-record-sha256", required=True)
+            command_parser.add_argument("--max-workers", type=int, default=2)
+        else:
+            command_parser.add_argument("--manifest-digest", required=True)
     cib_parent_seal = subparsers.add_parser(
         "cib-seal-parent-dev",
         help="seal consumed development states for a real parent-policy paired trace",
@@ -488,6 +509,19 @@ def main(argv: list[str] | None = None) -> int:
             result = seal_cmi_probe_calibration(args.workspace)
         elif args.command == "cmi-r1-run-probes":
             result = run_cmi_probe_calibration(args.workspace, manifest_digest=args.manifest_digest)
+        elif args.command in {"cmi-r2-seal", "cmi-r2-controls", "cmi-r2-run"}:
+            provider = CodexExecProvider(
+                command=tuple(shlex.split(args.codex_command, posix=False)),
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+                output_schema=__import__("discoveryos.benchmarks.executable_mechanism_contract", fromlist=["IMPLEMENTATION_SCHEMA"]).IMPLEMENTATION_SCHEMA,
+            )
+            if args.command == "cmi-r2-seal":
+                result = seal_cmi_real_diagnosis(args.workspace, cmi_r1_workspace=args.cmi_r1_workspace, cmi_r1_report_sha256=args.cmi_r1_report_sha256, resource_workspace=args.resource_workspace, resource_record_sha256=args.resource_record_sha256, provider=provider, max_workers=args.max_workers)
+            elif args.command == "cmi-r2-controls":
+                result = run_cmi_real_controls(args.workspace, manifest_digest=args.manifest_digest, provider=provider)
+            else:
+                result = run_cmi_real_diagnosis(args.workspace, manifest_digest=args.manifest_digest, provider=provider, progress=lambda message: print(message, file=sys.stderr, flush=True))
         elif args.command == "cib-seal-parent-dev":
             result = seal_parent_dev_cib_protocol(args.workspace)
         elif args.command == "cib-run-parent-dev":

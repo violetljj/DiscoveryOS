@@ -60,6 +60,7 @@ from .operator_causal_value import (
     seal_operator_causal_value_protocol,
 )
 from .cmi_probe_calibration import run_cmi_probe_calibration, seal_cmi_probe_calibration
+from .cmi_real_diagnosis import run_cmi_real_controls, run_cmi_real_diagnosis, seal_cmi_real_diagnosis
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -116,4 +117,7 @@ __all__ = [
     "run_operator_causal_value_validation",
     "seal_cmi_probe_calibration",
     "run_cmi_probe_calibration",
+    "seal_cmi_real_diagnosis",
+    "run_cmi_real_controls",
+    "run_cmi_real_diagnosis",
 ]

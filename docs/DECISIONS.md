@@ -253,3 +253,10 @@
 - **决定**：CMI-R1 只在两个从未消费的 assignment/coverage development episodes 上校准诊断工具，不生成候选。每个 state 冻结 baseline、三个 intermediate controls、reference、六个 evaluator seeds 与三个独立 functional-probe seeds。必须同时满足 baseline/reference valid、reference headroom 至少一个 score resolution、7 个预声明 ranked pairs 至少恢复 6 个、same-source functional distance 精确为零、baseline/reference functional distance 至少 `0.10`。
 - **原因**：若 evaluator control、perfect implementation control 或 functional basin assay 本身不敏感，直接花模型预算进行现实瓶颈诊断只会得到不可解释的 null。把该门放在 provider 前可以用秒级本地执行排除 instrumentation failure。
 - **后果**：R1 无模型、无 provider、无 fresh search-value task。两状态任一失败即关闭当前 probe 定义，不得进入现实诊断。全部通过也只授权另行预注册小规模现实诊断，不建立现实 bottleneck、不生成 Mechanism Brief、不选择 Operator。
+
+## D-037：现实瓶颈诊断限于两状态六次 Direct generation
+
+- **日期**：2026-08-17
+- **决定**：CMI-R2 在两个新 dev episodes 上各运行三个独立 Direct draws，总调用上限 6、并发上限 2、单调用沿用已验证的 `78,000` token ceiling。Provider 前必须重新通过两状态零模型 controls。冻结的竞争解释只有 evaluator insensitivity、implementation bottleneck 与 functional basin lock；阈值分别由 ranked recovery、valid-source rate 和 within-state functional distance 给出。
+- **原因**：CMI-R1 已证明 probe 对已知差异敏感，下一最小问题是现实 Direct generation 的失败形态。六次调用足以形成每状态三个 pairwise functional distances，同时避免在机制尚未诊断前投入 paired Operator experiment 的数十次调用。
+- **后果**：少于每状态三个 valid candidates 时 basin probe 为 `NOT_EVALUABLE`。只有一个 hypothesis supported 且其余全部 refuted 才允许 development Mechanism Brief；即使成立也不授权 Operator 实现、value trial 或 fresh search-value budget。

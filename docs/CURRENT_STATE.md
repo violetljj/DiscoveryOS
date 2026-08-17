@@ -67,6 +67,8 @@ NO_REAL_BOTTLENECK_ESTABLISHED
 NO_REAL_MECHANISM_BRIEF_AUTHORIZED
 CMI_R1_REAL_PROBE_CALIBRATION_PASSED
 BOUNDED_CMI_REAL_DIAGNOSIS_PREREGISTRATION_AUTHORIZED
+CMI_R2_BOUNDED_REAL_DIAGNOSIS_PROTOCOL_IMPLEMENTED
+CMI_R2_NOT_YET_SEALED
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -183,6 +185,7 @@ BOUNDED_CMI_REAL_DIAGNOSIS_PREREGISTRATION_AUTHORIZED
 24. 两个 validation states 的六个 Direct/Repair intervention pairs 为 `0 positive / 6 tie / 0 negative`，final utility、anytime AUC、validity、replacement 与 breakthrough delta 全为 `0`，exact-sign `p=1.0`。正式 verdict 为 `DIRECT_REPAIR_OPERATOR_CAUSAL_VALUE_NOT_ESTABLISHED_ON_DEV`。44 calls 总计 `1,951,194` tokens，最大 `69,055 < 78,000`；journal 为 44 claims / 44 terminals / 44 unique request IDs / 44 checkpoints / 0 orphan。当前 Direct/Repair claim 与科学优先级关闭，不回头修改 EMC、不补 replicate，也不开放 fresh search-value budget。完整结果见 [`EMC_OPERATOR_CAUSAL_VALUE_R1.md`](EMC_OPERATOR_CAUSAL_VALUE_R1.md)。
 25. CMI-R0 已实现最小诊断纵向切片：`FailurePhenotypeReceipt`、`BottleneckHypothesis`、`DiagnosticProbeResult` 与确定性 fail-closed 状态机。Create-once synthetic run 的 manifest digest 为 `a6f3986da9f234bcbb417e3c2cbb5ea9b0e69cb3303b2e6706149c84d4788984`，report SHA-256 为 `bac3c68811d4f903cb080004378dfdaabe05e9e2e3784816b53bd86f406c8001`；null 保持 `NO_ACTIONABLE_BOTTLENECK`，positive control 唯一恢复预构造的 `H5_STRUCTURAL_BASIN_LOCK`。全程 0 model calls、0 evaluator calls、0 fresh tasks。该结果只证明诊断器能区分预构造输入，不建立现实 bottleneck、不授权现实 Mechanism Brief 或新 Operator，也不开放 fresh search-value budget。完整边界见 [`CAUSAL_MECHANISM_INTELLIGENCE_R0.md`](CAUSAL_MECHANISM_INTELLIGENCE_R0.md)。
 26. CMI-R1 real probe calibration 已正式通过。Manifest digest 为 `930ff7a5974da5d41b7b1d949b5b1fbd373ef4204fb8040f89149e92ef70f65d`，report SHA-256 为 `7de7d2238102045373dd8fddd043b1e746df557e0d2137b0433f291ad394f037`。Assignment 与 coverage 均恢复 `6/7` ranked controls，reference headroom 分别为 `0.20914510` / `0.10170301`，same-source functional distance 均为 `0`，baseline/reference distance 为 `0.41975309` / `0.27777778`。全程 0 model/provider calls、0 fresh search-value tasks；只授权另行预注册 bounded real diagnosis，不建立现实 bottleneck。详见 [`CMI_R1_REAL_PROBE_CALIBRATION.md`](CMI_R1_REAL_PROBE_CALIBRATION.md)。
+27. CMI-R2 bounded real diagnosis 协议已实现但未封存。它绑定 CMI-R1 probe authority 与 `78,000` token/call resource authority，在两个新 dev episodes 上各允许 3 个 Direct draws，总调用硬上限 6、并发上限 2；先运行零模型 controls，再区分 evaluator insensitivity、implementation bottleneck 与 functional basin lock。详见 [`CMI_R2_BOUNDED_REAL_DIAGNOSIS.md`](CMI_R2_BOUNDED_REAL_DIAGNOSIS.md)。
 
 ## 状态更新规则
 
@@ -210,3 +213,4 @@ BOUNDED_CMI_REAL_DIAGNOSIS_PREREGISTRATION_AUTHORIZED
 - EMC-R1 Executable Mechanism Contract：[`EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md`](EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md)
 - CMI-R0 Causal Mechanism Intelligence：[`CAUSAL_MECHANISM_INTELLIGENCE_R0.md`](CAUSAL_MECHANISM_INTELLIGENCE_R0.md)
 - CMI-R1 real probe calibration：[`CMI_R1_REAL_PROBE_CALIBRATION.md`](CMI_R1_REAL_PROBE_CALIBRATION.md)
+- CMI-R2 bounded real diagnosis：[`CMI_R2_BOUNDED_REAL_DIAGNOSIS.md`](CMI_R2_BOUNDED_REAL_DIAGNOSIS.md)

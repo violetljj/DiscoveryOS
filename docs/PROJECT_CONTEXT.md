@@ -126,3 +126,4 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - Direct/Repair Operator causal value / EMC-OCV-R1：`EMC_OPERATOR_CAUSAL_VALUE_R1.md`
 - Causal Mechanism Intelligence / CMI-R0：`CAUSAL_MECHANISM_INTELLIGENCE_R0.md`
 - Real probe calibration / CMI-R1：`CMI_R1_REAL_PROBE_CALIBRATION.md`
+- Bounded real diagnosis / CMI-R2：`CMI_R2_BOUNDED_REAL_DIAGNOSIS.md`
