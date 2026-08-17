@@ -10,6 +10,8 @@ DiscoveryOS 是一个统一算法研究内核：吸收并重组 AdaEvolve、Shin
 DISCOVERYOS_KERNEL_ADMITTED
 DISCOVERYOS_ACTION_CONTROLLER_MECHANICS_READY
 DISCOVERYOS_AUTONOMOUS_SEARCH_LOOP_MECHANICS_READY
+CMI_R0_PROTOCOL_IMPLEMENTED
+CMI_R0_SYNTHETIC_DIAGNOSTIC_SENSITIVITY_PASSED
 DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
 DISCOVERYOS_PRODUCTION_NOT_READY
 ```
@@ -30,6 +32,8 @@ DiscoveryOS
 Unified Research Graph / Evidence / Candidate Store
                          │
 Unified Budget + Fidelity + Async Runtime + Memory
+                         │
+Failure Phenotype + Competing Hypotheses + Diagnostic Probes
                          │
 Internal mechanism primitives
 ├── novelty / parent explore-exploit / diversity pressure
@@ -57,7 +61,7 @@ adapter 的存在不代表外部系统进入内部控制循环。其职责是隔
 | 平面 | 当前权威 | 能做什么 | 不能做什么 |
 |---|---|---|---|
 | Evidence | frozen evaluator + split binding + receipts | 产生可重放观察 | 自己修改协议或 claim |
-| Search | operator + safe racing + Pareto | 选择下一笔资源 | 读取 final blind 或宣布科学胜利 |
+| Search | CMI diagnosis + operator + safe racing + Pareto | 形成瓶颈假设、选择诊断 probe 与下一笔资源 | 修改 evaluator、读取 final blind 或宣布科学胜利 |
 | Claim | GateEngine + contract ceiling | 限制可声明范围 | 把 scheduling utility 当作 verdict |
 
 系统中的 scalar 只允许用于调度。协议违规、mechanics failure、hard-constraint failure、科学结果和 claim ceiling 分开记录。
@@ -71,6 +75,7 @@ src/discoveryos/
 ├── evaluation/    # evaluator registry, hard gates, Pareto, replay
 ├── operators/     # deterministic Action Controller + Random, ASHA, Local Patch, Structural Rewrite
 ├── memory/        # semantic delta and progressive context
+├── mechanism_intelligence.py # failure phenotype, competing hypotheses, diagnostic probes, fail-closed research state
 ├── runtime/       # artifacts, SQLite ledger, split vault, async scheduler
 └── domains/       # executable domain packs
 ```
@@ -95,12 +100,11 @@ ResourceReservation
 
 ## 下一批实现顺序
 
-1. **统一接口与 BR-A 封口**：candidate/evidence/artifact/budget/fidelity 接口已形成垂直切片；BR-A 保持 `LLM_LOCAL_PATCH_NOT_ADMITTED`，不再修 parser 或在 consumed corpus 上寻求翻案。
-2. **Search-Value MVP**：单 active branch 的真实闭环已经由 `LedgerBackedSearchStateProjector -> DeterministicActionController -> UnifiedActionExecutor -> SearchLoopRunner` 接通 Local Patch、Structural Escape、Replicate、ASHA Promote 与 Stop，并为每笔结算写入 create-once anytime trace。State 只投影 ledger 中的 candidate/evidence/action settlement；`scheduling_utility` 只分配搜索资源，不覆盖 Gate/Pareto 的科学裁决。下一步停止扩展 controller，直接运行 matched-resource Search-Value MVP。R1.0-SP-A 只作为 pre-model task-selection guard，不是独立产品阶段。
-3. **严格 matched-resource benchmark**：立即在多个预冻结 headroom task family 上，以 matched model/token/wall/compute/evaluator 比较 Vanilla one-shot 与 DiscoveryOS unified loop；先回答 search value，不添加 agent framework、LLM planner 或 distributed queue。Anytime、效率和 search-behavior 指标与最终 task outcome 一起报告。
-4. **远端并行计算**：只有首轮 Search-Value MVP 暴露出真实吞吐瓶颈后，才实现多进程与远端 CPU/GPU/device worker、heartbeat、retry、checkpoint/cache 和真实 resource measurement，避免先为未经证明的 action model 建集群。
-5. **Search value 成立后补生产隔离**：只有稳定优势成立后，才把 final-blind 独立服务身份、一次性票据、shadow 查询预算和 hostile-worker isolation 提升为最高优先级。
-6. **后续内部机制**：逐项 admission novelty/parent selection、branch credit、crossover/rollback、BOHB/qNEHVI 和更强 multi-fidelity；不把 mechanics smoke、单 seed 或 development improvement 当算法证据。
-7. **Meta-Strategy / Advisor**：只在基础 search value 成立后实现受限 Meta-Strategy evolution，并只用通过复验和消融晋升的轨迹训练 Advisor。
+1. **CMI-R0 最小纵向切片**：已实现 failure phenotype、竞争 bottleneck hypothesis、冻结 diagnostic probe、资源绑定结果与 fail-closed 状态机；synthetic null/positive controls 只验证诊断 mechanics。
+2. **现实 probe protocol**：选择 never-consumed development episodes，在读取输出前冻结 phenotype、竞争 hypotheses、probe semantics、阈值、预算和 fail-closed terminal。先验证 evaluator control、perfect-implementation control 与 functional-basin assay，不生成 Operator。
+3. **Mechanism Brief admission**：只有恰好一个瓶颈 hypothesis 被支持且竞争解释全部被反证，才允许冻结包含 preconditions、causal target、required context、observable fingerprint、interactions 与 failure modes 的 Mechanism Brief。
+4. **Operator Admission Funnel**：新 Operator 依次证明 applicability、realized functional intervention、causal reachability、state-local null/positive controls 和独立 dev value；任一层失败即关闭当前版本。
+5. **Fresh search-value trial**：只有独立 dev value gate 通过后，才申请 never-consumed tasks、matched resources 与新 create-once root。此前不扩展机制数量、远端计算或生产 blind isolation。
+6. **后续组合与学习**：积累多个独立 admitted mechanisms 后，才实现 applicability learning、mechanism composition 与 credit assignment；Meta-Strategy/Advisor 仍需等待基础 search value 成立。
 
 每阶段都必须用独立 benchmark 证明增量价值；mechanics smoke、单 seed 或 development improvement 都不允许升级成算法优越性、安全性或产品结论。

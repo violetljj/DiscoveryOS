@@ -61,6 +61,10 @@ EMC_OPERATOR_CAUSAL_VALUE_R1_COMPLETE
 DIRECT_REPAIR_OPERATOR_CAUSAL_VALUE_NOT_ESTABLISHED_ON_DEV
 EXECUTABLE_CONTRACT_TRANSMISSION_RECONFIRMED_IN_VALUE_TRIAL
 DIRECT_REPAIR_OPERATOR_SCIENTIFIC_PRIORITY_CLOSED
+CMI_R0_PROTOCOL_IMPLEMENTED
+CMI_R0_SYNTHETIC_DIAGNOSTIC_SENSITIVITY_PASSED
+NO_REAL_BOTTLENECK_ESTABLISHED
+NO_REAL_MECHANISM_BRIEF_AUTHORIZED
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -175,6 +179,7 @@ DIRECT_REPAIR_OPERATOR_SCIENTIFIC_PRIORITY_CLOSED
 22. 正式 verdict 为 `EMC_R3_EXECUTABLE_CONTRACT_TRANSMISSION_CONFIRMED_ON_TWO_NEW_DEV_STATES`，claim ceiling 仅为 resource-calibrated two-state development transmission。它证明 structured contract 能够可控且由独立 harness 观察地改变真实调用路径；utility 仍是 record-only，search value、superiority 与 production readiness 均未建立。下一步只授权另行预注册一个 Operator causal-value protocol，尚未运行，也未直接开放 fresh search-value budget。完整边界见 [`EMC_R3_RESOURCE_CALIBRATED_CONFIRMATION.md`](EMC_R3_RESOURCE_CALIBRATED_CONFIRMATION.md)。
 23. EMC Operator Causal Value R1 已在 commit `8af61c2` 完成。Calibration 16/16 与 validation 28/28 calls 均 evaluable，source/static/runtime/invariant/resource 全通过；Direct/Repair signatures 持续稳定为 `[1,0,0]` / `[1,1,0]`，所以 utility 可解释，不是 contract portability failure。Calibration 冻结 utility margin `0.00667893`、AUC margin `0.005`。
 24. 两个 validation states 的六个 Direct/Repair intervention pairs 为 `0 positive / 6 tie / 0 negative`，final utility、anytime AUC、validity、replacement 与 breakthrough delta 全为 `0`，exact-sign `p=1.0`。正式 verdict 为 `DIRECT_REPAIR_OPERATOR_CAUSAL_VALUE_NOT_ESTABLISHED_ON_DEV`。44 calls 总计 `1,951,194` tokens，最大 `69,055 < 78,000`；journal 为 44 claims / 44 terminals / 44 unique request IDs / 44 checkpoints / 0 orphan。当前 Direct/Repair claim 与科学优先级关闭，不回头修改 EMC、不补 replicate，也不开放 fresh search-value budget。完整结果见 [`EMC_OPERATOR_CAUSAL_VALUE_R1.md`](EMC_OPERATOR_CAUSAL_VALUE_R1.md)。
+25. CMI-R0 已实现最小诊断纵向切片：`FailurePhenotypeReceipt`、`BottleneckHypothesis`、`DiagnosticProbeResult` 与确定性 fail-closed 状态机。Create-once synthetic run 的 manifest digest 为 `a6f3986da9f234bcbb417e3c2cbb5ea9b0e69cb3303b2e6706149c84d4788984`，report SHA-256 为 `bac3c68811d4f903cb080004378dfdaabe05e9e2e3784816b53bd86f406c8001`；null 保持 `NO_ACTIONABLE_BOTTLENECK`，positive control 唯一恢复预构造的 `H5_STRUCTURAL_BASIN_LOCK`。全程 0 model calls、0 evaluator calls、0 fresh tasks。该结果只证明诊断器能区分预构造输入，不建立现实 bottleneck、不授权现实 Mechanism Brief 或新 Operator，也不开放 fresh search-value budget。完整边界见 [`CAUSAL_MECHANISM_INTELLIGENCE_R0.md`](CAUSAL_MECHANISM_INTELLIGENCE_R0.md)。
 
 ## 状态更新规则
 
@@ -200,3 +205,4 @@ DIRECT_REPAIR_OPERATOR_SCIENTIFIC_PRIORITY_CLOSED
 - GCF-R1 real Mechanism Brief：[`GCF_R1_REAL_MECHANISM_BRIEF.md`](GCF_R1_REAL_MECHANISM_BRIEF.md)
 - GCF-V2 Structured Mechanism Mediation：[`GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md`](GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md)
 - EMC-R1 Executable Mechanism Contract：[`EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md`](EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md)
+- CMI-R0 Causal Mechanism Intelligence：[`CAUSAL_MECHANISM_INTELLIGENCE_R0.md`](CAUSAL_MECHANISM_INTELLIGENCE_R0.md)

@@ -61,6 +61,7 @@ Frozen ProblemContract
 | `src/discoveryos/operators/` | Random、ASHA、Local Patch、Structural Rewrite、parent/novelty 等机制 |
 | `src/discoveryos/runtime/` | ledger、artifact、vault、scheduler、provider invocation journal、repository runner、search loop |
 | `src/discoveryos/memory/` | semantic delta 和 progressive context 基础接口 |
+| `src/discoveryos/mechanism_intelligence.py` | failure phenotype、竞争瓶颈假设、冻结诊断 probe 与 fail-closed 研究状态机；只属于 Search/Research 平面 |
 | `src/discoveryos/benchmarks/` | 冻结 admission/benchmark runner 与任务定义 |
 | `src/discoveryos/domains/` | 可执行领域包；当前含 deterministic clearance demo |
 | `tests/` | mechanics、失败路径、协议封存、预算、重放和研究循环验证 |
@@ -123,3 +124,4 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - Executable Mechanism Contract / EMC-R1：`EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md`
 - Resource-calibrated EMC confirmation / EMC-R3：`EMC_R3_RESOURCE_CALIBRATED_CONFIRMATION.md`
 - Direct/Repair Operator causal value / EMC-OCV-R1：`EMC_OPERATOR_CAUSAL_VALUE_R1.md`
+- Causal Mechanism Intelligence / CMI-R0：`CAUSAL_MECHANISM_INTELLIGENCE_R0.md`

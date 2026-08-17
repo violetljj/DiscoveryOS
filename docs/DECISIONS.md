@@ -239,3 +239,10 @@
 - **决定**：接受 `DIRECT_REPAIR_OPERATOR_CAUSAL_VALUE_NOT_ESTABLISHED_ON_DEV`。Calibration 与 validation 共 44/44 branches 全部 evaluable、资源合规并通过所有 executable contract 层；Direct/Repair runtime signatures 在四个 states 上继续严格分离。六个 validation intervention pairs 的 final utility effect 全在冻结 envelope 内为 tie，两个 states 的 anytime AUC、validity、replacement 和 breakthrough effect 也均为零。
 - **原因**：utility manipulation 可解释且资源/accounting 完整，因此不能再用 generator 不服从、contract 未进入 runtime、instrumentation 失敏或 ceiling 不可评价解释 value null。`p=1.0`、`0/2` beneficial states 与全部 primary efficacy gate failure 直接回答了当前冻结 Operator 选择没有建立因果 value；这不证明所有 Operator 或所有任务上普遍无效。
 - **后果**：当前 Direct/Repair Operator claim 与科学优先级关闭。Consumed root 不改 margin、task、prompt、contract、endpoint 或 replicate 数，不继续扩展 EMC schema/signature，也不开放 fresh search-value budget。未来若提出不同 Operator，必须有新的 mechanism hypothesis、applicability contract、预注册 null calibration 和独立 value surface；不得把本次 transmission positive 复用成 value evidence。
+
+## D-035：新 Operator 前先建立可证伪的机制诊断闭环
+
+- **日期**：2026-08-17
+- **决定**：新增 `CAUSAL_MECHANISM_INTELLIGENCE_R0`，但只实现最小纵向切片：冻结 failure phenotype、至少两个竞争 bottleneck hypotheses、精确覆盖它们的 cheap diagnostic probes、资源绑定结果与确定性状态机。只有恰好一个 hypothesis 为 `SUPPORTED` 且其余全部为 `REFUTED` 时，状态机才输出 `MECHANISM_BRIEF_ALLOWED`；`UNRESOLVED`、`NOT_EVALUABLE`、多 hypothesis supported 或绑定/预算违规均 fail closed。CMI 属于 Search/Research 平面，永远不拥有科学 verdict 或 claim ceiling 权威。
+- **原因**：EMC-R3 已建立真实执行通道，Direct/Repair R1 又在该通道上得到所有 value endpoint 为零的可解释 null。当前主要缺口不再是继续增加 Operator 插槽，而是从失败 phenotype 区分 representation ceiling、evaluator insensitivity、implementation bottleneck、structural basin lock 等竞争解释，并让 Operator 由仍存活的瓶颈理论推导。
+- **后果**：R0 只运行零模型、零 evaluator、零 fresh-task 的 null/positive synthetic controls；positive 只证明预构造 `H5_STRUCTURAL_BASIN_LOCK` 可被恢复，不建立现实 bottleneck。现实阶段必须另行封存 never-consumed dev states、probe semantics、阈值、预算和独立 value surface。此前不得选择新 Operator、生成现实 Mechanism Brief 或开放 fresh search-value budget。
