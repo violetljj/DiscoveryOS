@@ -51,6 +51,9 @@ from discoveryos.benchmarks import (
     run_emc_r3_instrumentation,
     run_emc_r3_validation,
     seal_emc_r3_protocol,
+    calibrate_operator_causal_value,
+    run_operator_causal_value_validation,
+    seal_operator_causal_value_protocol,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
@@ -255,6 +258,24 @@ def build_parser() -> argparse.ArgumentParser:
         if name == "emc-r3-seal":
             command_parser.add_argument("--resource-workspace", type=Path, default=Path("runs/emc-resource-calibration-r1"))
             command_parser.add_argument("--resource-record-sha256", required=True)
+            command_parser.add_argument("--max-workers", type=int, default=2)
+        else:
+            command_parser.add_argument("--manifest-digest", required=True)
+    for name, help_text in (
+        ("emc-ocv-r1-seal", "seal the Direct vs Repair Operator causal-value protocol"),
+        ("emc-ocv-r1-calibrate", "calibrate Direct/Direct and Repair/Repair stochastic nulls"),
+        ("emc-ocv-r1-validate", "run the frozen Direct vs Repair causal-value validation"),
+    ):
+        command_parser = subparsers.add_parser(name, help=help_text)
+        command_parser.add_argument("--workspace", type=Path, default=Path("runs/emc-operator-causal-value-r1"))
+        command_parser.add_argument("--model", required=True)
+        command_parser.add_argument("--codex-command", default="codex")
+        command_parser.add_argument("--reasoning-effort", required=True)
+        if name == "emc-ocv-r1-seal":
+            command_parser.add_argument(
+                "--emc-r3-workspace", type=Path, default=Path("runs/emc-r3-resource-calibrated-confirmation")
+            )
+            command_parser.add_argument("--emc-r3-validation-record-sha256", required=True)
             command_parser.add_argument("--max-workers", type=int, default=2)
         else:
             command_parser.add_argument("--manifest-digest", required=True)
@@ -637,6 +658,39 @@ def main(argv: list[str] | None = None) -> int:
                 )
             else:
                 result = run_emc_r3_validation(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    implementation_provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+        elif args.command in {"emc-ocv-r1-seal", "emc-ocv-r1-calibrate", "emc-ocv-r1-validate"}:
+            module = __import__(
+                "discoveryos.benchmarks.executable_mechanism_contract",
+                fromlist=["IMPLEMENTATION_SCHEMA"],
+            )
+            provider = CodexExecProvider(
+                command=tuple(shlex.split(args.codex_command, posix=False)),
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+                output_schema=module.IMPLEMENTATION_SCHEMA,
+            )
+            if args.command == "emc-ocv-r1-seal":
+                result = seal_operator_causal_value_protocol(
+                    args.workspace,
+                    emc_r3_workspace=args.emc_r3_workspace,
+                    emc_r3_validation_record_sha256=args.emc_r3_validation_record_sha256,
+                    implementation_provider=provider,
+                    max_workers=args.max_workers,
+                )
+            elif args.command == "emc-ocv-r1-calibrate":
+                result = calibrate_operator_causal_value(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    implementation_provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+            else:
+                result = run_operator_causal_value_validation(
                     args.workspace,
                     manifest_digest=args.manifest_digest,
                     implementation_provider=provider,

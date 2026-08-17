@@ -57,7 +57,7 @@ EMC_RESOURCE_CALIBRATION_R1_PASSED
 EMC_R3_INSTRUMENTATION_SENSITIVITY_PASSED
 EMC_R3_CALIBRATION_PASSED
 EMC_R3_EXECUTABLE_CONTRACT_TRANSMISSION_CONFIRMED_ON_TWO_NEW_DEV_STATES
-EMC_OPERATOR_CAUSAL_VALUE_TRIAL_PROTOCOL_AUTHORIZED_NOT_RUN
+EMC_OPERATOR_CAUSAL_VALUE_R1_PROTOCOL_IMPLEMENTED_NOT_RUN
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -170,6 +170,7 @@ EMC_OPERATOR_CAUSAL_VALUE_TRIAL_PROTOCOL_AUTHORIZED_NOT_RUN
 20. EMC Resource Calibration R1 在 commit `49462e0` 封存并通过：4/4 non-scientific calls evaluable，token distribution 为 `17,560–53,449`，总计 `140,495`；预冻结公式仍由历史最大 `61,681` 控制，推导 scientific ceiling `78,000`。resource record SHA-256 为 `49d86e376997ff98ffecf319198e3a7589282bf0b086215465655cbb9b2f84bc`。
 21. EMC-R3 在同一 commit 以 manifest digest `aec9e99df6e1b7f214e553a1d4f6115057f5f183791546cf18be2cdc1bdfed64` 封存。E0 4/4 controls 通过；assignment calibration 与独立 coverage validation 均为 6/6 evaluable、source/static/runtime/invariant/resource 全部合规，Direct 与 Repair signatures 在两个 states 上分别稳定为 `[1,0,0]` 与 `[1,1,0]`。12 scientific calls 总计 `500,474` tokens，最大单调用 `57,118 < 78,000`；12 claims、12 terminals、12 draw checkpoints、0 orphan、0 duplicate。
 22. 正式 verdict 为 `EMC_R3_EXECUTABLE_CONTRACT_TRANSMISSION_CONFIRMED_ON_TWO_NEW_DEV_STATES`，claim ceiling 仅为 resource-calibrated two-state development transmission。它证明 structured contract 能够可控且由独立 harness 观察地改变真实调用路径；utility 仍是 record-only，search value、superiority 与 production readiness 均未建立。下一步只授权另行预注册一个 Operator causal-value protocol，尚未运行，也未直接开放 fresh search-value budget。完整边界见 [`EMC_R3_RESOURCE_CALIBRATED_CONFIRMATION.md`](EMC_R3_RESOURCE_CALIBRATED_CONFIRMATION.md)。
+23. EMC Operator Causal Value R1 已实现但未运行。协议在两个预声明 calibration dev states 上以 16 calls 的 Direct/Direct、Repair/Repair pairs 冻结 utility/AUC stochastic margins，再在两个独立 validation dev states 上以 28 calls 同时运行 same-condition null 与 Direct/Repair intervention。每个 state 在 seal 前必须以零模型 baseline→reference witness 证明 repair headroom；runtime signature 只作 manipulation gate，失败时 utility 不可解释。正式执行前仍保持 `FRESH_SEARCH_VALUE_BUDGET_NOT_AUTHORIZED`；完整预注册见 [`EMC_OPERATOR_CAUSAL_VALUE_R1.md`](EMC_OPERATOR_CAUSAL_VALUE_R1.md)。
 
 ## 状态更新规则
 

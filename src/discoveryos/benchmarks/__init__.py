@@ -54,6 +54,11 @@ from .executable_mechanism_contract_r3 import (
     run_emc_r3_validation,
     seal_emc_r3_protocol,
 )
+from .operator_causal_value import (
+    calibrate_operator_causal_value,
+    run_operator_causal_value_validation,
+    seal_operator_causal_value_protocol,
+)
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -105,4 +110,7 @@ __all__ = [
     "run_emc_r3_instrumentation",
     "run_emc_r3_calibration",
     "run_emc_r3_validation",
+    "seal_operator_causal_value_protocol",
+    "calibrate_operator_causal_value",
+    "run_operator_causal_value_validation",
 ]

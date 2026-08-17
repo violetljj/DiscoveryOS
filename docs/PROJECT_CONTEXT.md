@@ -122,3 +122,4 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - Structured Mechanism Mediation / GCF-V2：`GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md`
 - Executable Mechanism Contract / EMC-R1：`EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md`
 - Resource-calibrated EMC confirmation / EMC-R3：`EMC_R3_RESOURCE_CALIBRATED_CONFIRMATION.md`
+- Direct/Repair Operator causal value / EMC-OCV-R1：`EMC_OPERATOR_CAUSAL_VALUE_R1.md`
