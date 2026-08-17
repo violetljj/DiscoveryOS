@@ -16,6 +16,7 @@ from .plugins import (
     ResearchHarness,
     ResearchProfile,
 )
+from .runtime import HarnessSearchRuntime
 from .strategies import (
     ACTION_CONTROLLER,
     OPERATOR_REGISTRY,
@@ -25,7 +26,7 @@ from .strategies import (
     HarnessResearchController,
     HarnessRoutingConfig,
     OperatorRegistry,
-    algorithm_discovery_v0_profile,
+    algorithm_discovery_v1_profile,
     build_root_research_context,
     standard_research_plugins,
 )
@@ -43,6 +44,7 @@ __all__ = [
     "HarnessResearchController",
     "HarnessRoutingConfig",
     "HarnessSession",
+    "HarnessSearchRuntime",
     "MissingServiceError",
     "OperatorRegistry",
     "PluginActivation",
@@ -53,7 +55,7 @@ __all__ = [
     "ResearchHarness",
     "ResearchProfile",
     "ServiceKey",
-    "algorithm_discovery_v0_profile",
+    "algorithm_discovery_v1_profile",
     "build_root_research_context",
     "standard_research_plugins",
 ]

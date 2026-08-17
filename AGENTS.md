@@ -102,7 +102,7 @@ DiscoveryOS 是证据优先的 Algorithm Discovery Harness，不是单一搜索�
 
 - 修改前先运行 `git status --short --branch`，识别用户已有的 staged、modified 和 untracked 工作。共享工作树中不得覆盖、格式化、暂存或提交与本任务无关的改动。
 - 优先做最小、可验证的纵向改动。新机制必须复用统一 candidate/evidence/budget/evaluator 权威，不能另建平行 verdict 或隐式预算系统。
-- 新 Search-plane 能力默认放入 `src/discoveryos/harness/` 或明确的 plugin package；不得为单个策略向 Kernel 添加专用状态、隐藏调度或第二套配置权威。确需扩大 Kernel 时，必须同时更新系统理念、项目上下文与设计决策。
+- 新 Search-plane 能力默认放入 `src/discoveryos/harness/` 或明确的 plugin package，并通过 `HarnessSearchRuntime` 进入统一搜索循环；不得直接新增第二条 `SearchLoopRunner` 默认装配路径，不得为单个策略向 Kernel 添加专用状态、隐藏调度或第二套配置权威。历史协议为 replay 保留的直接 runner 构造属于 compatibility-only。确需扩大 Kernel 时，必须同时更新系统理念、项目上下文与设计决策。
 - Profile、router 或 plugin composition 若进入正式实验，就属于 evidence semantics 的一部分：必须版本化、内容寻址、运行前冻结并写入 manifest/receipt。Harness adaptation 必须保留冻结 outer anchor 和 rollback，且不能修改 evaluator、winner rule、claim ceiling 或任何 consumed evidence。
 - evaluator、协议门、任务选择、数据 split、winner rule 或 claim ceiling 的变化属于证据语义变化，必须显式版本化并新增协议/决策记录；不能把新旧结果混为同一实验。
 - 任何模型调用前，先冻结需要防止事后选择的 task、模型/版本、prompt/settings、预算、evaluator、seed/replicate 和 acceptance gate。已看见候选输出后不得换题、放宽门槛或补免费调用。
@@ -143,7 +143,7 @@ python -m unittest discover -s tests -v
 以下变化必须与代码在同一任务、最好同一提交中更新文档：
 
 - 系统理念、Kernel/Plugin/Profile 边界或 Harness 准入阶梯变化：更新 `docs/SYSTEM_PHILOSOPHY.md`、`docs/PROJECT_CONTEXT.md` 和必要的 `docs/DECISIONS.md`。
-- Plugin、profile、routing 或 Harness lifecycle 的实现/claim 变化：更新 `docs/RESEARCH_HARNESS_V0.md`（或其版本化后继）与 `docs/CURRENT_STATE.md`。
+- Plugin、profile、routing 或 Harness lifecycle 的实现/claim 变化：更新当前 [`docs/RESEARCH_HARNESS_V1.md`](docs/RESEARCH_HARNESS_V1.md)（或其版本化后继）与 `docs/CURRENT_STATE.md`；V0 仅作历史 mechanics record。
 - 新阶段启动、完成、失败、撤回或 claim ceiling 变化：更新 `docs/CURRENT_STATE.md` 及对应协议/结果文档。
 - 新的不可逆协议决策：追加 `docs/DECISIONS.md`，保留旧决策并标注 superseded，禁止静默改史。
 - 状态数字、commit、模型版本和实验结果只写入阶段文档或 `CURRENT_STATE`，不要塞进本文件。

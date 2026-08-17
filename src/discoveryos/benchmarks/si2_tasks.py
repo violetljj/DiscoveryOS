@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import textwrap
-
 from discoveryos.benchmarks.real_code_tasks import RealCodeTask
-from discoveryos.benchmarks.search_value_mvp0_tasks import SearchValueTask
+from discoveryos.benchmarks.task_types import SearchValueTask, normalized_source
 
 
 DISCOVERY_TASK_IDS = (
@@ -453,7 +451,3 @@ def balanced_cut(node_count, edges):
     starts.append([0 if n in left else 1 for n in range(node_count)])
     return max((improve(list(labels)) for labels in starts), key=lambda item: item[1])[0]
 """
-
-
-def normalized_source(source: str) -> str:
-    return textwrap.dedent(source).strip() + "\n"

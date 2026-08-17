@@ -68,7 +68,9 @@ Harness/Profile 属于 Search plane 的组合层，不是第四个权威平面�
 | `src/discoveryos/harness/` | typed ResearchContext、插件生命周期、Research Profile、Direct/Ada/EvoX 插件与 state router |
 | `src/discoveryos/memory/` | semantic delta 和 progressive context 基础接口 |
 | `src/discoveryos/mechanism_intelligence.py` | failure phenotype、竞争瓶颈假设、冻结诊断 probe 与 fail-closed 研究状态机；只属于 Search/Research 平面 |
-| `src/discoveryos/benchmarks/` | 冻结 admission/benchmark runner、Benchmark Bank registry/adapter 与任务定义 |
+| `src/discoveryos/benchmarks/` | Benchmark Bank、协议中性 task types/adapter，以及惰性隔离的冻结历史 protocol runner |
+| `src/discoveryos/cli.py` | 小型正式 CLI；不 eager import 历史实验 |
+| `src/discoveryos/legacy_cli.py` | 历史协议命令兼容面；只在显式请求旧命令时加载 |
 | `src/discoveryos/domains/` | 可执行领域包；当前含 deterministic clearance demo |
 | `tests/` | mechanics、失败路径、协议封存、预算、重放和研究循环验证 |
 | `docs/` | 架构、协议、正式结果、claim ceiling 与阶段状态 |
@@ -117,7 +119,8 @@ python -m discoveryos harness-profile-show
 - 已确定的设计原因：`DECISIONS.md`
 - 本机依赖和工具位置：`LOCAL_ENVIRONMENT.md`
 - 总体架构路线：`ARCHITECTURE.md`
-- Research Harness V0：`RESEARCH_HARNESS_V0.md`
+- Research Harness V1：`RESEARCH_HARNESS_V1.md`
+- Research Harness V0 历史 mechanics：`RESEARCH_HARNESS_V0.md`
 - ASHA mechanics admission：`ASHA_ADMISSION.md`
 - Local Patch verdict：`LLM_LOCAL_PATCH_ADMISSION.md`、`LLM_LOCAL_PATCH_RELIABILITY.md`
 - Search-value MVP：`SEARCH_VALUE_MVP0.md`、`MVP0_BUDGET_REACHABILITY_REPAIR.md`

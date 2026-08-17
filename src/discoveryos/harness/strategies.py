@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Mapping
 
-from discoveryos.contracts.models import ProblemContract, ResourceBudget
+from discoveryos.contracts.models import ProblemContract
+from discoveryos.evaluation.base import EvaluatorRegistry
 from discoveryos.evaluation.gates import GateEngine
 from discoveryos.graph.models import ResearchGraph
 from discoveryos.operators.action_controller import (
@@ -16,7 +18,8 @@ from discoveryos.operators.local_patch import LocalPatchOperator, PatchProvider
 from discoveryos.operators.structural_rewrite import StructuralRewriteOperator
 from discoveryos.runtime.artifacts import ArtifactStore
 from discoveryos.runtime.ledger import EvidenceLedger
-from discoveryos.util import digest_json
+from discoveryos.runtime.scheduler import ExperimentExecutor
+from discoveryos.util import digest_bytes, digest_json
 
 from .context import ResearchContext, ServiceKey
 from .plugins import (
@@ -32,12 +35,38 @@ from .plugins import (
 CONTRACT = ServiceKey("contract", ProblemContract, authority=True)
 LEDGER = ServiceKey("candidate_evidence_store", EvidenceLedger, authority=True)
 ARTIFACTS = ServiceKey("artifact_store", ArtifactStore, authority=True)
-EVALUATOR = ServiceKey("evaluator", object, authority=True)
-BUDGET = ServiceKey("budget_authority", ResourceBudget, authority=True)
+EVALUATOR = ServiceKey("evaluator_registry", EvaluatorRegistry, authority=True)
+BUDGET = ServiceKey("budget_authority", ExperimentExecutor, authority=True)
 GATE_ENGINE = ServiceKey("gate_engine", GateEngine, authority=True)
 RESEARCH_GRAPH = ServiceKey("research_graph", ResearchGraph, authority=True)
-PATCH_PROVIDER = ServiceKey("patch_provider", object)
+LOCAL_PATCH_PROVIDER = ServiceKey("local_patch_provider", object)
+STRUCTURAL_PATCH_PROVIDER = ServiceKey("structural_patch_provider", object)
 BASE_CONTROLLER = ServiceKey("base_action_controller", DeterministicActionController)
+
+
+_IMPLEMENTATION_DIGEST = digest_bytes(Path(__file__).read_bytes())
+
+
+def _plugin_manifest(
+    plugin_id: str,
+    *,
+    source_system: str,
+    requires: tuple[ServiceKey[Any], ...],
+    provides: tuple[ServiceKey[Any], ...],
+) -> PluginManifest:
+    return PluginManifest(
+        plugin_id=plugin_id,
+        version="1",
+        source_system=source_system,
+        source_revision="discoveryos-internal-adapter-v1",
+        license_id="UNSPECIFIED_REFERENCE_LICENSE_INTERNAL_IMPLEMENTATION",
+        implementation_digest=_IMPLEMENTATION_DIGEST,
+        authority_scope="SEARCH_PLANE_ONLY",
+        failure_semantics="ACTIVATION_OR_GENERATION_FAIL_CLOSED",
+        replay_contract="PROFILE_MANIFEST_AND_DECISION_DIGEST_V1",
+        requires=requires,
+        provides=provides,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -233,13 +262,14 @@ class HarnessResearchController(DeterministicActionController):
 class _OperatorPlugin(ResearchPlugin):
     operator_type: type[LocalPatchOperator]
     descriptor: StrategyDescriptor
+    provider_key: ServiceKey[Any]
 
     def activate(self, context: ResearchContext, config: Mapping[str, Any]) -> PluginActivation:
         if config:
             unknown = ",".join(sorted(config))
             raise ValueError(f"{self.manifest.plugin_id} does not accept config: {unknown}")
         operator = self.operator_type(
-            provider=context.get(PATCH_PROVIDER),
+            provider=context.get(self.provider_key),
             artifacts=context.get(ARTIFACTS),
             ledger=context.get(LEDGER),
             contract=context.get(CONTRACT),
@@ -249,13 +279,14 @@ class _OperatorPlugin(ResearchPlugin):
 
 
 class DirectLLMPlugin(_OperatorPlugin):
-    manifest = PluginManifest(
+    manifest = _plugin_manifest(
         "direct_llm",
-        "1",
-        requires=(PATCH_PROVIDER, ARTIFACTS, LEDGER, CONTRACT),
+        source_system="DiscoveryOS Direct LLM",
+        requires=(LOCAL_PATCH_PROVIDER, ARTIFACTS, LEDGER, CONTRACT),
         provides=(OPERATOR_REGISTRY,),
     )
     operator_type = DirectLLMResearchOperator
+    provider_key = LOCAL_PATCH_PROVIDER
     descriptor = StrategyDescriptor(
         "direct_llm_strategy_v1",
         "bootstrap_proposer",
@@ -266,13 +297,14 @@ class DirectLLMPlugin(_OperatorPlugin):
 
 
 class AdaLineagePlugin(_OperatorPlugin):
-    manifest = PluginManifest(
+    manifest = _plugin_manifest(
         "ada_lineage",
-        "1",
-        requires=(PATCH_PROVIDER, ARTIFACTS, LEDGER, CONTRACT, OPERATOR_REGISTRY),
+        source_system="AdaEvolve mechanism role / DiscoveryOS implementation",
+        requires=(LOCAL_PATCH_PROVIDER, ARTIFACTS, LEDGER, CONTRACT, OPERATOR_REGISTRY),
         provides=(OPERATOR_REGISTRY,),
     )
     operator_type = AdaLineageOperator
+    provider_key = LOCAL_PATCH_PROVIDER
     descriptor = StrategyDescriptor(
         "ada_lineage_strategy_v1",
         "lineage",
@@ -283,13 +315,14 @@ class AdaLineagePlugin(_OperatorPlugin):
 
 
 class EvoXMetaStrategyPlugin(_OperatorPlugin):
-    manifest = PluginManifest(
+    manifest = _plugin_manifest(
         "evox_meta_strategy",
-        "1",
-        requires=(PATCH_PROVIDER, ARTIFACTS, LEDGER, CONTRACT, OPERATOR_REGISTRY),
+        source_system="EvoX mechanism role / DiscoveryOS implementation",
+        requires=(STRUCTURAL_PATCH_PROVIDER, ARTIFACTS, LEDGER, CONTRACT, OPERATOR_REGISTRY),
         provides=(OPERATOR_REGISTRY,),
     )
     operator_type = EvoXMetaStrategyOperator
+    provider_key = STRUCTURAL_PATCH_PROVIDER
     descriptor = StrategyDescriptor(
         "evox_meta_strategy_v1",
         "meta_strategy",
@@ -300,9 +333,9 @@ class EvoXMetaStrategyPlugin(_OperatorPlugin):
 
 
 class StateRouterPlugin(ResearchPlugin):
-    manifest = PluginManifest(
+    manifest = _plugin_manifest(
         "state_router",
-        "1",
+        source_system="DiscoveryOS deterministic router",
         requires=(BASE_CONTROLLER, OPERATOR_REGISTRY),
         provides=(ACTION_CONTROLLER,),
     )
@@ -317,14 +350,18 @@ class StateRouterPlugin(ResearchPlugin):
         return PluginActivation({ACTION_CONTROLLER: controller})
 
 
-def algorithm_discovery_v0_profile() -> ResearchProfile:
+def algorithm_discovery_v1_profile() -> ResearchProfile:
     return ResearchProfile(
-        name="algorithm-discovery-v0",
+        name="algorithm-discovery-v1",
         plugins=(
-            PluginSelection.create("direct_llm"),
-            PluginSelection.create("ada_lineage"),
-            PluginSelection.create("evox_meta_strategy"),
-            PluginSelection.create("state_router", {"direct_bootstrap_steps": 1}),
+            PluginSelection.create("direct_llm", DirectLLMPlugin.manifest.digest),
+            PluginSelection.create("ada_lineage", AdaLineagePlugin.manifest.digest),
+            PluginSelection.create("evox_meta_strategy", EvoXMetaStrategyPlugin.manifest.digest),
+            PluginSelection.create(
+                "state_router",
+                StateRouterPlugin.manifest.digest,
+                {"direct_bootstrap_steps": 1},
+            ),
         ),
     )
 
@@ -338,10 +375,15 @@ def build_root_research_context(
     contract: ProblemContract,
     ledger: EvidenceLedger,
     artifacts: ArtifactStore,
-    evaluator: object,
-    patch_provider: PatchProvider,
+    experiment_executor: ExperimentExecutor,
+    local_provider: PatchProvider,
+    structural_provider: PatchProvider,
     base_controller: DeterministicActionController,
 ) -> tuple[ResearchContext, HarnessEventSink]:
+    if experiment_executor.contract.digest != contract.digest:
+        raise ValueError("harness and experiment executor must share the frozen contract")
+    if experiment_executor.ledger is not ledger or experiment_executor.artifacts is not artifacts:
+        raise ValueError("harness and experiment executor must share ledger and artifact authorities")
     graph = ResearchGraph(ledger)
     gate = GateEngine()
     sink = HarnessEventSink(ledger)
@@ -350,11 +392,12 @@ def build_root_research_context(
             CONTRACT: contract,
             LEDGER: ledger,
             ARTIFACTS: artifacts,
-            EVALUATOR: evaluator,
-            BUDGET: contract.budget,
+            EVALUATOR: experiment_executor.registry,
+            BUDGET: experiment_executor,
             GATE_ENGINE: gate,
             RESEARCH_GRAPH: graph,
-            PATCH_PROVIDER: patch_provider,
+            LOCAL_PATCH_PROVIDER: local_provider,
+            STRUCTURAL_PATCH_PROVIDER: structural_provider,
             BASE_CONTROLLER: base_controller,
         }
     )

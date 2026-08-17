@@ -1,5 +1,7 @@
 # DiscoveryOS Research Harness V0
 
+> Historical mechanics record. V1 supersedes V0 as the default execution profile; this document and its claim ceiling remain unchanged. See [`RESEARCH_HARNESS_V1.md`](RESEARCH_HARNESS_V1.md).
+
 ## Status
 
 ```text

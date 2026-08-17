@@ -13,6 +13,8 @@ DISCOVERYOS_KERNEL_ADMITTED
 DISCOVERYOS_ACTION_CONTROLLER_MECHANICS_READY
 DISCOVERYOS_AUTONOMOUS_SEARCH_LOOP_MECHANICS_READY
 RESEARCH_HARNESS_V0_MECHANICS_READY
+RESEARCH_HARNESS_V1_EXECUTION_BACKBONE_MECHANICS_READY
+MANIFEST_BOUND_RESEARCH_PROFILE_READY
 HYBRID_SEARCH_VALUE_NOT_EVALUATED
 CMI_R0_PROTOCOL_IMPLEMENTED
 CMI_R0_SYNTHETIC_DIAGNOSTIC_SENSITIVITY_PASSED
@@ -107,8 +109,8 @@ ResourceReservation
 
 ## 下一批实现顺序
 
-1. **Research Harness V0**：已实现 typed/scoped context、插件生命周期、静态 Profile、Direct/Ada/EvoX 策略 provenance、state routing 与 cross-seeding graph mechanics。
-2. **Static composition development gate**：冻结 Direct/Ada、EvoX、naive parallel、DOS Harness 四臂 matched-resource protocol；先用合格的 DEV/consumed bank 资产做 mechanics 和效用校准，不用 fresh task debugging。
+1. **Research Harness V1**：已让 manifest-bound Profile 通过 typed/scoped context 接管默认 unified search-loop 组合入口；实际 evaluator/budget/ledger 权威不分叉，历史协议 runner 已退出默认 CLI/import surface。
+2. **Static composition development gate**：冻结 Direct/Ada、EvoX、naive parallel、DOS Harness V1 四臂 matched-resource protocol；先用合格的 DEV/consumed bank 资产做 mechanics 和效用校准，不用 fresh task debugging。
 3. **Harness adaptation gate**：只有静态组合相对强基线产生正向证据后，才冻结 profile mutation space、反馈、选择、rollback 与资源边界，比较 Static vs Adaptive。
 4. **Memory-conditioned gate**：只有 adaptive value 成立后，才比较 Adaptive Reset vs Adaptive Warm，并保持 task-family/freshness 层级诚实。
 5. **Harness evolution**：最后才允许搜索 Profile/HarnessGraph 本身；frozen outer authority、feedback-fidelity bound 与 backbone capability bound 不得绕过。

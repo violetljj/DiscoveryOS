@@ -764,10 +764,11 @@ class UnifiedActionExecutor:
         ledger: EvidenceLedger,
         artifacts: ArtifactStore,
         projector: LedgerBackedSearchStateProjector,
-        local_operator: LocalPatchOperator,
-        structural_operator: StructuralRewriteOperator,
         experiment_executor: ExperimentExecutor,
         novelty_policy: ShinkaStyleNoveltyPolicy | None = None,
+        generative_operators: tuple[LocalPatchOperator, ...] = (),
+        local_operator: LocalPatchOperator | None = None,
+        structural_operator: StructuralRewriteOperator | None = None,
         additional_operators: tuple[LocalPatchOperator, ...] = (),
     ) -> None:
         self.spec = spec
@@ -775,11 +776,16 @@ class UnifiedActionExecutor:
         self.ledger = ledger
         self.artifacts = artifacts
         self.projector = projector
-        self.local_operator = local_operator
-        self.structural_operator = structural_operator
         self.experiment_executor = experiment_executor
         self.novelty_policy = novelty_policy
-        operators = (local_operator, structural_operator, *additional_operators)
+        legacy_operators = tuple(
+            operator for operator in (local_operator, structural_operator) if operator is not None
+        )
+        if generative_operators and legacy_operators:
+            raise ValueError("use either the harness operator registry or legacy operator arguments")
+        operators = (*generative_operators, *legacy_operators, *additional_operators)
+        if not operators:
+            raise ValueError("at least one generative operator must be loaded")
         self.generative_operators = {operator.operator_id: operator for operator in operators}
         if len(self.generative_operators) != len(operators):
             raise ValueError("generative operator ids must be unique")

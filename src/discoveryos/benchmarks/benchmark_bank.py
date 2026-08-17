@@ -20,7 +20,7 @@ from discoveryos.benchmarks.algotune_r2_dev import (
     UPSTREAM_BINDINGS as ALGOTUNE_R2_DEV_UPSTREAM_BINDINGS,
     materialize_r2_dev,
 )
-from discoveryos.benchmarks.search_value_mvp0_tasks import normalized_source
+from discoveryos.benchmarks.task_types import normalized_source
 from discoveryos.benchmarks.si2_tasks import si2_confirmation_tasks, si2_discovery_tasks
 from discoveryos.util import digest_bytes, digest_json
 

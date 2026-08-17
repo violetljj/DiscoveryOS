@@ -400,3 +400,10 @@
 - **决定**：将 D-056 的架构方向提升为长期项目约束。稳定 Kernel 限于 `ProblemContract`、Evaluator/`GateEngine`、Candidate/Evidence/Artifact Store、Budget、Research Graph 与 Runtime；proposal、lineage、parent policy、meta-strategy、routing、memory 和 profile adaptation 默认属于 Research Plugin 或 profile policy。所有正式 profile 必须内容寻址并在比较前冻结。研究顺序固定为 P0 mechanics → P1 单插件 causal/value → P2 静态 composition value → P3 adaptive profile value → P4 memory-conditioned value → P5 harness-evolution value，不能用前一级 mechanics 直接授权后一级实现或 claim。
 - **原因**：只有把“最小权威内核”变成可执行的工程与研究门，Harness 定位才不会在新增机制时重新退化为专用 Operator 堆叠或多 runtime 编排。静态组合、适应、记忆和自演化回答的是不同因果问题，也需要不同控制臂、污染边界与 claim ceiling。
 - **后果**：新增 Kernel 能力必须证明 typed plugin/profile 边界无法表达所需跨策略权威语义并追加决策。外部官方引擎只有在 candidate/evidence/budget/graph 归一到统一 `ResearchContext`、内部状态不具科学权威且 lifecycle/replay 可审计时，才可申请 Discovery plugin admission；否则保留为 Benchmark Mode。当前唯一默认科学下一门是 L0-L2 上的 matched-resource 静态四臂比较；在正向结果前，不开放 adaptive routing、cross-task memory、Harness evolution、fresh task 或 superiority/generalization claim。
+
+## D-058：以 manifest-bound Harness V1 接管默认搜索组合路径并隔离历史运行面
+
+- **日期**：2026-08-18
+- **决定**：新增 `HarnessSearchRuntime`，把 `ResearchProfile -> ResearchContext -> ACTION_CONTROLLER/OPERATOR_REGISTRY -> UnifiedActionExecutor -> SearchLoopRunner` 固定为新搜索工作的唯一默认组合路径。Plugin manifest 增加 source/revision/license/implementation digest、authority scope、failure semantics 与 replay contract，Profile selection 必须绑定 manifest digest。根 context 绑定实际 `ExperimentExecutor` 作为预算/评估权威，并为 local 与 structural generation 分离 provider。正式 CLI 与 `benchmarks` 包默认不再 eager import 历史协议 runner；旧命令通过 lazy compatibility surface 保留。
+- **原因**：V0 已证明 context、plugin lifecycle 和 routing mechanics，但尚未接管实际搜索主干，Profile id 也没有绑定插件实现 provenance；同时单一 CLI 与 eager benchmark exports 使 40 余个历史 runner 进入每次启动路径。继续在该结构上增加 profile 会让新 Harness 仍受旧实验拓扑支配。
+- **后果**：V0 作为历史 mechanics record 保留，V1 成为默认 runtime profile。历史协议、负结果、收据语义和测试不删除、不改写；它们可以为 replay/compatibility 直接构造旧 runner，但新研究不得绕过 Harness runtime 形成第二条默认路径。此次只建立执行与依赖隔离 mechanics，不修改 scientific verdict，不建立 static composition value，也不授权 adaptive/memory/evolution 或 fresh 资产。

@@ -18,6 +18,9 @@ class HarnessEventType(str, Enum):
     PROFILE_FAILED = "PROFILE_FAILED"
     PROFILE_DISPOSED = "PROFILE_DISPOSED"
     STRATEGY_HANDOFF = "STRATEGY_HANDOFF"
+    SEARCH_STARTED = "SEARCH_STARTED"
+    SEARCH_SETTLED = "SEARCH_SETTLED"
+    SEARCH_FAILED = "SEARCH_FAILED"
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,24 +44,77 @@ class HarnessEventSink:
 class PluginManifest:
     plugin_id: str
     version: str
+    source_system: str
+    source_revision: str
+    license_id: str
+    implementation_digest: str
+    authority_scope: str
+    failure_semantics: str
+    replay_contract: str
     requires: tuple[ServiceKey[Any], ...] = ()
     provides: tuple[ServiceKey[Any], ...] = ()
 
     def __post_init__(self) -> None:
-        if not self.plugin_id or not self.version:
-            raise ValueError("plugin id and version are required")
+        required = (
+            self.plugin_id,
+            self.version,
+            self.source_system,
+            self.source_revision,
+            self.license_id,
+            self.authority_scope,
+            self.failure_semantics,
+            self.replay_contract,
+        )
+        if not all(item.strip() for item in required):
+            raise ValueError("plugin provenance, authority, failure and replay fields are required")
+        if len(self.implementation_digest) != 64 or any(
+            character not in "0123456789abcdef" for character in self.implementation_digest
+        ):
+            raise ValueError("plugin implementation digest must be a lowercase SHA-256 digest")
         if len(set(self.provides)) != len(self.provides):
             raise ValueError("plugin cannot declare duplicate provided services")
+
+    @property
+    def digest(self) -> str:
+        return digest_json(
+            {
+                "plugin_id": self.plugin_id,
+                "version": self.version,
+                "source_system": self.source_system,
+                "source_revision": self.source_revision,
+                "license_id": self.license_id,
+                "implementation_digest": self.implementation_digest,
+                "authority_scope": self.authority_scope,
+                "failure_semantics": self.failure_semantics,
+                "replay_contract": self.replay_contract,
+                "requires": tuple((key.name, key.authority) for key in self.requires),
+                "provides": tuple((key.name, key.authority) for key in self.provides),
+            }
+        )
 
 
 @dataclass(frozen=True, slots=True)
 class PluginSelection:
     plugin_id: str
+    manifest_digest: str
     config: tuple[tuple[str, Any], ...] = ()
 
     @classmethod
-    def create(cls, plugin_id: str, config: Mapping[str, Any] | None = None) -> PluginSelection:
-        return cls(plugin_id=plugin_id, config=pairs(dict(config or {})))
+    def create(
+        cls,
+        plugin_id: str,
+        manifest_digest: str,
+        config: Mapping[str, Any] | None = None,
+    ) -> PluginSelection:
+        if len(manifest_digest) != 64 or any(
+            character not in "0123456789abcdef" for character in manifest_digest
+        ):
+            raise ValueError("profile selections require a bound plugin manifest digest")
+        return cls(
+            plugin_id=plugin_id,
+            manifest_digest=manifest_digest,
+            config=pairs(dict(config or {})),
+        )
 
     def config_dict(self) -> dict[str, Any]:
         return unpairs(self.config)
@@ -162,6 +218,10 @@ class ResearchHarness:
                 plugin = self._plugins.get(selection.plugin_id)
                 if plugin is None:
                     raise KeyError(f"profile references an unknown plugin: {selection.plugin_id}")
+                if selection.manifest_digest != plugin.manifest.digest:
+                    raise RuntimeError(
+                        f"plugin manifest binding mismatch: {selection.plugin_id}"
+                    )
                 missing = [key.name for key in plugin.manifest.requires if not context.has(key)]
                 if missing:
                     raise RuntimeError(
@@ -180,13 +240,21 @@ class ResearchHarness:
                     owner=selection.plugin_id,
                 )
                 activations.append((selection.plugin_id, activation))
-                plugin_node_id = f"plugin:{selection.plugin_id}@{plugin.manifest.version}"
+                plugin_node_id = f"plugin:{selection.plugin_id}@{plugin.manifest.digest[:24]}"
                 ledger.add_node(
                     plugin_node_id,
                     "research_plugin",
                     {
                         "plugin_id": plugin.manifest.plugin_id,
                         "version": plugin.manifest.version,
+                        "manifest_digest": plugin.manifest.digest,
+                        "source_system": plugin.manifest.source_system,
+                        "source_revision": plugin.manifest.source_revision,
+                        "license_id": plugin.manifest.license_id,
+                        "implementation_digest": plugin.manifest.implementation_digest,
+                        "authority_scope": plugin.manifest.authority_scope,
+                        "failure_semantics": plugin.manifest.failure_semantics,
+                        "replay_contract": plugin.manifest.replay_contract,
                         "requires": tuple(key.name for key in plugin.manifest.requires),
                         "provides": tuple(key.name for key in plugin.manifest.provides),
                     },

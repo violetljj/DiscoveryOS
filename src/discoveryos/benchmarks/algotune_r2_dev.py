@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from discoveryos.benchmarks.algotune_dev import UPSTREAM_REVISION
-from discoveryos.benchmarks.search_value_mvp0_tasks import normalized_source
+from discoveryos.benchmarks.task_types import normalized_source
 from discoveryos.util import digest_bytes, digest_json
 
 

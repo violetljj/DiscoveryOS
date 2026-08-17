@@ -1,24 +1,7 @@
 from __future__ import annotations
 
-import textwrap
-from dataclasses import dataclass
-
 from discoveryos.benchmarks.real_code_tasks import RealCodeTask
-from discoveryos.util import digest_json
-
-
-@dataclass(frozen=True, slots=True)
-class SearchValueTask:
-    task: RealCodeTask
-    reference_source: str
-    intermediate_sources: tuple[str, ...]
-    score_resolution: float
-    baseline_basin_id: str
-    trajectory_classes: tuple[str, ...]
-
-    @property
-    def payload_digest(self) -> str:
-        return digest_json(self)
+from discoveryos.benchmarks.task_types import SearchValueTask, normalized_source
 
 
 def search_value_mvp0_tasks() -> tuple[SearchValueTask, ...]:
@@ -448,7 +431,3 @@ _BALANCE_BETA = (
     ((16, 14, 12, 10, 8, 6), 3), ((11, 10, 9, 8, 7, 6, 5), 3), ((13, 12, 8, 7, 5), 2),
     ((18, 15, 12, 9, 6, 3), 3), ((10, 10, 9, 9, 8, 8, 7), 4), ((17, 13, 11, 8, 7, 5), 3),
 )
-
-
-def normalized_source(source: str) -> str:
-    return textwrap.dedent(source).strip() + "\n"

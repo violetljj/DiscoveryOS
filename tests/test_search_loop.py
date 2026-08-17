@@ -25,6 +25,7 @@ from discoveryos.contracts.models import (
 )
 from discoveryos.contracts.patch import ProviderGeneration
 from discoveryos.evaluation.base import EvaluatorRegistry
+from discoveryos.harness import HarnessSearchRuntime, algorithm_discovery_v1_profile
 from discoveryos.operators.action_controller import (
     ActionControllerConfig,
     ActionCost,
@@ -71,7 +72,11 @@ class _LoopEvaluator:
 
     def evaluate(self, candidate, experiment, data):
         del data
-        if candidate.operator_id == "bounded_llm_local_patch_v1":
+        if candidate.operator_id in {
+            "bounded_llm_local_patch_v1",
+            "direct_llm_research_v1",
+            "ada_lineage_refinement_v1",
+        }:
             return EvaluationOutput.from_metrics(
                 {},
                 validity=EvidenceValidity.NOT_EVALUABLE,
@@ -79,7 +84,8 @@ class _LoopEvaluator:
             )
         if candidate.operator_id == "asha_control":
             return EvaluationOutput.from_metrics({"score": 2.0})
-        score = 1.5 if experiment.fidelity is Fidelity.G1 else 1.0 if candidate.operator_id == "structural_rewrite_basin_jump_v1" else 0.0
+        structural_ids = {"structural_rewrite_basin_jump_v1", "evox_meta_strategy_rewrite_v1"}
+        score = 1.5 if experiment.fidelity is Fidelity.G1 else 1.0 if candidate.operator_id in structural_ids else 0.0
         return EvaluationOutput.from_metrics({"score": score})
 
 
@@ -238,42 +244,20 @@ class SearchLoopIntegrationTests(unittest.IsolatedAsyncioTestCase):
             structural_provider = _Provider(
                 [self._structural_response(self._patch("return value + 2", "return abs(value)"))]
             )
-            local = LocalPatchOperator(
-                provider=local_provider,
-                artifacts=artifacts,
-                ledger=ledger,
-                contract=contract,
-            )
-            structural = StructuralRewriteOperator(
-                provider=structural_provider,
-                artifacts=artifacts,
-                ledger=ledger,
-                contract=contract,
-            )
-            projector = LedgerBackedSearchStateProjector(
-                spec=spec,
-                contract=contract,
-                controller_config=controller_config,
-                ledger=ledger,
-                artifacts=artifacts,
-            )
-            self.assertEqual(spec, SearchRunSpec.from_dict(ledger.get_search_run(spec.run_id)))
-            action_executor = UnifiedActionExecutor(
+            runtime = HarnessSearchRuntime.build(
+                profile=algorithm_discovery_v1_profile(),
                 spec=spec,
                 contract=contract,
                 ledger=ledger,
                 artifacts=artifacts,
-                projector=projector,
-                local_operator=local,
-                structural_operator=structural,
                 experiment_executor=experiment_executor,
+                base_controller=DeterministicActionController(controller_config),
+                local_provider=local_provider,
+                structural_provider=structural_provider,
             )
-            result = await SearchLoopRunner(
-                controller=DeterministicActionController(controller_config),
-                projector=projector,
-                executor=action_executor,
-                trace=AnytimeTraceRecorder(artifacts, ledger),
-            ).run()
+            projector = runtime.loop.projector
+            self.assertEqual(spec, SearchRunSpec.from_dict(ledger.get_search_run(spec.run_id)))
+            result = await runtime.run()
 
             actions = [payload["action"] for payload in ledger.search_action_payloads(spec.run_id)]
             self.assertEqual(
@@ -306,6 +290,9 @@ class SearchLoopIntegrationTests(unittest.IsolatedAsyncioTestCase):
             self.assertIn("ACTION_EXECUTION_FAILED", event_types)
             self.assertIn("CANDIDATE_EMITTED", event_types)
             self.assertIn("CANDIDATE_VALID", event_types)
+            self.assertIn("HARNESS_SEARCH_STARTED", event_types)
+            self.assertIn("HARNESS_SEARCH_SETTLED", event_types)
+            self.assertIn("HARNESS_PROFILE_DISPOSED", event_types)
             self.assertNotIn("CANDIDATE_INVALID", event_types)
             self.assertFalse(
                 any(

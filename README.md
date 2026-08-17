@@ -13,7 +13,7 @@ pwsh -NoProfile -File scripts/project.ps1 run -Module discoveryos -TargetArgumen
 
 `.python-version` selects Python 3.11.9, `uv.lock` fixes project resolution, and `.venv` is disposable. `rebuild` is limited to the verified project `.venv`; run and evidence directories are never cleanup targets.
 
-DiscoveryOS 是一个“证据优先”的统一算法研究内核。它把其他算法发现系统中有价值的机制重构为共享 Research Graph、Evidence Model、Candidate Store、Budget/Fidelity Controller、Memory 和异步执行底座的内部原语；官方原版系统只作为隔离 external challengers。当前版本从零实现了可运行的 **Phase 0 + Phase 1 垂直切片**：它能冻结研究协议、生成内容寻址候选、异步执行 G0/G1/G2 多保真赛马、先过硬约束再维护 Pareto front，并在 winner 冻结后通过独立命令执行 G7 final-blind 认证。
+DiscoveryOS 是一个“证据优先”的 Algorithm Discovery Harness。极小权威内核冻结 Research Graph、Evidence/Candidate Store、Budget/Fidelity、Evaluator 与 GateEngine；proposal、lineage、meta-strategy 和 routing 通过 manifest-bound Research Plugins 组合。Harness V1 已把 Profile 接入统一 SearchLoop/Executor，而不是只停留在架构包装层。官方原版系统默认仍是隔离 external challengers。
 
 它不是把 ShinkaEvolve、AdaEvolve、EvoX 等完整 runtime 串在一起，也不让多套 population/memory/budget/evaluator 语义进入 Discovery Mode，更不把调度分数冒充科学结论。外部 adapter 只服务 Benchmark Mode 的隔离公平对照。
 
@@ -40,6 +40,9 @@ DiscoveryOS 是一个“证据优先”的统一算法研究内核。它把其�
 - 原始收据重放：重新执行冻结 evaluator，并核对 contract/evaluator/data/candidate 绑定。
 - semantic delta memory 与 progressive context builder 基础接口。
 - 可插拔 evaluator/operator 接口和一个完整、确定性的近场净空演示域。
+- manifest-bound `ResearchProfile`、typed `ResearchContext`、authority override fail-closed、原子 boot/rollback/teardown。
+- `HarnessSearchRuntime`：Profile → plugin registry/router → unified executor → ledger-backed SearchLoop 的唯一默认组合路径。
+- 正式 CLI 与历史协议 runner 的 lazy isolation；旧命令与历史 replay 保持兼容，不进入默认 import path。
 
 ## 端到端运行
 
@@ -51,9 +54,11 @@ python -m discoveryos demo-discovery --workspace runs/clearance-demo
 python -m discoveryos status --workspace runs/clearance-demo
 python -m discoveryos demo-certify --workspace runs/clearance-demo
 python -m discoveryos demo-replay --workspace runs/clearance-demo
-python -m discoveryos asha-admission --workspace runs/asha-admission --seeds 12
-python -m discoveryos local-patch-admission --workspace runs/local-patch-admission --model gpt-5.4
+python -m discoveryos harness-profile-show
+python -m discoveryos legacy --help
 ```
+
+ASHA、Local Patch、SI-2、CMI 等冻结历史协议命令仍可直接调用，但会惰性进入兼容面，例如 `python -m discoveryos asha-admission ...`。新研究不得把该兼容面当作绕过 Harness V1 的默认入口。
 
 也可以安装为本地命令：
 
@@ -97,7 +102,7 @@ flowchart LR
 
 ## 当前边界
 
-这是可信研究内核，不是整份远景设计已经全部完成。bounded LLM Local Patch 已实现但尚未通过算法准入；Structural Rewrite / Basin-Jump 已有共享 CandidateBundle/ledger/runner 的 mechanics vertical slice，但尚无 fresh-task search-value evidence。尚未实现或未获授权的主要能力包括统一 action acquisition、BOHB/qNEHVI、Portfolio、component-effect credit、G3–G6 的正式策略、远端 GPU/device worker、外部 challenger adapter、生产级 blind isolation、Meta-Strategy Evolver 和学习型 Advisor。
+这是可信研究 Harness，不是整份远景设计已经全部完成。Harness V1 只建立执行主干、manifest binding 与依赖隔离 mechanics；没有建立 Direct/Ada/EvoX 官方 runtime 等价性、static composition value、adaptive profile value、一般 search value 或 superiority。下一科学门仍是 L0-L2 上的 matched-resource 静态四臂比较。
 
 当前 `SplitVault` 是 fail-closed 的应用能力边界，能阻止正常 worker 通过系统 API 读取 blind；`IsolatedRepositoryRunner` 提供临时 worktree 和独立子进程，但它同样不是 hostile-code 安全沙箱。真实数据认证必须把 final-blind vault 部署为独立服务或独立系统身份，只向认证 worker 返回受控结果。
 

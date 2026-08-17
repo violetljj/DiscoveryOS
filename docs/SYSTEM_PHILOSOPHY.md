@@ -67,7 +67,7 @@ P0 mechanics
 
 ## 当前默认研发路线
 
-当前默认 profile 是 Direct bootstrap + Ada lineage + EvoX meta-strategy + deterministic router。下一科学问题是：在冻结任务与 matched resources 下，这个静态组合是否优于强单策略和朴素并行组合。
+当前默认 V1 profile 是 Direct bootstrap + Ada lineage + EvoX meta-strategy + deterministic router，并通过 `HarnessSearchRuntime` 接入统一搜索循环。下一科学问题是：在冻结任务与 matched resources 下，这个静态组合是否优于强单策略和朴素并行组合。
 
 在该问题得到正向、可重放证据前：
 
@@ -76,7 +76,7 @@ P0 mechanics
 - 不因官方外部 runtime 的名气而放弃统一权威边界；
 - 不再把新增自研 Operator 数量当作主要进展指标。
 
-具体 V0 实现与当前 claim ceiling 见 [`RESEARCH_HARNESS_V0.md`](RESEARCH_HARNESS_V0.md)，项目当前状态见 [`CURRENT_STATE.md`](CURRENT_STATE.md)。
+当前 V1 执行实现与 claim ceiling 见 [`RESEARCH_HARNESS_V1.md`](RESEARCH_HARNESS_V1.md)；V0 历史 mechanics 见 [`RESEARCH_HARNESS_V0.md`](RESEARCH_HARNESS_V0.md)，项目当前状态见 [`CURRENT_STATE.md`](CURRENT_STATE.md)。
 
 ## 设计审查清单
 

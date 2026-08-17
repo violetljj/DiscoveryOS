@@ -11,6 +11,9 @@ DISCOVERYOS_AUTONOMOUS_SEARCH_LOOP_MECHANICS_READY
 HARNESS_FIRST_SYSTEM_PHILOSOPHY_FROZEN
 HARNESS_PROJECT_CONSTRAINTS_UPDATED
 RESEARCH_HARNESS_V0_MECHANICS_READY
+RESEARCH_HARNESS_V1_EXECUTION_BACKBONE_MECHANICS_READY
+MANIFEST_BOUND_RESEARCH_PROFILE_READY
+CORE_CLI_ISOLATED_FROM_HISTORICAL_PROTOCOL_RUNNERS
 STATIC_ALGORITHM_DISCOVERY_PROFILE_AVAILABLE
 DIRECT_ADA_EVOX_PLUGIN_COMPOSITION_READY
 CROSS_STRATEGY_HANDOFF_PROVENANCE_READY
@@ -132,7 +135,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 - 可执行代码 bundle、临时 Git worktree runner、路径策略、超时进程树终止和 run receipts。
 - ASHA mechanics admission；bounded Local Patch、一次 mechanical repair 和 generation provenance。
 - Structural Rewrite mechanics、ledger-backed state projector、deterministic action controller、unified executor 和 anytime settlement。
-- Research Harness V0：typed/scoped `ResearchContext`、不可覆盖的 authority services、原子插件启动/逆序清理、内容寻址 `ResearchProfile`、Direct/Ada/EvoX 内部策略插件、state router、strategy provenance 与 cross-seeding ledger edge。当前只到 mechanics，未运行 Hybrid search-value 比较，也未启用 Harness adaptation。
+- Research Harness V1：typed/scoped `ResearchContext`、manifest-bound `ResearchProfile`、不可覆盖的 authority services、真实 `ExperimentExecutor` 预算/评估权威、独立 local/structural provider、原子插件启动/逆序清理，以及 Profile → unified executor → ledger-backed search loop 的默认执行闭环。V0 保留为历史 composition-only mechanics record；V1 仍未运行 static composition search-value 比较，也未启用 Harness adaptation。
 - residual-headroom task admission 与 matched-resource Search-Value MVP 协议/runner。
 - Benchmark Bank v1 的 47-family commit-pinned registry、DEV/SHADOW/SEALED 生命周期门、统一 adapter contract，以及可执行的 consumed Assignment/Coverage development 物化切片。
 
@@ -175,7 +178,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 ## 明确尚未建立或尚未实现
 
 - 一般性 DiscoveryOS search value、跨任务/模型稳定优势。
-- Direct/Ada/EvoX 插件与各官方完整 runtime 的行为等价性；V0 名称只表示机制来源和角色。
+- Direct/Ada/EvoX 插件与各官方完整 runtime 的行为等价性；V1 名称仍只表示机制来源和角色。
 - 静态 Research Harness 相对强单策略或朴素组合的 composition value；因此 adaptive profile、cross-task memory 与 Harness evolution 的增量价值也均未建立。
 - BOHB/qNEHVI、正式 G3-G6 策略、multi-branch credit、完整 crossover/rollback、learned controller、Meta-Strategy Evolver 和 Advisor。
 - 远端 GPU/device worker、分布式队列、生产级 heartbeat/checkpoint/cache。
@@ -213,7 +216,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 
 当前默认研发路线由 D-056/D-057 与 [`SYSTEM_PHILOSOPHY.md`](SYSTEM_PHILOSOPHY.md) 约束：
 
-1. 先在 L0-L2 上补齐 Direct/Ada、EvoX、naive parallel 与静态 DiscoveryOS Harness 四臂的来源/version/license/digest、plugin lifecycle、authority、provenance、replay 与 matched-resource preflight；不得用 fresh task debugging。
+1. 先在 L0-L2 上补齐 Direct/Ada、EvoX、naive parallel 与静态 DiscoveryOS Harness V1 四臂的精确上游 source/version/license、plugin lifecycle、authority、provenance、replay 与 matched-resource preflight；内部 manifest binding 已完成，但不等于官方 runtime admission。不得用 fresh task debugging。
 2. 冻结并运行 P2 static composition development protocol。task、model/settings、token、evaluator calls、CPU/GPU/device time、wall envelope、router/profile digest、winner rule 与 claim ceiling 必须 matched 或显式配平。
 3. 只有静态 Harness 相对强单策略和朴素组合取得正向、可重放结果，才允许设计 P3 adaptive profile；否则先诊断静态组合，不靠增加策略数或自研 Operator 绕过负结果。
 4. P3 通过后才允许 P4 memory-conditioned comparison；P4 通过后才允许 P5 Harness evolution。每层使用独立协议、控制臂、污染边界、rollback 和 claim ceiling。
@@ -261,6 +264,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 38. 经 D-055 显式 supersede D-054 的“先证明 incumbent-monotonic candidate competition”下一门后，CMI Forced-Lineage Transmission R1 已实现但尚未执行。它只绑定 V3 的完整 5 个 eligible consumed states，三臂分别强制 incumbent、同期 control descendant、CMI descendant 为 Generation 0 parent；后续两代使用完全相同 Local Patch generator/model/prompt/budget/evaluator，且每个 valid child无视 fitness 继续成为下一代 parent。Generation 0 不计成功；primary 为 CMI lineage 与 matched-control lineage 的 best downstream utility，anytime AUC 从 forced parent 起算。严格 success gate 要求 5/5 primary win、两 family 全正、median primary/AUC 正和 exact two calls。该方向现保留为历史 protocol，不再作为默认新增自研 Operator 主线；没有新 fresh budget。详见 [`CMI_FORCED_LINEAGE_TRANSMISSION_R1.md`](CMI_FORCED_LINEAGE_TRANSMISSION_R1.md)。
 39. Research Harness V0 已实现 `ResearchContext` 的 typed extend/isolate/intercept、authority override fail-closed、插件 dependency/provides 校验、原子 boot/rollback/reverse teardown、Profile/HarnessGraph 记录，以及 Direct bootstrap、Ada lineage refinement、EvoX structural meta-strategy 的静态组合。Controller 仍把 replicate/promotion/budget/stagnation/stop 交给原冻结 deterministic policy；candidate 继续进入统一 ledger/evaluator，跨策略生成记录 `CROSS_SEEDED_TO`。这只建立 mechanics；未调用模型、未运行 evaluator、未消费 fresh/SEALED 资产，未建立 Ada/EvoX 官方 runtime 等价性、Hybrid search value、adaptive harness value 或 superiority。详见 [`RESEARCH_HARNESS_V0.md`](RESEARCH_HARNESS_V0.md)。
 40. Harness-first 系统理念与项目约束已固化到 [`SYSTEM_PHILOSOPHY.md`](SYSTEM_PHILOSOPHY.md)、`AGENTS.md` 与 D-057：Kernel whitelist、plugin/profile 默认边界、外部 engine 接入条件和 P0-P5 准入阶梯成为长期规则。此次仅更新治理与默认研发路线，没有修改代码、evaluator、GateEngine、协议资产、既有 receipt 或科学 verdict；不提高 Research Harness V0 的 mechanics claim ceiling。
+41. Research Harness V1 已把 manifest-bound Profile 接入实际 `SearchLoopRunner`：插件 registry 决定统一 executor 的 generation operators，root context 绑定真实 `ExperimentExecutor` 预算/评估权威，local 与 structural provider 分离，运行 terminal 后逆序 teardown。Core CLI 与 benchmark package 改为 lazy compatibility surface，历史协议 runner 不再进入默认 import path；旧直接命令仍可重放。协议中性 task 类型已从 MVP-0 模块抽出。针对性闭环、lifecycle、CLI isolation 与 Benchmark Bank 测试通过。该重构 0 model calls、0 evaluator science runs、0 fresh/SEALED assets，不改变任何既有 verdict；详见 [`RESEARCH_HARNESS_V1.md`](RESEARCH_HARNESS_V1.md)。
 
 ## 状态更新规则
 
@@ -276,6 +280,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 - 长期设计决策：[`DECISIONS.md`](DECISIONS.md)
 - 架构路线：[`ARCHITECTURE.md`](ARCHITECTURE.md)
 - Research Harness V0：[`RESEARCH_HARNESS_V0.md`](RESEARCH_HARNESS_V0.md)
+- Research Harness V1：[`RESEARCH_HARNESS_V1.md`](RESEARCH_HARNESS_V1.md)
 - Local Patch：[`LLM_LOCAL_PATCH_ADMISSION.md`](LLM_LOCAL_PATCH_ADMISSION.md)、[`LLM_LOCAL_PATCH_RELIABILITY.md`](LLM_LOCAL_PATCH_RELIABILITY.md)
 - MVP-0：[`SEARCH_VALUE_MVP0.md`](SEARCH_VALUE_MVP0.md)、[`MVP0_BUDGET_REACHABILITY_REPAIR.md`](MVP0_BUDGET_REACHABILITY_REPAIR.md)
 - SI-1：[`STRATEGY_INTEGRATION_SI1.md`](STRATEGY_INTEGRATION_SI1.md)、[`SHINKA_MECHANISM_MAPPING.md`](SHINKA_MECHANISM_MAPPING.md)

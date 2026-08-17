@@ -19,7 +19,7 @@ from discoveryos.harness import (
     ResearchHarness,
     ResearchProfile,
     ServiceKey,
-    algorithm_discovery_v0_profile,
+    algorithm_discovery_v1_profile,
     build_root_research_context,
     standard_research_plugins,
 )
@@ -71,19 +71,40 @@ class ResearchContextTests(unittest.TestCase):
 
 
 class ResearchHarnessLifecycleTests(unittest.TestCase):
+    def test_profile_boot_rejects_a_plugin_manifest_binding_mismatch(self) -> None:
+        class BoundPlugin:
+            manifest = self._manifest("bound")
+
+            def activate(self, context, config):
+                del context, config
+                return PluginActivation({})
+
+        with tempfile.TemporaryDirectory() as directory:
+            ledger = EvidenceLedger(Path(directory) / "ledger.sqlite3")
+            profile = ResearchProfile(
+                "mismatch",
+                (PluginSelection.create("bound", "f" * 64),),
+            )
+            with self.assertRaisesRegex(RuntimeError, "manifest binding mismatch"):
+                ResearchHarness((BoundPlugin(),)).boot(
+                    profile,
+                    ResearchContext.root({}),
+                    HarnessEventSink(ledger),
+                )
+
     def test_failed_boot_rolls_back_activated_plugins_in_reverse(self) -> None:
         service = ServiceKey("temporary", str)
         disposed: list[str] = []
 
         class First:
-            manifest = PluginManifest("first", "1", provides=(service,))
+            manifest = self._manifest("first", provides=(service,))
 
             def activate(self, context, config):
                 del context, config
                 return PluginActivation({service: "ready"}, lambda: disposed.append("first"))
 
         class Broken:
-            manifest = PluginManifest("broken", "1", requires=(service,))
+            manifest = self._manifest("broken", requires=(service,))
 
             def activate(self, context, config):
                 del context, config
@@ -93,7 +114,10 @@ class ResearchHarnessLifecycleTests(unittest.TestCase):
             ledger = EvidenceLedger(Path(directory) / "ledger.sqlite3")
             profile = ResearchProfile(
                 "rollback",
-                (PluginSelection.create("first"), PluginSelection.create("broken")),
+                (
+                    PluginSelection.create("first", First.manifest.digest),
+                    PluginSelection.create("broken", Broken.manifest.digest),
+                ),
             )
             with self.assertRaisesRegex(RuntimeError, "boot failed"):
                 ResearchHarness((First(), Broken())).boot(
@@ -117,6 +141,22 @@ class ResearchHarnessLifecycleTests(unittest.TestCase):
                 event_types,
             )
 
+    @staticmethod
+    def _manifest(plugin_id, *, requires=(), provides=()):
+        return PluginManifest(
+            plugin_id=plugin_id,
+            version="1",
+            source_system="test",
+            source_revision="test-revision",
+            license_id="test-license",
+            implementation_digest="0" * 64,
+            authority_scope="SEARCH_PLANE_ONLY",
+            failure_semantics="FAIL_CLOSED",
+            replay_contract="TEST_REPLAY_V1",
+            requires=requires,
+            provides=provides,
+        )
+
 
 class ResearchHarnessStrategyTests(unittest.TestCase):
     def test_standard_profile_composes_three_strategies_without_replacing_authority(self) -> None:
@@ -127,12 +167,13 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
                 contract=demo.contract,
                 ledger=demo.ledger,
                 artifacts=demo.artifacts,
-                evaluator=object(),
-                patch_provider=_Provider(),
+                experiment_executor=demo.runner.executor,
+                local_provider=_Provider(),
+                structural_provider=_Provider(),
                 base_controller=base,
             )
             session = ResearchHarness(standard_research_plugins()).boot(
-                algorithm_discovery_v0_profile(),
+                algorithm_discovery_v1_profile(),
                 root,
                 sink,
             )
@@ -158,12 +199,13 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
                 contract=demo.contract,
                 ledger=demo.ledger,
                 artifacts=demo.artifacts,
-                evaluator=object(),
-                patch_provider=_Provider(),
+                experiment_executor=demo.runner.executor,
+                local_provider=_Provider(),
+                structural_provider=_Provider(),
                 base_controller=self._controller(),
             )
             with ResearchHarness(standard_research_plugins()).boot(
-                algorithm_discovery_v0_profile(), root, sink
+                algorithm_discovery_v1_profile(), root, sink
             ) as session:
                 controller = session.context.get(ACTION_CONTROLLER)
                 first = controller.decide(self._state(step=0, strategy_id="baseline"))
@@ -184,12 +226,13 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
                 contract=demo.contract,
                 ledger=demo.ledger,
                 artifacts=demo.artifacts,
-                evaluator=object(),
-                patch_provider=_Provider(),
+                experiment_executor=demo.runner.executor,
+                local_provider=_Provider(),
+                structural_provider=_Provider(),
                 base_controller=self._controller(),
             )
             with ResearchHarness(standard_research_plugins()).boot(
-                algorithm_discovery_v0_profile(), root, sink
+                algorithm_discovery_v1_profile(), root, sink
             ) as session:
                 controller = session.context.get(ACTION_CONTROLLER)
                 state = self._state(step=3, strategy_id="ada_lineage_strategy_v1", stagnant=True)
