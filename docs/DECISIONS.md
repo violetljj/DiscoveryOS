@@ -337,3 +337,10 @@
 - **决定**：R7 绑定 R6 的 passed report 与 Operator/control 文件哈希，一次性封存 Assignment 3 + Coverage 3 个 exact neighboring-hidden states。实例 seed 只由冻结 salt 与 family/state/case identity 派生，不做 evaluator outcome screening。每 state 严格 paired，唯一 primary endpoint 是 `treatment utility - control utility > state resolution`；escape、replacement、AUC 与 breakthrough 降为 supporting metrics。成功门为 `6/6` valid、`6/6` primary positive、`0 negative`、两 family 各 `3/3` positive，以及沿用 aggregate `2x` / per-state `3x` evaluator runtime gate。
 - **原因**：R6 的完整 compatible consumed population 已把 consumed-distribution sign consistency 问题回答充分，继续 R6.x replay 信息增益低。六个 fresh states 是能保持 3+3 family balance 的最小独立 causal replication，同时避免把 operator admission 和 complete-search value 混成一个问题。
 - **后果**：这六个 state 是 instance-fresh，但不是新 distribution、新 task family 或新 evaluator regime。通过时只输出 `CMI_OPERATOR_ADMITTED_ON_FRESH_ASSIGNMENT_COVERAGE_STATES`，并授权另行预注册 CMI-enabled Search vs identical Search without CMI；不建立完整 search value、概率、显著性、跨 family generalization、superiority 或 production readiness。协议专用 SEALED admission 不把整个 Bank family 或任何 external adapter 泛化升级为 `ADMITTED`。
+
+## D-049：接受 CMI-R7 六状态 fresh causal replication
+
+- **日期**：2026-08-17
+- **决定**：接受 manifest `df1d2dd26730a5487e8e1e685339b7fd35430abd509cb4ea0433aa6458228209` 与 report SHA-256 `3072e74c1a0114920f98c7930097a5488dd8a50763709a073513a1ef4dca763f`。6/6 exact fresh states 均 technically evaluable，且唯一 primary endpoint `utility_delta > resolution` 全部为真；0 negative、0 tie，两 family 各 3/3 positive，cost guardrails 全通过。
+- **原因**：结果在没有 fresh 后调参、没有 state replacement、零模型和 matched deterministic pairs 下复现了 R5/R6 的 causal sign。Control 为 0/6 escape/replacement，Treatment 为 6/6；aggregate/max-state evaluator runtime ratio 为 `1.04189x` / `1.61769x`，不支持“靠明显增加 evaluator cost 换效果”的解释。
+- **后果**：输出 `CMI_OPERATOR_ADMITTED_ON_FRESH_ASSIGNMENT_COVERAGE_STATES` 与 `CMI_ENABLED_SEARCH_VS_IDENTICAL_SEARCH_WITHOUT_CMI_PREREGISTRATION_AUTHORIZED`。六个 exact states 永久 consumed；不增加 R7.x replay，不修改 CMI、threshold 或 gate。Operator admission 仍限于同两 family 和同 evaluator regime，不能写成 DiscoveryOS search core 已增强。下一科学问题是完整搜索系统的 CMI-on/off matched comparison。

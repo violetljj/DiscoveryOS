@@ -4,9 +4,10 @@
 
 ```text
 CMI_R7_PROTOCOL_IMPLEMENTED
-CMI_R7_FRESH_SHARD_NOT_YET_SEALED
-CMI_R7_FRESH_EXECUTION_NOT_YET_RUN
-ZERO_R7_FRESH_STATES_CONSUMED
+CMI_R7_FRESH_CAUSAL_REPLICATION_PASSED
+CMI_OPERATOR_ADMITTED_ON_FRESH_ASSIGNMENT_COVERAGE_STATES
+CMI_ENABLED_SEARCH_VS_IDENTICAL_SEARCH_WITHOUT_CMI_PREREGISTRATION_AUTHORIZED
+SIX_R7_FRESH_STATES_CONSUMED
 ```
 
 CMI-R7 is the single small fresh-state validation authorized by CMI-R6. It does not add an R6.1/R6.2 consumed replay. It freezes six exact neighboring-hidden instances together: three Capacitated Assignment states and three Budgeted Weighted Coverage states. The exact evaluator seeds are derived without screening from a protocol salt, family, state index, and case index. There is no task replacement after sealing.
@@ -49,3 +50,13 @@ python -m discoveryos cmi-r7-run-fresh --manifest-digest <sealed-manifest-digest
 ```
 
 The second command consumes all six exact instances once. A completed result root cannot be rerun or backfilled.
+
+## Result
+
+R7 was sealed and executed on implementation commit `913ab5e`. The create-once manifest digest is `df1d2dd26730a5487e8e1e685339b7fd35430abd509cb4ea0433aa6458228209`; the result report SHA-256 is `3072e74c1a0114920f98c7930097a5488dd8a50763709a073513a1ef4dca763f`.
+
+All six states were technically evaluable and passed the single primary endpoint. Assignment utility deltas were `+0.18698661`, `+0.18896208`, and `+0.19221718`; Coverage utility deltas were `+0.10059052`, `+0.09804796`, and `+0.09464326`. Thus the result is `6/6` resolution-exceeding positives, `0` negatives, `0` ties, with each family contributing `3/3` positives.
+
+The supporting mechanism trace was also consistent: Control escaped and replaced on `0/6`; Treatment escaped and replaced on `6/6`. Breakthrough changed from `0/6` to `1/6`. Aggregate treatment/control evaluator runtime was `1.04189x`, and the maximum state ratio was `1.61769x`; both frozen cost guardrails passed. All six gate checks passed. Usage was 6 matched pairs, 24 evaluator calls, 24 functional-probe calls, zero model calls, and zero tokens.
+
+The verdict is `CMI_R7_FRESH_CAUSAL_REPLICATION_PASSED`, with the narrow operator status `CMI_OPERATOR_ADMITTED_ON_FRESH_ASSIGNMENT_COVERAGE_STATES`. This completes the chain from two-state consumed detection, through eight-state consumed-distribution replication, to six-state exact-instance-fresh replication. It does not establish complete-search value. The next authorized scientific action is separate preregistration of CMI-enabled Search versus otherwise identical Search without CMI.
