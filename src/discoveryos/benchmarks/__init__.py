@@ -33,6 +33,11 @@ from .mechanism_brief_real import (
     run_mechanism_brief_validation,
     seal_mechanism_brief_protocol,
 )
+from .structured_mechanism_mediation import (
+    calibrate_structured_proposals,
+    run_structured_implementation_calibration,
+    seal_structured_mediation_protocol,
+)
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -68,4 +73,7 @@ __all__ = [
     "seal_mechanism_brief_protocol",
     "calibrate_mechanism_brief",
     "run_mechanism_brief_validation",
+    "seal_structured_mediation_protocol",
+    "calibrate_structured_proposals",
+    "run_structured_implementation_calibration",
 ]

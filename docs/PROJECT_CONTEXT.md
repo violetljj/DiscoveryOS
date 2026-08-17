@@ -119,3 +119,4 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - Causal Intervention Bench：`CAUSAL_INTERVENTION_BENCH.md`
 - Generator Conditioning Fidelity：`GENERATOR_CONDITIONING_FIDELITY.md`
 - First real Mechanism Brief GCF diagnosis：`GCF_R1_REAL_MECHANISM_BRIEF.md`
+- Structured Mechanism Mediation / GCF-V2：`GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md`

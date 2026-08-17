@@ -35,6 +35,9 @@ GCF_R1_REAL_MECHANISM_BRIEF_PROTOCOL_IMPLEMENTED
 GCF_R1_CALIBRATION_FAILED
 MECHANISM_BRIEF_REAL_SEMANTIC_TRANSMISSION_NOT_ESTABLISHED
 GCF_R1_VALIDATION_BLOCKED_NOT_RUN
+GCF_V2_STRUCTURED_MEDIATION_PROTOCOL_IMPLEMENTED
+GCF_V2_NOT_YET_SEALED
+NO_STRUCTURED_MECHANISM_CHANNEL_ADMITTED
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -135,6 +138,7 @@ GCF_R1_VALIDATION_BLOCKED_NOT_RUN
 8. 下一允许的诊断路线是 Generator Conditioning Fidelity。先分别检查 Parent source、Failure evidence 和 Mechanism brief 在 proposal、implementation、repair、final 与 hidden behavior 中是否超过 same-condition stochastic null；只有 GCF-2 semantic transmission 通过的现实 channel 才可预注册独立 GCF-3 downstream causal-value trial。当前仅实现并测试 synthetic identifiability fixture，尚无现实 channel admission，也未授权 fresh trial。
 9. GCF-R1 已完成 calibration 并按冻结门 fail closed：24/24 branches evaluable、final source valid 且资源门通过；proposal detectability 为 `0/2`，因此 42-call validation 被阻断且实际调用为零。Implementation/repair/final 结构 separation 在 `2/2` calibration states 超过 null，hidden behavior 仅 `1/2`，只能作为 development diagnosis，不能建立现实 channel semantic transmission。不得在 consumed calibration root 上调 proposal probe、margin、prompt、brief 或 replicates 翻案。
 10. 下一允许的 GCF 假设应版本化 generator interface，例如 structured proposal 或 explicit executable mechanism contract，并使用新 calibration evidence；不是继续完善通用框架，也不是绕过独立 behavior validation 直接开 fresh value trial。
+11. GCF-V2 Structured Mechanism Mediation 已实现但尚未 seal 或调用模型。它冻结两个新 development calibration states，先以 12 个独立 proposal calls 检验结构化 categorical fields 的 between-condition separation 是否超过 within-condition stochastic variance；失败即以零 implementation calls 停止。只有 proposal gate 通过，才允许第二组 12 calls，且 implementation request 只能看到 canonical Mechanism Object，不能看到原 brief 或 condition ID。完整边界见 [`GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md`](GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md)。
 
 ## 状态更新规则
 
@@ -158,3 +162,4 @@ GCF_R1_VALIDATION_BLOCKED_NOT_RUN
 - CIB-R1 real downstream Parent trial：[`CIB_R1_REAL_DOWNSTREAM_CAUSAL_TRIAL.md`](CIB_R1_REAL_DOWNSTREAM_CAUSAL_TRIAL.md)
 - Generator Conditioning Fidelity：[`GENERATOR_CONDITIONING_FIDELITY.md`](GENERATOR_CONDITIONING_FIDELITY.md)
 - GCF-R1 real Mechanism Brief：[`GCF_R1_REAL_MECHANISM_BRIEF.md`](GCF_R1_REAL_MECHANISM_BRIEF.md)
+- GCF-V2 Structured Mechanism Mediation：[`GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md`](GCF_V2_STRUCTURED_MECHANISM_MEDIATION.md)

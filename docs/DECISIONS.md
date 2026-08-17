@@ -155,3 +155,10 @@
 - **决定**：DiscoveryOS controller、Research Graph、Evidence Ledger、planner、LLM generation、长期 candidate/artifact 状态与 verdict 权威保留在本地；经用户授权的 AutoDL/其他远端只作为 ephemeral evaluator worker。远端 job 必须绑定 Git commit、candidate bundle、contract/evaluator/data/environment digest、预算和输出 schema，返回 create-once result bundle，由本地验证后写 ledger；远端不得直接写权威 ledger 或取得 final-blind capability。
 - **原因**：CPU-heavy、独立 candidate evaluation 适合弹性并行，而 generation、规划和长期证据状态不应随临时 worker 生命周期漂移。Commit-pinned checkout 与 digest-bound result 能避免本地代码变化后无法解释远端分数。
 - **后果**：该方向目前是 protocol/architecture only，不是吞吐或 search-value improvement。实现顺序从单个 commit-pinned、fail-closed worker 的纵向切片开始，验证 transport、身份、资源计量、超时、幂等、结果签名和本地 admission 后，才扩展 32C 或多节点 worker pool。已经 seal 的实验不得中途迁移环境；只有新协议可在首个 model/evaluator call 前冻结远端环境。
+
+## D-023：以隔离的 Structured Mechanism Object 替代自由文本 proposal 中介
+
+- **状态**：Accepted; protocol implemented; not yet run
+- **决定**：GCF-V2 把 proposal 与 implementation 拆成两个独立 provider request。第一阶段只把 task、base source 和自然语言 mechanism brief 转换为 schema-constrained、canonical、content-addressed Mechanism Object；第二阶段只接收 task、base source 和该对象，不得读取原 brief、condition ID 或 proposal raw response。Categorical control-flow fields 是 proposal admission signature；解释文本不能覆盖与冻结 condition contract 冲突的字段。
+- **原因**：GCF-R1 在 proposal `0/2` 的同时出现 implementation/repair/final `2/2`，说明同一 staged call 中的后续代码阶段可能绕过 proposal 并重新解释原 brief。继续用自由文本 proposal 做 parent、novelty 或 research-taste 的中间表示缺少稳定控制证据，也无法区分 proposal mediation 与直接 context reuse。
+- **后果**：新协议使用两个新 development calibration states 和每 condition/state 三次独立 draw。先运行 12-call、8,000-token-per-call proposal gate，只有 2/2 states 的 between-condition categorical separation 超过 within-condition stochastic envelope 且所有对象合规时，才开放 12-call implementation gate。Implementation 的 source 与 hidden behavior 分开裁决，utility 只记录；正 calibration 只获得独立 validation 的预注册资格，不能开放 fresh value trial、SI-3 或 superiority claim。Executable obligations 与 runtime counter enforcement 留给通过该中介门后的 V3，不与 V2 同时建设。

@@ -35,6 +35,9 @@ from discoveryos.benchmarks import (
     calibrate_mechanism_brief,
     run_mechanism_brief_validation,
     seal_mechanism_brief_protocol,
+    calibrate_structured_proposals,
+    run_structured_implementation_calibration,
+    seal_structured_mediation_protocol,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
@@ -211,6 +214,20 @@ def build_parser() -> argparse.ArgumentParser:
         if name == "gcf-r1-seal-mechanism-brief":
             command_parser.add_argument("--source-workspace", type=Path, default=Path("runs/cib-r1-parent-real"))
             command_parser.add_argument("--source-manifest-digest", required=True)
+            command_parser.add_argument("--max-workers", type=int, default=2)
+        else:
+            command_parser.add_argument("--manifest-digest", required=True)
+    for name, help_text in (
+        ("gcf-v2-seal-structured", "seal cheap-first Structured Mechanism Mediation calibration"),
+        ("gcf-v2-calibrate-proposals", "run only the frozen structured-proposal calibration gate"),
+        ("gcf-v2-run-implementation", "run isolated implementation calibration after proposal admission"),
+    ):
+        command_parser = subparsers.add_parser(name, help=help_text)
+        command_parser.add_argument("--workspace", type=Path, default=Path("runs/gcf-v2-structured-mediation"))
+        command_parser.add_argument("--model", required=True)
+        command_parser.add_argument("--codex-command", default="codex")
+        command_parser.add_argument("--reasoning-effort", required=True)
+        if name == "gcf-v2-seal-structured":
             command_parser.add_argument("--max-workers", type=int, default=2)
         else:
             command_parser.add_argument("--manifest-digest", required=True)
@@ -402,6 +419,51 @@ def main(argv: list[str] | None = None) -> int:
                     args.workspace,
                     manifest_digest=args.manifest_digest,
                     provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+        elif args.command in {
+            "gcf-v2-seal-structured",
+            "gcf-v2-calibrate-proposals",
+            "gcf-v2-run-implementation",
+        }:
+            module = __import__(
+                "discoveryos.benchmarks.structured_mechanism_mediation",
+                fromlist=["MECHANISM_OBJECT_SCHEMA", "IMPLEMENTATION_SCHEMA"],
+            )
+            command = tuple(shlex.split(args.codex_command, posix=False))
+            proposal_provider = CodexExecProvider(
+                command=command,
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+                output_schema=module.MECHANISM_OBJECT_SCHEMA,
+            )
+            implementation_provider = CodexExecProvider(
+                command=command,
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+                output_schema=module.IMPLEMENTATION_SCHEMA,
+            )
+            if args.command == "gcf-v2-seal-structured":
+                result = seal_structured_mediation_protocol(
+                    args.workspace,
+                    proposal_provider=proposal_provider,
+                    implementation_provider=implementation_provider,
+                    max_workers=args.max_workers,
+                )
+            elif args.command == "gcf-v2-calibrate-proposals":
+                result = calibrate_structured_proposals(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    proposal_provider=proposal_provider,
+                    implementation_provider=implementation_provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+            else:
+                result = run_structured_implementation_calibration(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    proposal_provider=proposal_provider,
+                    implementation_provider=implementation_provider,
                     progress=lambda message: print(message, file=sys.stderr, flush=True),
                 )
         elif args.command in {
