@@ -8,13 +8,14 @@ BENCHMARK_BANK_V1_DEVELOPMENT_SLICE_EXECUTABLE
 BENCHMARK_BANK_V1_SIX_ALGOTUNE_CONTRACT_DEV_FAMILIES_EXECUTABLE
 BENCHMARK_BANK_V1_TEN_ALGOTUNE_R2_CONTRACT_DEV_FAMILIES_EXECUTABLE
 BENCHMARK_BANK_V1_ALE_R3_ARTIFACTS_PINNED_EXECUTION_BLOCKED
+BENCHMARK_BANK_V1_SKYDISCOVER_R4_R5_SOURCE_TREES_AUDITED_EXECUTION_BLOCKED
 BENCHMARK_BANK_V1_EXTERNAL_SCIENTIFIC_ADMISSION_NOT_ESTABLISHED
 ZERO_FRESH_INSTANCES_CONSUMED
 ```
 
 Benchmark Bank v1 makes the problem family a durable research asset while treating a sealed instance or shard as the consumable scientific unit. It does not declare all listed benchmarks runnable. The registry currently contains 47 core families: two internal consumed families and 16 external contract-derived AlgoTune families are `DEVELOPMENT_READY`; 29 families remain `CATALOGUED`; zero external family is `ADMITTED`.
 
-The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../benchmarks/bank/v1/registry.json). The R0-R3 audited bank has registry digest `60c75c914722855392be5db2836bf96c12e9ac711bfcc203322c1445cb746a5b`.
+The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../benchmarks/bank/v1/registry.json). The R0-R5 audited bank has registry digest `99cfa092e01522627514b175eb25970246db987dbad00a4ff2d92eeb339a6b6d`.
 
 ## Difficulty ladder
 
@@ -136,6 +137,30 @@ They remain `CATALOGUED`, not `DEVELOPMENT_READY`, for three concrete reasons:
 3. The local Docker 29.6.2 CLI is installed, but the Docker Desktop Linux daemon was unavailable during the 2026-08-17 preflight. No judge image, generator or evaluator was run.
 
 Registry validation therefore requires all three blockers while an ALE family is catalogued and rejects any execution-ready state without `public_only_extraction_digest`, `native_program_bundle_digest`, and `docker_judge_preflight_digest`. No dataset ZIP was downloaded or opened during this audit, no private seed was read, and no ALE shard was consumed.
+
+## SkyDiscover R4 systems audit
+
+The five systems families bind SkyDiscover commit `8a840394e19ee4bfb3fb0a62762b902561a7efeb` and a deterministic SHA-256 over each tracked source-tree listing. A read-only syntax smoke parsed all selected R4/R5 Python files successfully. This is source integrity and mechanics preflight only; it is not an evaluator run.
+
+| Family | Upstream dependencies | Data boundary | Current blocker |
+|---|---|---|---|
+| Cloudcast | NetworkX, Pandas | downloaded network profiles/configs | data digest/license and environment/evaluator preflight |
+| EPLB | Torch | downloaded `expert-load.json` | data digest/license and environment/evaluator preflight |
+| Prism | NumPy | generated public cases | frozen partition identity and environment/evaluator preflight |
+| LLM-SQL | Pandas, NetworkX | five downloaded CSV datasets | data digests/licenses and environment/evaluator preflight |
+| Transaction Scheduling | NumPy | repository-bundled public workloads | frozen partition identity and environment/evaluator preflight |
+
+The frozen DiscoveryOS environment intentionally has no runtime dependencies. Runtime probing confirmed that NumPy, SciPy, Pandas, NetworkX, Torch, JAX and tqdm are unavailable there. Consequently none of the R4 families is marked `DEVELOPMENT_READY`; Prism and Transaction Scheduling are the shortest next adapter candidates because their current inputs are self-contained, while the other three first require explicit data provenance.
+
+Registry validation requires every R4 entry to retain a source-tree digest, syntax result, dependency profile, data boundary and non-empty blocker set. Promotion additionally requires an adapter, evaluator and environment digest.
+
+## SkyDiscover R5 public-frontier audit
+
+All ten selected R5 paths exist at the same pinned SkyDiscover commit and have source-tree digests plus dependency profiles recorded in the registry. They rely on combinations of NumPy/SciPy and, for several families, JAX/Optax; the official evaluator runtime was not executed in the dependency-free project environment.
+
+Every selected family publicly exposes its prompt, evaluator, initial program, fixed instance and target value. Several targets explicitly compare against published AlphaEvolve results; the referenced AlphaEvolve problem repository was separately checked out at pinned commit `8f447457957deac61e28bf1676746f0753b3b2f8`. These assets may become public replay/stress DEV tasks after an exact environment preflight, but they cannot support de-novo discovery or unseen-family claims.
+
+Registry validation therefore fails closed if any R5 exposure flag or the `NEIGHBORING_HIDDEN_DISTRIBUTION_NOT_FROZEN` blocker is removed. A scientific generalization protocol would need a pre-frozen neighboring hidden distribution that was not inferred or tuned from the public prompt, verifier, fixed dimensions or target value.
 
 ## External sources and exposure boundaries
 

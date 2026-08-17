@@ -316,6 +316,41 @@ class BenchmarkBankTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "ALE_EXECUTION_ADMISSION_INCOMPLETE:ahc008"):
             validate_benchmark_bank(pretend)
 
+    def test_skydiscover_r4_catalog_binds_source_dependencies_and_data_boundary(self) -> None:
+        registry = load_benchmark_bank(REGISTRY)
+        families = [family for family in registry["families"] if family["difficulty_tier"] == "R4"]
+        self.assertEqual(5, len(families))
+        self.assertEqual(
+            {"EXTERNAL_DATASET_UNBOUND", "SELF_CONTAINED_GENERATED_PUBLIC_CASES", "SELF_CONTAINED_PUBLIC_WORKLOADS"},
+            {family["catalog_audit"]["data_boundary"] for family in families},
+        )
+        for family in families:
+            audit = family["catalog_audit"]
+            self.assertEqual(64, len(audit["upstream_tree_sha256"]))
+            self.assertTrue(audit["syntax_preflight_passed"])
+            self.assertTrue(audit["dependency_profile"])
+            self.assertTrue(audit["execution_blockers"])
+        tampered = copy.deepcopy(registry)
+        next(f for f in tampered["families"] if f["family_id"] == "prism")["catalog_audit"]["data_boundary"] = "UNKNOWN"
+        with self.assertRaisesRegex(ValueError, "SKYDISCOVER_SYSTEM_DATA_BOUNDARY_MISSING:prism"):
+            validate_benchmark_bank(tampered)
+
+    def test_skydiscover_r5_public_frontier_exposure_is_fail_closed(self) -> None:
+        registry = load_benchmark_bank(REGISTRY)
+        families = [family for family in registry["families"] if family["difficulty_tier"] == "R5"]
+        self.assertEqual(10, len(families))
+        for family in families:
+            exposure = family["catalog_audit"]["public_exposure"]
+            self.assertTrue(all(exposure.values()))
+            self.assertIn(
+                "NEIGHBORING_HIDDEN_DISTRIBUTION_NOT_FROZEN",
+                family["catalog_audit"]["execution_blockers"],
+            )
+        tampered = copy.deepcopy(registry)
+        next(f for f in tampered["families"] if f["family_id"] == "circle_packing")["catalog_audit"]["public_exposure"]["target_value"] = False
+        with self.assertRaisesRegex(ValueError, "SKYDISCOVER_FRONTIER_EXPOSURE_INCOMPLETE:circle_packing"):
+            validate_benchmark_bank(tampered)
+
     def test_registry_rejects_duplicate_or_pretend_admitted_family(self) -> None:
         registry = load_benchmark_bank(REGISTRY)
         duplicate = copy.deepcopy(registry)

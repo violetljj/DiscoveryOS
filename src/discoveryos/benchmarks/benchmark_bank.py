@@ -161,6 +161,36 @@ def validate_benchmark_bank(registry: dict[str, Any]) -> dict[str, Any]:
                 )
                 if any(not admission.get(key) for key in required_ale):
                     failures.append(f"ALE_EXECUTION_ADMISSION_INCOMPLETE:{family_id}")
+        if source_id == "skydiscover" and tier in {"R4", "R5"}:
+            audit = family.get("catalog_audit") or {}
+            if not re.fullmatch(r"[0-9a-f]{64}", str(audit.get("upstream_tree_sha256", ""))):
+                failures.append(f"SKYDISCOVER_TREE_DIGEST_INVALID:{family_id}")
+            if audit.get("syntax_preflight_passed") is not True:
+                failures.append(f"SKYDISCOVER_SYNTAX_PREFLIGHT_MISSING:{family_id}")
+            dependencies = audit.get("dependency_profile")
+            if not isinstance(dependencies, list) or not dependencies:
+                failures.append(f"SKYDISCOVER_DEPENDENCY_PROFILE_MISSING:{family_id}")
+            blockers = audit.get("execution_blockers")
+            if status is IntegrationStatus.CATALOGUED and (not isinstance(blockers, list) or not blockers):
+                failures.append(f"SKYDISCOVER_CATALOG_BLOCKERS_INCOMPLETE:{family_id}")
+            if tier == "R4" and audit.get("data_boundary") not in {
+                "EXTERNAL_DATASET_UNBOUND",
+                "SELF_CONTAINED_GENERATED_PUBLIC_CASES",
+                "SELF_CONTAINED_PUBLIC_WORKLOADS",
+            }:
+                failures.append(f"SKYDISCOVER_SYSTEM_DATA_BOUNDARY_MISSING:{family_id}")
+            if tier == "R5":
+                exposure = audit.get("public_exposure") or {}
+                required_exposure = {"prompt", "evaluator", "initial_program", "target_value", "fixed_instance"}
+                if set(exposure) != required_exposure or any(exposure.get(key) is not True for key in required_exposure):
+                    failures.append(f"SKYDISCOVER_FRONTIER_EXPOSURE_INCOMPLETE:{family_id}")
+                if "NEIGHBORING_HIDDEN_DISTRIBUTION_NOT_FROZEN" not in (blockers or []):
+                    failures.append(f"SKYDISCOVER_FRONTIER_HIDDEN_DISTRIBUTION_UNBOUND:{family_id}")
+            if status is not IntegrationStatus.CATALOGUED:
+                execution = family.get("execution_binding") or {}
+                required_execution = ("adapter_digest", "evaluator_digest", "environment_digest")
+                if any(not execution.get(key) for key in required_execution):
+                    failures.append(f"SKYDISCOVER_EXECUTION_BINDING_INCOMPLETE:{family_id}")
         if status is IntegrationStatus.DEVELOPMENT_READY:
             development_ready += 1
             adapter_id = family.get("adapter_id")
