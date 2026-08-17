@@ -407,3 +407,10 @@
 - **决定**：新增 `HarnessSearchRuntime`，把 `ResearchProfile -> ResearchContext -> ACTION_CONTROLLER/OPERATOR_REGISTRY -> UnifiedActionExecutor -> SearchLoopRunner` 固定为新搜索工作的唯一默认组合路径。Plugin manifest 增加 source/revision/license/implementation digest、authority scope、failure semantics 与 replay contract，Profile selection 必须绑定 manifest digest。根 context 绑定实际 `ExperimentExecutor` 作为预算/评估权威，并为 local 与 structural generation 分离 provider。正式 CLI 与 `benchmarks` 包默认不再 eager import 历史协议 runner；旧命令通过 lazy compatibility surface 保留。
 - **原因**：V0 已证明 context、plugin lifecycle 和 routing mechanics，但尚未接管实际搜索主干，Profile id 也没有绑定插件实现 provenance；同时单一 CLI 与 eager benchmark exports 使 40 余个历史 runner 进入每次启动路径。继续在该结构上增加 profile 会让新 Harness 仍受旧实验拓扑支配。
 - **后果**：V0 作为历史 mechanics record 保留，V1 成为默认 runtime profile。历史协议、负结果、收据语义和测试不删除、不改写；它们可以为 replay/compatibility 直接构造旧 runner，但新研究不得绕过 Harness runtime 形成第二条默认路径。此次只建立执行与依赖隔离 mechanics，不修改 scientific verdict，不建立 static composition value，也不授权 adaptive/memory/evolution 或 fresh 资产。
+
+## D-059：P2 四臂使用 capability-aware Profile，并以 create-once manifest 绑定运行
+
+- **日期**：2026-08-18
+- **决定**：P2 的 lineage、structural、naive parallel 与 static Harness 均由 Harness V1 Profile 表达。Naive parallel 是两个禁用 cross-seeding 的隔离 child profile，正式协议必须预拆总预算并在两者 settlement 后应用同一冻结 winner rule；不得用共享 candidate state 的单 loop 冒充 naive parallel。Router 只按 Profile 已注册能力路由，缺少 action capability 时 fail closed。每个新 Harness search run 必须在执行前提供 `HarnessRunManifest`，绑定 Profile/Plugin、SearchRunSpec、传递实现 bundle、Git/source tree、provider、task/contract/evaluator/environment、seed/budget/winner/claim，并写入 `PROFILE_EXECUTED_SEARCH_RUN`。
+- **原因**：让部分基线绕开 Harness runtime 会破坏执行公平性；让 naive parallel 共享候选会污染对“组合价值”的因果问题；只在事件 payload 中记录 Profile 或只摘要单个 plugin 文件不足以阻止 replay 在底层 operator/controller/provider 变化后误接纳旧身份。
+- **后果**：四臂 mechanics 与绑定可在零模型测试中验证，但这不等于 P2 protocol 已封存、naive parent settlement runner 已实现或 composition value 已建立。任何正式 development wave 仍须在首次模型调用前冻结具体任务、预算拆分、provider 与统计/停止规则；P2 结果无论正负都只支持 development claim。

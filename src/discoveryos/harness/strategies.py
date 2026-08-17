@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Mapping
 
 from discoveryos.contracts.models import ProblemContract
@@ -19,8 +18,9 @@ from discoveryos.operators.structural_rewrite import StructuralRewriteOperator
 from discoveryos.runtime.artifacts import ArtifactStore
 from discoveryos.runtime.ledger import EvidenceLedger
 from discoveryos.runtime.scheduler import ExperimentExecutor
-from discoveryos.util import digest_bytes, digest_json
+from discoveryos.util import digest_json
 
+from .bindings import harness_code_bundle_digest
 from .context import ResearchContext, ServiceKey
 from .plugins import (
     HarnessEventSink,
@@ -44,7 +44,7 @@ STRUCTURAL_PATCH_PROVIDER = ServiceKey("structural_patch_provider", object)
 BASE_CONTROLLER = ServiceKey("base_action_controller", DeterministicActionController)
 
 
-_IMPLEMENTATION_DIGEST = digest_bytes(Path(__file__).read_bytes())
+_IMPLEMENTATION_DIGEST = harness_code_bundle_digest()
 
 
 def _plugin_manifest(
@@ -142,6 +142,7 @@ class HarnessRoutingConfig:
     evox_operator_id: str = EvoXMetaStrategyOperator.operator_id
     direct_strategy_id: str = "direct_llm_strategy_v1"
     direct_operator_id: str = DirectLLMResearchOperator.operator_id
+    allow_cross_seed: bool = True
 
     def __post_init__(self) -> None:
         if self.direct_bootstrap_steps < 0:
@@ -167,20 +168,23 @@ class HarnessResearchController(DeterministicActionController):
         self.base = base
         self.registry = registry
         self.routing = routing or HarnessRoutingConfig()
-        required = {
+        registered = {operator_id for operator_id, _ in registry.operators}
+        if not registered:
+            raise ValueError("harness router requires at least one research operator")
+        known = {
             self.routing.direct_operator_id,
             self.routing.ada_operator_id,
             self.routing.evox_operator_id,
         }
-        registered = {operator_id for operator_id, _ in registry.operators}
-        if not required.issubset(registered):
-            raise ValueError("harness router requires Direct, Ada and EvoX operators")
+        if not registered.issubset(known):
+            raise ValueError("harness router received an unsupported operator capability")
+        self.registered = frozenset(registered)
 
     @property
     def digest(self) -> str:
         return digest_json(
             {
-                "policy": "discoveryos_research_harness_router_v0",
+                "policy": "discoveryos_research_harness_router_v1_capability_aware",
                 "base_controller": self.base.digest,
                 "routing": self.routing,
                 "strategies": self.registry.strategies,
@@ -194,22 +198,37 @@ class HarnessResearchController(DeterministicActionController):
         reasons: tuple[str, ...] = ()
         if base.action is SearchAction.LOCAL_PATCH:
             source = self._candidate(state, base.candidate_id)
-            if state.step < self.routing.direct_bootstrap_steps:
+            if (
+                state.step < self.routing.direct_bootstrap_steps
+                and self.routing.direct_operator_id in self.registered
+            ):
                 strategy_id = self.routing.direct_strategy_id
                 operator_id = self.routing.direct_operator_id
                 reasons = ("HARNESS_DIRECT_BOOTSTRAP",)
-            else:
+            elif self.routing.ada_operator_id in self.registered:
                 strategy_id = self.routing.ada_strategy_id
                 operator_id = self.routing.ada_operator_id
                 reasons = ("HARNESS_ADA_LINEAGE_REFINEMENT",)
-                if source is not None and source.strategy_id == self.routing.evox_strategy_id:
+                if (
+                    self.routing.allow_cross_seed
+                    and source is not None
+                    and source.strategy_id == self.routing.evox_strategy_id
+                ):
                     reasons += ("CROSS_SEED_EVOX_TO_ADA",)
+            elif self.routing.direct_operator_id in self.registered:
+                strategy_id = self.routing.direct_strategy_id
+                operator_id = self.routing.direct_operator_id
+                reasons = ("HARNESS_DIRECT_ONLY",)
+            else:
+                raise ValueError("profile cannot execute a local refinement action")
         elif base.action is SearchAction.STRUCTURAL_ESCAPE:
             source = self._candidate(state, base.candidate_id)
+            if self.routing.evox_operator_id not in self.registered:
+                raise ValueError("profile cannot execute a structural escape action")
             strategy_id = self.routing.evox_strategy_id
             operator_id = self.routing.evox_operator_id
             reasons = ("HARNESS_EVOX_META_STRATEGY",)
-            if source is not None and source.strategy_id in {
+            if self.routing.allow_cross_seed and source is not None and source.strategy_id in {
                 self.routing.ada_strategy_id,
                 self.routing.direct_strategy_id,
             }:
@@ -351,8 +370,52 @@ class StateRouterPlugin(ResearchPlugin):
 
 
 def algorithm_discovery_v1_profile() -> ResearchProfile:
+    return harness_static_v1_profile()
+
+
+def lineage_static_v1_profile() -> ResearchProfile:
     return ResearchProfile(
-        name="algorithm-discovery-v1",
+        name="lineage-static-v1",
+        plugins=(
+            PluginSelection.create("direct_llm", DirectLLMPlugin.manifest.digest),
+            PluginSelection.create("ada_lineage", AdaLineagePlugin.manifest.digest),
+            PluginSelection.create(
+                "state_router",
+                StateRouterPlugin.manifest.digest,
+                {"direct_bootstrap_steps": 1, "allow_cross_seed": False},
+            ),
+        ),
+    )
+
+
+def structural_static_v1_profile() -> ResearchProfile:
+    return ResearchProfile(
+        name="structural-static-v1",
+        plugins=(
+            PluginSelection.create("direct_llm", DirectLLMPlugin.manifest.digest),
+            PluginSelection.create("evox_meta_strategy", EvoXMetaStrategyPlugin.manifest.digest),
+            PluginSelection.create(
+                "state_router",
+                StateRouterPlugin.manifest.digest,
+                {"direct_bootstrap_steps": 1, "allow_cross_seed": False},
+            ),
+        ),
+    )
+
+
+def naive_parallel_lineage_v1_profile() -> ResearchProfile:
+    profile = lineage_static_v1_profile()
+    return ResearchProfile(name="naive-parallel-lineage-v1", plugins=profile.plugins)
+
+
+def naive_parallel_structural_v1_profile() -> ResearchProfile:
+    profile = structural_static_v1_profile()
+    return ResearchProfile(name="naive-parallel-structural-v1", plugins=profile.plugins)
+
+
+def harness_static_v1_profile() -> ResearchProfile:
+    return ResearchProfile(
+        name="harness-static-v1",
         plugins=(
             PluginSelection.create("direct_llm", DirectLLMPlugin.manifest.digest),
             PluginSelection.create("ada_lineage", AdaLineagePlugin.manifest.digest),
@@ -364,6 +427,20 @@ def algorithm_discovery_v1_profile() -> ResearchProfile:
             ),
         ),
     )
+
+
+def static_composition_profiles() -> dict[str, tuple[ResearchProfile, ...]]:
+    """Frozen P2 arms; naive parallel is two isolated child runs with split budget."""
+
+    return {
+        "lineage_static_v1": (lineage_static_v1_profile(),),
+        "structural_static_v1": (structural_static_v1_profile(),),
+        "naive_parallel_v1": (
+            naive_parallel_lineage_v1_profile(),
+            naive_parallel_structural_v1_profile(),
+        ),
+        "harness_static_v1": (harness_static_v1_profile(),),
+    }
 
 
 def standard_research_plugins() -> tuple[ResearchPlugin, ...]:

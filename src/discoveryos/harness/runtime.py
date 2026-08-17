@@ -26,6 +26,7 @@ from .plugins import (
     ResearchHarness,
     ResearchProfile,
 )
+from .bindings import HarnessRunManifest, SourceSnapshot
 from .strategies import (
     ACTION_CONTROLLER,
     OPERATOR_REGISTRY,
@@ -47,6 +48,7 @@ class HarnessSearchRuntime:
     session: HarnessSession
     loop: SearchLoopRunner
     sink: HarnessEventSink
+    manifest: HarnessRunManifest
     _ran: bool = False
 
     @classmethod
@@ -62,10 +64,24 @@ class HarnessSearchRuntime:
         base_controller: DeterministicActionController,
         local_provider: PatchProvider,
         structural_provider: PatchProvider,
+        manifest: HarnessRunManifest,
+        source_snapshot: SourceSnapshot,
         novelty_policy: ShinkaStyleNoveltyPolicy | None = None,
     ) -> HarnessSearchRuntime:
         if spec.contract_digest != contract.digest:
             raise ValueError("harness search spec must bind the frozen contract")
+        environment_digest = ledger.get_candidate(spec.root_candidate_id).environment_digest
+        issues = manifest.verify(
+            profile=profile,
+            spec=spec,
+            contract=contract,
+            environment_digest=environment_digest,
+            local_provider=local_provider,
+            structural_provider=structural_provider,
+            source_snapshot=source_snapshot,
+        )
+        if issues:
+            raise ValueError("harness run manifest mismatch: " + ",".join(issues))
         projector = LedgerBackedSearchStateProjector(
             spec=spec,
             contract=contract,
@@ -102,10 +118,17 @@ class HarnessSearchRuntime:
                 executor=executor,
                 trace=AnytimeTraceRecorder(artifacts, ledger),
             )
+            ledger.add_node(spec.run_id, "search_run", spec)
+            ledger.add_harness_run_binding(
+                profile_id=profile.profile_id,
+                run_id=spec.run_id,
+                manifest_id=manifest.manifest_id,
+                manifest=manifest,
+            )
         except Exception:
             session.close()
             raise
-        return cls(profile=profile, session=session, loop=loop, sink=sink)
+        return cls(profile=profile, session=session, loop=loop, sink=sink, manifest=manifest)
 
     @property
     def operator_registry(self) -> OperatorRegistry:

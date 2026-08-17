@@ -13,6 +13,10 @@ HARNESS_PROJECT_CONSTRAINTS_UPDATED
 RESEARCH_HARNESS_V0_MECHANICS_READY
 RESEARCH_HARNESS_V1_EXECUTION_BACKBONE_MECHANICS_READY
 MANIFEST_BOUND_RESEARCH_PROFILE_READY
+P2_STATIC_COMPOSITION_PROFILES_READY
+CAPABILITY_AWARE_HARNESS_ROUTING_READY
+PROFILE_TO_SEARCH_RUN_REPLAY_BINDING_READY
+P2_DEVELOPMENT_PROTOCOL_NOT_SEALED
 CORE_CLI_ISOLATED_FROM_HISTORICAL_PROTOCOL_RUNNERS
 STATIC_ALGORITHM_DISCOVERY_PROFILE_AVAILABLE
 DIRECT_ADA_EVOX_PLUGIN_COMPOSITION_READY
@@ -135,7 +139,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 - 可执行代码 bundle、临时 Git worktree runner、路径策略、超时进程树终止和 run receipts。
 - ASHA mechanics admission；bounded Local Patch、一次 mechanical repair 和 generation provenance。
 - Structural Rewrite mechanics、ledger-backed state projector、deterministic action controller、unified executor 和 anytime settlement。
-- Research Harness V1：typed/scoped `ResearchContext`、manifest-bound `ResearchProfile`、不可覆盖的 authority services、真实 `ExperimentExecutor` 预算/评估权威、独立 local/structural provider、原子插件启动/逆序清理，以及 Profile → unified executor → ledger-backed search loop 的默认执行闭环。V0 保留为历史 composition-only mechanics record；V1 仍未运行 static composition search-value 比较，也未启用 Harness adaptation。
+- Research Harness V1：typed/scoped `ResearchContext`、manifest-bound `ResearchProfile`、不可覆盖的 authority services、真实 `ExperimentExecutor` 预算/评估权威、独立 local/structural provider、原子插件启动/逆序清理，以及 Profile → unified executor → ledger-backed search loop 的默认执行闭环。四个 P2 arm 已成为一等定义；Router 可按已加载能力工作，naive parallel 由两个禁用 handoff 的隔离 child profile 表达。每次新运行必须以 create-once `HarnessRunManifest` 绑定 Profile、SearchRunSpec、传递代码 bundle、Git/source tree、provider、contract/evaluator/environment、预算、seed、winner rule 与 claim ceiling，并写入 `PROFILE_EXECUTED_SEARCH_RUN` 图边。V1 仍未封存或运行 static composition search-value 比较，也未启用 Harness adaptation。
 - residual-headroom task admission 与 matched-resource Search-Value MVP 协议/runner。
 - Benchmark Bank v1 的 47-family commit-pinned registry、DEV/SHADOW/SEALED 生命周期门、统一 adapter contract，以及可执行的 consumed Assignment/Coverage development 物化切片。
 
@@ -216,7 +220,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 
 当前默认研发路线由 D-056/D-057 与 [`SYSTEM_PHILOSOPHY.md`](SYSTEM_PHILOSOPHY.md) 约束：
 
-1. 先在 L0-L2 上补齐 Direct/Ada、EvoX、naive parallel 与静态 DiscoveryOS Harness V1 四臂的精确上游 source/version/license、plugin lifecycle、authority、provenance、replay 与 matched-resource preflight；内部 manifest binding 已完成，但不等于官方 runtime admission。不得用 fresh task debugging。
+1. 在任何正式模型调用前封存 P2 development protocol：从 L0-L2 Bank 明确选择具体 instance/shard，冻结四臂 Profile/RunManifest、naive-parallel 预算拆分与终局 settlement、provider executable/version/model/settings、token/evaluator/CPU/GPU/wall ceilings、统计门、winner rule、stop rule 和 claim ceiling。内部四臂与 Profile→Run replay closure 已完成，但不等于官方 runtime admission。不得用 fresh task debugging。
 2. 冻结并运行 P2 static composition development protocol。task、model/settings、token、evaluator calls、CPU/GPU/device time、wall envelope、router/profile digest、winner rule 与 claim ceiling 必须 matched 或显式配平。
 3. 只有静态 Harness 相对强单策略和朴素组合取得正向、可重放结果，才允许设计 P3 adaptive profile；否则先诊断静态组合，不靠增加策略数或自研 Operator 绕过负结果。
 4. P3 通过后才允许 P4 memory-conditioned comparison；P4 通过后才允许 P5 Harness evolution。每层使用独立协议、控制臂、污染边界、rollback 和 claim ceiling。

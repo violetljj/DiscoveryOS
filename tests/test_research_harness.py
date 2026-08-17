@@ -12,16 +12,22 @@ from discoveryos.harness import (
     OPERATOR_REGISTRY,
     AuthorityOverrideError,
     HarnessEventSink,
+    HarnessRunManifest,
+    HarnessSearchRuntime,
     PluginActivation,
     PluginManifest,
     PluginSelection,
+    ProviderBinding,
     ResearchContext,
     ResearchHarness,
     ResearchProfile,
     ServiceKey,
+    SourceSnapshot,
     algorithm_discovery_v1_profile,
     build_root_research_context,
+    harness_code_bundle_digest,
     standard_research_plugins,
+    static_composition_profiles,
 )
 from discoveryos.harness.strategies import CONTRACT
 from discoveryos.operators.action_controller import (
@@ -33,7 +39,10 @@ from discoveryos.operators.action_controller import (
     SearchAction,
     SearchState,
 )
+from discoveryos.operators.asha import RungDefinition
 from discoveryos.runtime.ledger import EvidenceLedger
+from discoveryos.runtime.search_loop import SearchRunSpec
+from discoveryos.util import digest_json
 
 
 class _Provider:
@@ -159,6 +168,185 @@ class ResearchHarnessLifecycleTests(unittest.TestCase):
 
 
 class ResearchHarnessStrategyTests(unittest.TestCase):
+    def test_every_static_composition_child_builds_through_harness_runtime_without_model_calls(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            demo = initialize_demo(Path(directory))
+            baseline = demo.ledger.get_candidate(demo.contract.baseline_candidate_id)
+            source_snapshot = SourceSnapshot("a" * 40, "b" * 64, True)
+            for arm_id, profiles in static_composition_profiles().items():
+                for child_index, profile in enumerate(profiles):
+                    spec = SearchRunSpec(
+                        run_id=f"{arm_id}-{child_index}",
+                        contract_digest=demo.contract.digest,
+                        root_candidate_id=baseline.candidate_id,
+                        branch_id=f"{arm_id}-branch-{child_index}",
+                        initial_algorithm_family="clearance-demo",
+                        metric_name=demo.contract.metrics[0].name,
+                        metric_direction=demo.contract.metrics[0].direction,
+                        initial_fidelity=Fidelity.G0,
+                        budget=ResourceBudget(tokens=100, cpu_seconds=10, wall_seconds=20),
+                        rungs=(
+                            RungDefinition(
+                                "g0", Fidelity.G0, ResourceBudget(cpu_seconds=1, wall_seconds=1)
+                            ),
+                            RungDefinition(
+                                "g2", Fidelity.G2, ResourceBudget(cpu_seconds=2, wall_seconds=2)
+                            ),
+                        ),
+                        eta=2,
+                        initial_trials=2,
+                        local_action_limit=2,
+                        structural_action_limit=1,
+                        max_steps=3,
+                        mutable_file_paths=(demo.contract.mutable_paths[0],),
+                        seeds=(0,),
+                    )
+                    local_provider = _Provider()
+                    structural_provider = _Provider()
+                    manifest = HarnessRunManifest(
+                        run_id=spec.run_id,
+                        search_run_spec_digest=spec.digest,
+                        profile_id=profile.profile_id,
+                        plugin_manifest_digests=tuple(
+                            (item.plugin_id, item.manifest_digest) for item in profile.plugins
+                        ),
+                        code_bundle_digest=harness_code_bundle_digest(),
+                        repository_commit=source_snapshot.repository_commit,
+                        tracked_source_tree_digest=source_snapshot.tracked_source_tree_digest,
+                        worktree_clean=True,
+                        local_provider=ProviderBinding(
+                            local_provider.provider_name,
+                            local_provider.model,
+                            local_provider.settings_digest,
+                            "test-provider-v1",
+                        ),
+                        structural_provider=ProviderBinding(
+                            structural_provider.provider_name,
+                            structural_provider.model,
+                            structural_provider.settings_digest,
+                            "test-provider-v1",
+                        ),
+                        task_instance_digest="c" * 64,
+                        contract_digest=demo.contract.digest,
+                        evaluator_bindings=demo.contract.evaluator_bindings,
+                        environment_digest=baseline.environment_digest,
+                        seeds=spec.seeds,
+                        budget=spec.budget,
+                        winner_rule_digest=digest_json(demo.contract.winner_rule),
+                        claim_ceiling=demo.contract.claim_ceiling.value,
+                    )
+                    runtime = HarnessSearchRuntime.build(
+                        profile=profile,
+                        spec=spec,
+                        contract=demo.contract,
+                        ledger=demo.ledger,
+                        artifacts=demo.artifacts,
+                        experiment_executor=demo.runner.executor,
+                        base_controller=self._controller(),
+                        local_provider=local_provider,
+                        structural_provider=structural_provider,
+                        manifest=manifest,
+                        source_snapshot=source_snapshot,
+                    )
+                    runtime.close()
+
+    def test_static_composition_arms_are_first_class_and_budget_matched(self) -> None:
+        arms = static_composition_profiles()
+        self.assertEqual(
+            {
+                "lineage_static_v1",
+                "structural_static_v1",
+                "naive_parallel_v1",
+                "harness_static_v1",
+            },
+            set(arms),
+        )
+        self.assertEqual(2, len(arms["naive_parallel_v1"]))
+        self.assertTrue(all(profile.profile_id for profiles in arms.values() for profile in profiles))
+        with tempfile.TemporaryDirectory() as directory:
+            demo = initialize_demo(Path(directory))
+            decisions = []
+            for profiles in arms.values():
+                for profile in profiles:
+                    root, sink = build_root_research_context(
+                        contract=demo.contract,
+                        ledger=demo.ledger,
+                        artifacts=demo.artifacts,
+                        experiment_executor=demo.runner.executor,
+                        local_provider=_Provider(),
+                        structural_provider=_Provider(),
+                        base_controller=self._controller(),
+                    )
+                    with ResearchHarness(standard_research_plugins()).boot(
+                        profile, root, sink
+                    ) as session:
+                        decision = session.context.get(ACTION_CONTROLLER).decide(
+                            self._state(step=0, strategy_id="baseline")
+                        )
+                        decisions.append(decision)
+            reservation_surfaces = {
+                (
+                    item.resource_floor,
+                    item.generation_reserve,
+                    item.evaluation_reserve,
+                    item.settlement_reserve,
+                    item.reserved_downstream_budget,
+                )
+                for item in decisions
+            }
+            self.assertEqual(1, len(reservation_surfaces))
+
+    def test_naive_parallel_children_disable_handoffs_while_harness_enables_them(self) -> None:
+        arms = static_composition_profiles()
+        with tempfile.TemporaryDirectory() as directory:
+            demo = initialize_demo(Path(directory))
+            for profile in arms["naive_parallel_v1"]:
+                root, sink = build_root_research_context(
+                    contract=demo.contract,
+                    ledger=demo.ledger,
+                    artifacts=demo.artifacts,
+                    experiment_executor=demo.runner.executor,
+                    local_provider=_Provider(),
+                    structural_provider=_Provider(),
+                    base_controller=self._controller(),
+                )
+                with ResearchHarness(standard_research_plugins()).boot(
+                    profile, root, sink
+                ) as session:
+                    controller = session.context.get(ACTION_CONTROLLER)
+                    if "lineage" in profile.name:
+                        decision = controller.decide(
+                            self._state(step=1, strategy_id="evox_meta_strategy_v1")
+                        )
+                        self.assertNotIn("CROSS_SEED_EVOX_TO_ADA", decision.reason_codes)
+                    else:
+                        decision = controller.decide(
+                            self._state(
+                                step=3,
+                                strategy_id="ada_lineage_strategy_v1",
+                                stagnant=True,
+                            )
+                        )
+                        self.assertNotIn("CROSS_SEED_LINEAGE_TO_EVOX", decision.reason_codes)
+
+            profile = arms["harness_static_v1"][0]
+            root, sink = build_root_research_context(
+                contract=demo.contract,
+                ledger=demo.ledger,
+                artifacts=demo.artifacts,
+                experiment_executor=demo.runner.executor,
+                local_provider=_Provider(),
+                structural_provider=_Provider(),
+                base_controller=self._controller(),
+            )
+            with ResearchHarness(standard_research_plugins()).boot(profile, root, sink) as session:
+                decision = session.context.get(ACTION_CONTROLLER).decide(
+                    self._state(step=3, strategy_id="ada_lineage_strategy_v1", stagnant=True)
+                )
+                self.assertIn("CROSS_SEED_LINEAGE_TO_EVOX", decision.reason_codes)
+
     def test_standard_profile_composes_three_strategies_without_replacing_authority(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             demo = initialize_demo(Path(directory))

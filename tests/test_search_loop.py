@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 from discoveryos.contracts.executable import CommandSpec, EnvironmentLock, ExecutableCandidateBundle
@@ -25,7 +26,15 @@ from discoveryos.contracts.models import (
 )
 from discoveryos.contracts.patch import ProviderGeneration
 from discoveryos.evaluation.base import EvaluatorRegistry
-from discoveryos.harness import HarnessSearchRuntime, algorithm_discovery_v1_profile
+from discoveryos.harness import (
+    HarnessRunManifest,
+    HarnessSearchRuntime,
+    ProviderBinding,
+    SourceSnapshot,
+    algorithm_discovery_v1_profile,
+    harness_code_bundle_digest,
+    replay_harness_run_binding,
+)
 from discoveryos.operators.action_controller import (
     ActionControllerConfig,
     ActionCost,
@@ -51,12 +60,13 @@ from discoveryos.runtime.search_loop import (
     UnifiedActionExecutor,
 )
 from discoveryos.runtime.vault import SplitVault
-from discoveryos.util import digest_bytes
+from discoveryos.util import digest_bytes, digest_json
 
 
 class _Provider:
     provider_name = "frozen_fake_provider"
     model = "frozen_test_model"
+    settings_digest = "0" * 64
 
     def __init__(self, responses: list[ProviderGeneration]) -> None:
         self.responses = responses
@@ -244,8 +254,42 @@ class SearchLoopIntegrationTests(unittest.IsolatedAsyncioTestCase):
             structural_provider = _Provider(
                 [self._structural_response(self._patch("return value + 2", "return abs(value)"))]
             )
+            profile = algorithm_discovery_v1_profile()
+            source_snapshot = SourceSnapshot("a" * 40, "b" * 64, True)
+            manifest = HarnessRunManifest(
+                run_id=spec.run_id,
+                search_run_spec_digest=spec.digest,
+                profile_id=profile.profile_id,
+                plugin_manifest_digests=tuple(
+                    (item.plugin_id, item.manifest_digest) for item in profile.plugins
+                ),
+                code_bundle_digest=harness_code_bundle_digest(),
+                repository_commit=source_snapshot.repository_commit,
+                tracked_source_tree_digest=source_snapshot.tracked_source_tree_digest,
+                worktree_clean=True,
+                local_provider=ProviderBinding(
+                    local_provider.provider_name,
+                    local_provider.model,
+                    local_provider.settings_digest,
+                    "test-provider-v1",
+                ),
+                structural_provider=ProviderBinding(
+                    structural_provider.provider_name,
+                    structural_provider.model,
+                    structural_provider.settings_digest,
+                    "test-provider-v1",
+                ),
+                task_instance_digest="c" * 64,
+                contract_digest=contract.digest,
+                evaluator_bindings=contract.evaluator_bindings,
+                environment_digest=baseline.environment_digest,
+                seeds=spec.seeds,
+                budget=spec.budget,
+                winner_rule_digest=digest_json(contract.winner_rule),
+                claim_ceiling=contract.claim_ceiling.value,
+            )
             runtime = HarnessSearchRuntime.build(
-                profile=algorithm_discovery_v1_profile(),
+                profile=profile,
                 spec=spec,
                 contract=contract,
                 ledger=ledger,
@@ -254,10 +298,37 @@ class SearchLoopIntegrationTests(unittest.IsolatedAsyncioTestCase):
                 base_controller=DeterministicActionController(controller_config),
                 local_provider=local_provider,
                 structural_provider=structural_provider,
+                manifest=manifest,
+                source_snapshot=source_snapshot,
             )
             projector = runtime.loop.projector
             self.assertEqual(spec, SearchRunSpec.from_dict(ledger.get_search_run(spec.run_id)))
             result = await runtime.run()
+            replay = replay_harness_run_binding(
+                ledger,
+                manifest,
+                profile=profile,
+                spec=spec,
+                contract=contract,
+                environment_digest=baseline.environment_digest,
+                local_provider=local_provider,
+                structural_provider=structural_provider,
+                source_snapshot=source_snapshot,
+            )
+            self.assertTrue(replay.bindings_valid, replay.issues)
+            drifted = replace(manifest, code_bundle_digest="f" * 64)
+            drift_replay = replay_harness_run_binding(
+                ledger,
+                drifted,
+                profile=profile,
+                spec=spec,
+                contract=contract,
+                environment_digest=baseline.environment_digest,
+                local_provider=local_provider,
+                structural_provider=structural_provider,
+                source_snapshot=source_snapshot,
+            )
+            self.assertIn("CODE_BUNDLE_MISMATCH", drift_replay.issues)
 
             actions = [payload["action"] for payload in ledger.search_action_payloads(spec.run_id)]
             self.assertEqual(

@@ -242,6 +242,56 @@ class EvidenceLedger:
             )
             return True
 
+    def add_harness_run_binding(
+        self,
+        *,
+        profile_id: str,
+        run_id: str,
+        manifest_id: str,
+        manifest: Any,
+    ) -> bool:
+        """Atomically create the manifest node and Profile-to-Run edge."""
+
+        manifest_payload = canonical_json(jsonable(manifest))
+        edge_payload = canonical_json({"manifest_id": manifest_id})
+        created_at = utc_now()
+        with self.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            node = connection.execute(
+                "SELECT node_type,payload FROM graph_nodes WHERE node_id=?", (manifest_id,)
+            ).fetchone()
+            if node is not None and (
+                node["node_type"] != "harness_run_manifest"
+                or node["payload"] != manifest_payload
+            ):
+                raise LedgerConflict(f"graph node collision: {manifest_id}")
+            edge = connection.execute(
+                "SELECT payload FROM graph_edges WHERE source_id=? AND target_id=? "
+                "AND edge_type='PROFILE_EXECUTED_SEARCH_RUN'",
+                (profile_id, run_id),
+            ).fetchone()
+            if edge is not None and edge["payload"] != edge_payload:
+                raise LedgerConflict(
+                    f"graph edge collision: {profile_id}->{run_id}:PROFILE_EXECUTED_SEARCH_RUN"
+                )
+            if node is None:
+                connection.execute(
+                    "INSERT INTO graph_nodes VALUES (?,?,?,?)",
+                    (manifest_id, "harness_run_manifest", manifest_payload, created_at),
+                )
+            if edge is None:
+                connection.execute(
+                    "INSERT INTO graph_edges VALUES (?,?,?,?,?)",
+                    (
+                        profile_id,
+                        run_id,
+                        "PROFILE_EXECUTED_SEARCH_RUN",
+                        edge_payload,
+                        created_at,
+                    ),
+                )
+            return node is None or edge is None
+
     def reserve_budget(self, reservation_id: str, requested: ResourceBudget, limit: ResourceBudget) -> bool:
         requested_values = requested.as_dict()
         limits = limit.as_dict()

@@ -58,9 +58,10 @@ print(json.dumps(sorted(name for name in sys.modules if name.startswith('discove
             text=True,
         )
         payload = json.loads(completed.stdout)
-        self.assertEqual("RESEARCH_HARNESS_V1_PROFILE_AVAILABLE", payload["status"])
+        self.assertEqual("P2_STATIC_COMPOSITION_PROFILES_AVAILABLE", payload["status"])
         self.assertTrue(payload["manifest_bound"])
-        self.assertEqual("algorithm-discovery-v1", payload["profile"]["name"])
+        self.assertEqual("harness-static-v1", payload["profile"]["name"])
+        self.assertEqual(4, len(payload["static_composition_arms"]))
 
     def test_legacy_protocol_help_is_lazy_but_reachable(self) -> None:
         completed = subprocess.run(

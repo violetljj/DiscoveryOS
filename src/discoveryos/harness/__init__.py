@@ -17,6 +17,15 @@ from .plugins import (
     ResearchProfile,
 )
 from .runtime import HarnessSearchRuntime
+from .bindings import (
+    HarnessRunManifest,
+    HarnessRunReplayResult,
+    ProviderBinding,
+    SourceSnapshot,
+    capture_git_source_snapshot,
+    harness_code_bundle_digest,
+    replay_harness_run_binding,
+)
 from .strategies import (
     ACTION_CONTROLLER,
     OPERATOR_REGISTRY,
@@ -29,6 +38,12 @@ from .strategies import (
     algorithm_discovery_v1_profile,
     build_root_research_context,
     standard_research_plugins,
+    harness_static_v1_profile,
+    lineage_static_v1_profile,
+    naive_parallel_lineage_v1_profile,
+    naive_parallel_structural_v1_profile,
+    static_composition_profiles,
+    structural_static_v1_profile,
 )
 
 __all__ = [
@@ -45,6 +60,10 @@ __all__ = [
     "HarnessRoutingConfig",
     "HarnessSession",
     "HarnessSearchRuntime",
+    "HarnessRunManifest",
+    "HarnessRunReplayResult",
+    "ProviderBinding",
+    "SourceSnapshot",
     "MissingServiceError",
     "OperatorRegistry",
     "PluginActivation",
@@ -58,4 +77,13 @@ __all__ = [
     "algorithm_discovery_v1_profile",
     "build_root_research_context",
     "standard_research_plugins",
+    "capture_git_source_snapshot",
+    "harness_code_bundle_digest",
+    "harness_static_v1_profile",
+    "lineage_static_v1_profile",
+    "naive_parallel_lineage_v1_profile",
+    "naive_parallel_structural_v1_profile",
+    "replay_harness_run_binding",
+    "static_composition_profiles",
+    "structural_static_v1_profile",
 ]

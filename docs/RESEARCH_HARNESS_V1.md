@@ -5,11 +5,15 @@
 ```text
 RESEARCH_HARNESS_V1_EXECUTION_BACKBONE_MECHANICS_READY
 MANIFEST_BOUND_RESEARCH_PROFILE_READY
+P2_STATIC_COMPOSITION_PROFILES_READY
+CAPABILITY_AWARE_ROUTING_READY
+PROFILE_TO_SEARCH_RUN_REPLAY_BINDING_READY
 LIVE_BUDGET_EVALUATOR_AUTHORITY_BOUND
 SEPARATE_LOCAL_AND_STRUCTURAL_PROVIDERS_READY
 CORE_CLI_ISOLATED_FROM_HISTORICAL_PROTOCOL_RUNNERS
 HISTORICAL_PROTOCOL_REPLAY_COMPATIBILITY_PRESERVED
 STATIC_HARNESS_COMPOSITION_VALUE_NOT_EVALUATED
+P2_DEVELOPMENT_PROTOCOL_NOT_SEALED
 DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
 ```
 
@@ -50,6 +54,31 @@ Every `PluginSelection` freezes the expected manifest digest. Profile boot fails
 
 The current source-role metadata is intentionally narrow. Ada/EvoX names still describe mechanism roles implemented inside DiscoveryOS; `UNSPECIFIED_REFERENCE_LICENSE_INTERNAL_IMPLEMENTATION` is not external-runtime admission and must be replaced by exact upstream license/source bindings before an official port claim.
 
+### First-class P2 static arms
+
+V1 now exposes four frozen arm definitions through `static_composition_profiles()`:
+
+- `lineage_static_v1`: Direct bootstrap followed by Ada-role local lineage refinement, with structural capability absent;
+- `structural_static_v1`: Direct bootstrap plus EvoX-role structural escape, with Ada capability absent;
+- `naive_parallel_v1`: two isolated child profiles, one lineage and one structural, both with cross-seeding disabled; a formal runner must split the total arm budget before either child starts and apply the frozen winner rule only after both settle;
+- `harness_static_v1`: Direct + Ada + EvoX in one shared research state with deterministic cross-strategy handoff.
+
+Every child profile boots through `HarnessSearchRuntime`; no baseline requires a compatibility-only direct `SearchLoopRunner` path. `HarnessResearchController` is capability-aware and fails closed when a selected action has no loaded capability. It never silently substitutes a different action class.
+
+This code defines the arms but does not yet seal a task wave or make model calls. In particular, the naive-parallel parent settlement and matched budget split remain responsibilities of the forthcoming frozen P2 protocol runner.
+
+### Profile-to-run binding
+
+Every new Harness run must supply a `HarnessRunManifest`. Build now fails closed unless it matches:
+
+- the exact Profile id and ordered PluginManifest digests;
+- the `SearchRunSpec`, contract, evaluator bindings, seeds, total budget, winner rule and claim ceiling;
+- root-candidate environment and task-instance digests;
+- local and structural provider/model/settings identities plus recorded executable versions;
+- Git commit, tracked-tree digest, clean-worktree assertion and a transitive Harness code-bundle digest.
+
+The ledger records an explicit `PROFILE_EXECUTED_SEARCH_RUN` edge and a create-once manifest node. `replay_harness_run_binding()` rechecks the stored node/edge and current bindings; code, profile, provider, source-tree or frozen-run drift is invalid rather than best-effort replay.
+
 ### Real authority services and provider separation
 
 The root context now binds the actual `ExperimentExecutor` as live budget/evaluation authority. Construction fails unless contract, ledger and artifact identities match. This preserves the existing reservation, reconciliation and fail-closed evidence path.
@@ -78,6 +107,8 @@ Focused tests establish:
 - authority inheritance and override rejection;
 - atomic boot, reverse rollback and teardown;
 - Direct/Ada/EvoX registry composition and deterministic routing;
+- all four P2 arm definitions, capability-aware subset routing, disabled naive handoff and matched reservation surfaces;
+- create-once Profile-to-Run binding and fail-closed replay under code-bundle drift;
 - Profile → Harness runtime → unified executor → evaluator/ledger settlement;
 - core CLI and benchmark-package imports do not load historical runners;
 - historical CLI commands remain reachable through lazy compatibility routing.
@@ -92,4 +123,4 @@ Parent/Novelty/CMI and old protocol runners remain frozen regression/evidence as
 
 ## Next gate
 
-The next scientific gate is unchanged: matched-resource P2 comparison of strong Direct/Ada, EvoX, naive parallel composition and static Research Harness V1 on eligible L0-L2 development assets. V1 mechanics do not authorize adaptive routing, cross-task memory, Harness evolution, fresh assets or stronger claims.
+The next scientific gate is unchanged: seal a matched-resource P2 protocol, including exact L0-L2 task instances, child budget split and settlement for naive parallel, provider executable/version/settings, model calls, evaluator-call ceilings, wall/resource envelopes, statistics, winner rule and stop conditions, before the first formal model call. Only then may the development wave run. V1 mechanics do not authorize adaptive routing, cross-task memory, Harness evolution, fresh assets or stronger claims.
