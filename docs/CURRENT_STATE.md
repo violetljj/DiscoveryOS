@@ -51,6 +51,7 @@ EMC_R2_PROVIDER_PREFLIGHT_PASSED
 EMC_R2_CALIBRATION_NOT_EVALUABLE_RESOURCE_AND_DUPLICATE_CALL
 EMC_R2_VALIDATION_BLOCKED_NOT_RUN
 NO_EXECUTABLE_MECHANISM_CONTRACT_ADMITTED
+EMC_PROVIDER_INVOCATION_JOURNAL_MECHANICS_READY
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -159,6 +160,7 @@ NO_EXECUTABLE_MECHANISM_CONTRACT_ADMITTED
 16. EMC-R1 作为独立 create-once 协议实现：Structured Mechanism Object 经 deterministic compiler 变成 required/forbidden functions、entrypoint call edges、外部 profile counters 与 invariants。候选自报 counter 不具证据权。顺序门为 0-call instrumentation sensitivity、1-call provider/resource preflight、6-call assignment calibration、6-call independent coverage validation。详见 [`EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md`](EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md)。
 17. EMC-R1 在 commit `cc95730` 封存，E0 的 4/4 instrumentation controls 通过；E1 因不存在的 `GenerationKind.STRUCTURAL_REWRITE` 在 provider 前失败，0 provider calls、0 tokens，正式关闭为 `EMC_R1_NOT_EVALUABLE_IMPLEMENTATION_ENUM`。R1 root 不修补。EMC-R2 只把 request kind 修正为已有的 `PROPOSAL` 并换新 protocol/root，其余科学语义不变。
 18. EMC-R2 在 commit `fb643f5` 封存。E0 4/4 通过；E1 以 1 call、19,246 tokens 通过。E2 的六个唯一 checkpoint 均 evaluable、source valid，并 6/6 通过 static contract、独立 runtime counter 与 invariant canary；两条件 signature 稳定为 `[1,0,0]` 和 `[1,1,0]`。但 1/6 calls 使用 61,681 tokens，超过冻结 60,000 ceiling；恢复期间还发生同一 draw 的 create-once writer race，证明至少 1 次重复 provider invocation，实际 usage 至少 8 calls 且超过已入账的 255,420 tokens，精确 usage 不可恢复。正式 verdict 为 `EMC_R2_CALIBRATION_NOT_EVALUABLE_RESOURCE_AND_DUPLICATE_CALL`；E3 validation 0 calls，R2 root 关闭，不提 ceiling、不补跑。完整证据边界见 [`EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md`](EMC_R1_EXECUTABLE_MECHANISM_CONTRACT.md)。
+19. R2 后的 mechanics-only 修复为 provider 调用增加独立 durable journal：调用前原子写入 request-bound owner claim，正常返回或 provider failure 后立即持久化 terminal response、usage 与 request identity；已有 terminal 可零调用恢复，只有 claim 而无 terminal 时永久 fail closed，禁止根据 checkpoint 缺失猜测性重发。并发与 orphaned-claim 测试证明同一 request 不会重复进入 provider。该修复不修改 R2 root、不补计 R2 usage，也不授权新科学协议或提高 claim ceiling。
 
 ## 状态更新规则
 

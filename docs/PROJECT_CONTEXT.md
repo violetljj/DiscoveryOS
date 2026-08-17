@@ -59,7 +59,7 @@ Frozen ProblemContract
 | `src/discoveryos/graph/` | hypothesis、component、strategy、claim 及谱系模型 |
 | `src/discoveryos/evaluation/` | evaluator registry、GateEngine、Pareto、winner、replay |
 | `src/discoveryos/operators/` | Random、ASHA、Local Patch、Structural Rewrite、parent/novelty 等机制 |
-| `src/discoveryos/runtime/` | ledger、artifact、vault、scheduler、repository runner、search loop |
+| `src/discoveryos/runtime/` | ledger、artifact、vault、scheduler、provider invocation journal、repository runner、search loop |
 | `src/discoveryos/memory/` | semantic delta 和 progressive context 基础接口 |
 | `src/discoveryos/benchmarks/` | 冻结 admission/benchmark runner 与任务定义 |
 | `src/discoveryos/domains/` | 可执行领域包；当前含 deterministic clearance demo |

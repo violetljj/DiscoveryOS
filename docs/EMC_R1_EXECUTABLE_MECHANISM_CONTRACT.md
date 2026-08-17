@@ -37,6 +37,12 @@ The machine calibration record is therefore bounded by the stricter scoped verdi
 
 R2 is closed. Do not raise the ceiling, alter checkpoint/resume semantics, add replicates, or replay the same states to convert the diagnostic 6/6 into a pass. Any future protocol must use a new scientific question and fresh states; a mechanics-only repair may separately ensure that in-flight worker ownership is durably known before resume.
 
+## Post-R2 mechanics repair
+
+The provider boundary now writes a request-bound, create-once owner claim before entering an external call and a terminal response/usage record immediately after a normal return or provider failure. A complete terminal record can be recovered without another provider call. A claim without a terminal record is permanently fail closed: process exit, elapsed time, or a missing draw checkpoint is not treated as proof that the external call did not occur. Concurrent, completed-recovery, provider-failure-recovery, orphaned-claim, and binding-tamper fixtures cover this behavior.
+
+This is `EMC_PROVIDER_INVOCATION_JOURNAL_MECHANICS_READY` only. It does not mutate either consumed EMC root, reconstruct R2 usage, admit executable transmission, or authorize validation/search-value work.
+
 ## Claim ceiling
 
 The maximum positive claim is:

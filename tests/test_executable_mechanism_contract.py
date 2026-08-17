@@ -95,6 +95,10 @@ class ExecutableMechanismContractTests(unittest.TestCase):
             self.assertEqual("E0_INSTRUMENTATION_SENSITIVITY_NO_MODEL", manifest["cheap_first_gates"][0])
             self.assertFalse(manifest["isolation"]["candidate_self_reported_counters_authoritative"])
             self.assertEqual(0, manifest["model_calls_before_seal"])
+            self.assertIn(
+                "provider_invocations.py",
+                {Path(item["path"]).name for item in manifest["implementation_bindings"]},
+            )
 
     def test_failed_sensitivity_blocks_provider_call(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

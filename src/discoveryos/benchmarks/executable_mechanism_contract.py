@@ -19,6 +19,7 @@ from discoveryos.contracts.models import ResourceUsage
 from discoveryos.contracts.patch import GenerationKind, GenerationProviderError, GenerationRequest
 from discoveryos.operators.local_patch import PatchProvider
 from discoveryos.runtime.artifacts import ArtifactStore
+from discoveryos.runtime.provider_invocations import DurableProviderInvoker
 from discoveryos.util import digest_bytes, digest_json, jsonable
 
 
@@ -480,7 +481,11 @@ def _generate_implementation(
     evidence = _empty_contract_evidence("NOT_RUN")
     usage = ResourceUsage()
     try:
-        generated = provider.generate(request)
+        invocation = DurableProviderInvoker(
+            workspace / "result-artifacts",
+            namespace=f"{PROTOCOL_ID}:{item['draw_id']}",
+        ).invoke(provider, request)
+        generated = invocation.generation
         payload = json.loads(generated.raw_response)
         if set(payload) != {"implementation_source"} or not isinstance(payload["implementation_source"], str):
             raise ValueError("implementation response does not match the frozen schema")
@@ -489,7 +494,10 @@ def _generate_implementation(
         evidence = _evaluate_contract(workspace / "protocol-artifacts", state, source, contract)
         evaluable = not generated.refused
         usage = generated.usage
-        generation = _generation_success(request, generated, evaluable)
+        generation = {
+            **_generation_success(request, generated, evaluable),
+            "durable_invocation_recovered": invocation.recovered,
+        }
     except (GenerationProviderError, json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
         usage = error.usage if isinstance(error, GenerationProviderError) and error.usage else ResourceUsage()
         generation = _generation_failure(request, error, usage, started)
@@ -845,5 +853,6 @@ def _implementation_bindings() -> list[dict[str, str]]:
         Path(__file__).resolve(),
         Path(__file__).with_name("si2_tasks.py").resolve(),
         Path(__file__).with_name("parent_intervention_real.py").resolve(),
+        (Path(__file__).resolve().parents[1] / "runtime" / "provider_invocations.py").resolve(),
     )
     return [{"path": str(path), "sha256": digest_bytes(path.read_bytes())} for path in paths]

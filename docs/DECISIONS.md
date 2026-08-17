@@ -204,3 +204,10 @@
 - **决定**：R2 的 E0 与 E1 通过；E2 六个唯一 checkpoint 虽全部通过 source validity、static contract、external runtime counters 与 invariant canary，仍以 `EMC_R2_CALIBRATION_NOT_EVALUABLE_RESOURCE_AND_DUPLICATE_CALL` 关闭。原因是 1/6 persisted implementation calls 使用 61,681 tokens，超过冻结 60,000 ceiling；同时 interrupted aggregation 后的恢复与迟到 worker 对同一 create-once record 发生冲突，证明至少多发 1 次未入账 provider invocation。
 - **原因**：资源门和 matched-call accounting 是协议有效性，不因 executable diagnostics 看起来正向而豁免。已入账 7 calls、255,420 tokens 不是实际完整 usage；只能诚实声明至少 8 calls、超过 255,420 tokens，不能猜测未持久化 duplicate 的 tokens。
 - **后果**：E3 validation 保持 0 calls，`NO_EXECUTABLE_MECHANISM_CONTRACT_ADMITTED`，fresh value trial 与 SI-3 继续关闭。R2 root 不提高 ceiling、不改变 resume semantics、不补 replicate 或重跑相同 states。未来若修复，应先做 mechanics-only durable in-flight ownership，且不得用 R2 的 6/6 diagnostics 追逐同一科学 pass。
+
+## D-030：provider invocation 使用不可猜测重发的 durable journal
+
+- **日期**：2026-08-17
+- **决定**：每个受保护 provider request 在进入外部调用前，必须以 request identity 原子创建 owner claim；正常返回或 `GenerationProviderError` 后立即创建 terminal record，绑定 response、transport、usage、provider request ID 与 failure semantics。恢复时只有完整 terminal 才能零调用重放；claim 存在而 terminal 缺失一律记为状态未知并永久禁止自动 reclaim/retry，除非未来能证明 provider 端支持同一 identity 的幂等执行。
+- **原因**：最终 draw checkpoint 比 provider side effect 晚。用 checkpoint 缺失推断“调用未发生”会在迟到 worker、进程中断或聚合失败时重复消费模型预算，并破坏 matched-call accounting。超时或本机 PID 消失也不能证明外部 provider 没有完成调用。
+- **后果**：该机制只建立 crash-safe、at-most-once 的调用 mechanics；它不能恢复 R2 未持久化的 duplicate usage，不能把 R2 的诊断 6/6 升级为 admission，也不自动授权 R3。新的科学协议必须先在非科学故障夹具和资源校准上验证 journal，再使用新 states、独立 root 和预冻结 ceiling。
