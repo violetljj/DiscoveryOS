@@ -37,6 +37,10 @@ DiscoveryOS 是证据优先的统一算法研究内核。它把外部算法发�
 - `新运行 ≠ 新 seed ≠ 新实例 ≠ 新任务分布 ≠ 新任务族 ≠ 新 evaluator regime`。Manifest/receipt 必须分别记录 instance、distribution、task family 和 evaluator regime 的 freshness/consumption 状态；数量统计不得只写 `fresh_tasks=N`。同一 family 的不同 seed 或规模变体通常只支持稳定性或 scaling，不得冒充 task-family generalization。
 - 最强的泛化结论应保留未参与机制形成和调参的 task-family holdout；L5 final blind 只能在冻结 winner 后由 Certification 取得，永远不得回流选择 winner、阈值、prompt、operator 或策略。
 - 复用结果按其资产等级限定 claim。Consumed Assignment 上的正向结果可以表述为 `OPERATOR_VALUE_DETECTED_ON_CONSUMED_ASSIGNMENT_DEV_STATE` 或同等窄结论，不得表述为 unseen-task generalization。重复次数、效应大小或回归全绿都不能单独提高 claim ceiling。
+- Benchmark 选择默认遵循 `BANK_FIRST_BEFORE_NEW_FAMILY`：先从版本化、机器可读的 DiscoveryOS Benchmark Bank 选择已有 problem family，再轮换 DEV/SHADOW/SEALED instance 或 shard。只有 Bank 无法覆盖预声明机制，或研究问题本身要求真正外部 task-family generalization 时，才允许新增 family，并记录覆盖缺口与新增理由。
+- Problem family 是长期资产，SEALED instance/shard 才是一次性科学资源。一次正式运行只消费被打开的 sealed 单元，不得把整个 family 标为报废；DEV 可无限复用，SHADOW 只能有限且审计式使用，SEALED 只能用于预注册 admission 或 winner-frozen confirmation。
+- Bank 中 `CATALOGUED` 只表示名称与来源已登记，禁止执行或进入科学协议；外部 family 只有在 commit、许可证/数据使用、adapter/evaluator/environment digest、本机 preflight、资源 envelope、partition identity 与 replay 全部绑定后才可标为 `ADMITTED`。上游声称提供 evaluator 不能替代本项目 admission。
+- 公开 benchmark 若已暴露 prompt、verifier、initial program、reference/final solution 或公开测试分布，必须记录 contamination exposure，只能作为 replay、stress 或 development 资产；de-novo discovery 或泛化 claim 必须使用事前冻结的 neighboring hidden distribution，且不得从公开结果反推 hidden size、shape、field、constraint 或 workload。
 
 ## 本地执行与性能
 
