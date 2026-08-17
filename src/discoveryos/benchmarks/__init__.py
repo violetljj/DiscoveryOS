@@ -18,6 +18,11 @@ from .si2 import audit_si2_secondary_usage, run_si2_confirmation, run_si2_discov
 from .search_causality_autopsy import audit_si2_search_causality
 from .causal_intervention_bench import run_synthetic_cib, seal_synthetic_cib_protocol
 from .parent_intervention_dev import run_parent_dev_cib, seal_parent_dev_cib_protocol
+from .parent_intervention_real import (
+    calibrate_parent_real_cib,
+    run_parent_real_cib,
+    seal_parent_real_cib_protocol,
+)
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -44,4 +49,7 @@ __all__ = [
     "run_synthetic_cib",
     "seal_parent_dev_cib_protocol",
     "run_parent_dev_cib",
+    "seal_parent_real_cib_protocol",
+    "calibrate_parent_real_cib",
+    "run_parent_real_cib",
 ]

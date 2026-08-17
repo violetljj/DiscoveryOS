@@ -106,3 +106,10 @@
 - **决定**：Causal Intervention Bench 的基本单位是同一冻结 decision state 上的 paired branch。Null control 使用 default action `A/A` 的独立 stochastic draws，在每个 state 内形成噪声 envelope；positive control 只证明观测链能检测预构造的行为与 utility 差异。真实 intervention 必须依次证明 behavioral manipulation 超出 null、效果穿过 immediate child、utility 或 matched-cost efficiency 受益，并在至少两个独立 states 上复现。Proposal/algorithmic-root 标签只作解释面，冻结 behavioral signature 是主要 manipulation check。
 - **原因**：SI-2 已证明 source/AST trajectory 分化，但 9/9 final utility 完全持平。只比较 source、只观察即时 child，或没有 null/positive controls，都无法区分机制无效、模型随机噪声、效果未传导和 evaluator/任务不敏感。
 - **后果**：Synthetic fixture 只能把 CIB 提升为 `MECHANICS_READY`，其构造性 `INTERVENTION_VALUE_ADMITTED` 不授予现实机制 admission。Actual Parent policy 在 consumed dev states 上的 semantics-preserving replay 也只能证明 causal path 可执行；为 exercise 选择的 states/sources/seeds、deterministic zero-variance null 和非生成式 downstream 不能替代真实机制 gate。真实机制必须分开 calibration 与 validation states，先冻结 probe/margin 后再验证；通过 CIB 仅获得 SI-3 fresh-budget eligibility 的候选资格，不直接建立 DiscoveryOS search value。SI-3 在此之前保持关闭。
+
+## D-016：Parent 的下一道门是 consumed-state real downstream paired trial
+
+- **状态**：Accepted
+- **决定**：不启动 SI-3。CIB-R1 从 SI-2 中实际发生 non-incumbent selection 的 consumed states 冻结 calibration/validation split，在相同强模型、prompt contract、预算和 evaluator 下比较 incumbent parent 与实际 selected parent。每个 branch 用独立 provider request 生成三步 descendant chain；null、positive sensitivity、validity、fitness、replacement、anytime value 和成本共同进入预注册 gate。
+- **原因**：现有 Parent-dev replay 已证明 policy intervention 能沿构造的 deterministic downstream 传到 utility，但没有真实生成随机性，也没有回答这种传导在 strong agent 下是否稳定、为正且值得成本。整套系统 A/B 即使出现差异，也无法单独归因 Parent。
+- **后果**：只有跨 state paired gate 通过才可写 `REAL_PARENT_MECHANISM_CAUSAL_VALUE`，且只获得另行冻结 fresh trial 的候选资格。校准失败、provider failure、行为改变但 utility 等价和稳定负/零效应分别记录；任何结果都不改写 SI-2，也不自动开放或执行 SI-3。

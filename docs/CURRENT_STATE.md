@@ -24,6 +24,7 @@ PARENT_CIB_DEVELOPMENT_TRACE_COMPLETE
 PARENT_VALUE_TRANSMISSION_DETECTED_ON_SEMANTICS_PRESERVING_DEV_REPLAY
 NO_REAL_MECHANISM_INTERVENTION_ADMITTED
 NEXT_FRESH_SEARCH_TRIAL_NOT_ADMITTED
+CIB_R1_PROTOCOL_READY_NOT_SEALED
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -111,6 +112,7 @@ NEXT_FRESH_SEARCH_TRIAL_NOT_ADMITTED
 3. 任何下一代搜索设计必须解释为何三条内部系统在 9/9 tasks 上 final 完全持平，并用新鲜 cohort 证伪；不能把更复杂机制或 confirmation 的 Vanilla 绝对改进误写为 DiscoveryOS superiority。
 4. 新机制进入 fresh trial 前必须先接入 CIB：用 outcome-blind calibration states 冻结 probe/margin，再在未参与校准的 representative dev states 上用真实 stochastic downstream 证明超出 null、可持续且跨 state 复现的 intervention value。Synthetic sensitivity 和 semantics-preserving Parent replay 都不能替代该 admission。
 5. 在新的 search-value admission 成立前，不扩展远端计算、生产 blind isolation 或更多机制数量。
+6. CIB-R1 已实现但尚未封存或调用模型：它只使用 SI-2 actual non-incumbent consumed states，先校准真实 stochastic null，再在三类独立 validation tasks 上审判 Parent downstream causal value。协议见 [`CIB_R1_REAL_DOWNSTREAM_CAUSAL_TRIAL.md`](CIB_R1_REAL_DOWNSTREAM_CAUSAL_TRIAL.md)。
 
 ## 状态更新规则
 
@@ -131,3 +133,4 @@ NEXT_FRESH_SEARCH_TRIAL_NOT_ADMITTED
 - SI-2：[`SI2_FRESH_SEARCH_VALUE_TRIAL.md`](SI2_FRESH_SEARCH_VALUE_TRIAL.md)
 - SI-2 causal autopsy：[`SEARCH_CAUSALITY_AUTOPSY.md`](SEARCH_CAUSALITY_AUTOPSY.md)
 - Causal Intervention Bench：[`CAUSAL_INTERVENTION_BENCH.md`](CAUSAL_INTERVENTION_BENCH.md)
+- CIB-R1 real downstream Parent trial：[`CIB_R1_REAL_DOWNSTREAM_CAUSAL_TRIAL.md`](CIB_R1_REAL_DOWNSTREAM_CAUSAL_TRIAL.md)

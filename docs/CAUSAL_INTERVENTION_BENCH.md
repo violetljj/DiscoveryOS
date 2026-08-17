@@ -112,6 +112,8 @@ Parent-dev manifest digest 为 `92558fb944b9062ce88b7f3fd2aa6e86968251cc9ded2365
 
 下一步不是开启 SI-3，而是为一个真实机制实现 CIB adapter。真实 admission 必须先用 calibration states 冻结 probe/margin，再在未参与校准的 dev states 上运行；不得用同一 states 同时定义差异阈值并宣布 admission。只有一个真实机制取得可重放的 `INTERVENTION_VALUE_ADMITTED` 后，才可另行判断 `SI3_FRESH_BUDGET_ELIGIBLE`。
 
+CIB-R1 已把这一门实现为 actual consumed SI-2 Parent receipts 上的 strong-agent stochastic downstream protocol；在其封存和执行完成前状态仍为 `PROTOCOL_READY_NOT_SEALED`。见 [`CIB_R1_REAL_DOWNSTREAM_CAUSAL_TRIAL.md`](CIB_R1_REAL_DOWNSTREAM_CAUSAL_TRIAL.md)。
+
 ## Entrypoints
 
 ```powershell

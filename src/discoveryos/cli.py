@@ -26,6 +26,9 @@ from discoveryos.benchmarks import (
     seal_synthetic_cib_protocol,
     run_parent_dev_cib,
     seal_parent_dev_cib_protocol,
+    calibrate_parent_real_cib,
+    run_parent_real_cib,
+    seal_parent_real_cib_protocol,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
@@ -175,6 +178,22 @@ def build_parser() -> argparse.ArgumentParser:
     cib_parent_run.add_argument("--workspace", type=Path, default=Path("runs/cib-parent-dev-r1"))
     cib_parent_run.add_argument("--manifest-digest", required=True)
     for name, help_text in (
+        ("cib-r1-seal-parent-real", "seal actual consumed SI-2 parent interventions before stochastic calls"),
+        ("cib-r1-calibrate-parent-real", "run outcome-blind CIB-R1 stochastic calibration states"),
+        ("cib-r1-run-parent-real", "run the calibrated CIB-R1 validation states"),
+    ):
+        command_parser = subparsers.add_parser(name, help=help_text)
+        command_parser.add_argument("--workspace", type=Path, default=Path("runs/cib-r1-parent-real"))
+        command_parser.add_argument("--model", required=True)
+        command_parser.add_argument("--codex-command", default="codex")
+        command_parser.add_argument("--reasoning-effort", required=True)
+        if name == "cib-r1-seal-parent-real":
+            command_parser.add_argument("--source-workspace", type=Path, default=Path("runs/si2-fresh-search-value-r1"))
+            command_parser.add_argument("--source-manifest-digest", required=True)
+            command_parser.add_argument("--max-workers", type=int, default=2)
+        else:
+            command_parser.add_argument("--manifest-digest", required=True)
+    for name, help_text in (
         ("si2-run-discovery", "execute the already-sealed SI-2 fresh discovery cohort"),
         ("si2-confirm", "run the frozen SI-2 winner on the withheld confirmation cohort"),
     ):
@@ -306,6 +325,42 @@ def main(argv: list[str] | None = None) -> int:
             result = seal_parent_dev_cib_protocol(args.workspace)
         elif args.command == "cib-run-parent-dev":
             result = run_parent_dev_cib(args.workspace, manifest_digest=args.manifest_digest)
+        elif args.command in {
+            "cib-r1-seal-parent-real",
+            "cib-r1-calibrate-parent-real",
+            "cib-r1-run-parent-real",
+        }:
+            provider = CodexExecProvider(
+                command=tuple(shlex.split(args.codex_command, posix=False)),
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+                output_schema=__import__(
+                    "discoveryos.benchmarks.parent_intervention_real",
+                    fromlist=["DESCENDANT_CHAIN_SCHEMA"],
+                ).DESCENDANT_CHAIN_SCHEMA,
+            )
+            if args.command == "cib-r1-seal-parent-real":
+                result = seal_parent_real_cib_protocol(
+                    args.workspace,
+                    source_workspace=args.source_workspace,
+                    source_manifest_digest=args.source_manifest_digest,
+                    provider=provider,
+                    max_workers=args.max_workers,
+                )
+            elif args.command == "cib-r1-calibrate-parent-real":
+                result = calibrate_parent_real_cib(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+            else:
+                result = run_parent_real_cib(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
         elif args.command in {"si2-seal", "si2-run-discovery", "si2-confirm"}:
             command = tuple(shlex.split(args.codex_command, posix=False))
             local_provider = CodexExecProvider(

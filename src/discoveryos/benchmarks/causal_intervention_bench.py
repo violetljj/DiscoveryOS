@@ -476,7 +476,11 @@ def _evaluate_state(
     positive_behavior = positive["behavior_distance"] > (
         null["behavior_distance"] + thresholds.behavioral_margin
     )
-    positive_utility = positive["descendant_final_delta"] > (
+    # A positive control is a known, deliberately distinct intervention.  Its
+    # purpose is sensitivity, so either utility direction is admissible; only
+    # the real mechanism is required to improve utility in the positive
+    # direction below.
+    positive_utility = abs(positive["descendant_final_delta"]) > (
         null["descendant_final_delta"] + thresholds.utility_margin
     )
     behavior_changed = intervention["behavior_distance"] > (
