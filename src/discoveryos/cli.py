@@ -22,6 +22,8 @@ from discoveryos.benchmarks import (
     run_si2_confirmation,
     run_si2_discovery,
     seal_si2_protocol,
+    run_cmi_search_value_r1,
+    seal_cmi_search_value_r1,
     run_synthetic_cib,
     seal_synthetic_cib_protocol,
     run_parent_dev_cib,
@@ -290,6 +292,25 @@ def build_parser() -> argparse.ArgumentParser:
     cmi_r7_run = subparsers.add_parser("cmi-r7-run-fresh", help="consume and evaluate the sealed six-state fresh CMI shard once")
     cmi_r7_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-r7-fresh-causal-replication"))
     cmi_r7_run.add_argument("--manifest-digest", required=True)
+    cmi_svr1_seal = subparsers.add_parser(
+        "cmi-search-value-r1-seal",
+        help="seal the paired fresh CMI-enabled versus CMI-disabled search protocol",
+    )
+    cmi_svr1_seal.add_argument("--workspace", type=Path, default=Path("runs/cmi-search-value-r1"))
+    cmi_svr1_seal.add_argument("--cmi-r7-workspace", type=Path, default=Path("runs/cmi-r7-fresh-causal-replication"))
+    cmi_svr1_seal.add_argument("--cmi-r7-report-sha256", required=True)
+    cmi_svr1_seal.add_argument("--model", required=True)
+    cmi_svr1_seal.add_argument("--codex-command", required=True)
+    cmi_svr1_seal.add_argument("--reasoning-effort", required=True)
+    cmi_svr1_run = subparsers.add_parser(
+        "cmi-search-value-r1-run",
+        help="consume the sealed fresh CMI search-value cohort once",
+    )
+    cmi_svr1_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-search-value-r1"))
+    cmi_svr1_run.add_argument("--manifest-digest", required=True)
+    cmi_svr1_run.add_argument("--model", required=True)
+    cmi_svr1_run.add_argument("--codex-command", required=True)
+    cmi_svr1_run.add_argument("--reasoning-effort", required=True)
     bank_validate = subparsers.add_parser(
         "benchmark-bank-validate",
         help="validate the pinned Benchmark Bank v1 registry without consuming any shard",
@@ -918,6 +939,26 @@ def main(argv: list[str] | None = None) -> int:
                 )
             else:
                 result = run_parent_real_cib(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+        elif args.command in {"cmi-search-value-r1-seal", "cmi-search-value-r1-run"}:
+            provider = CodexExecProvider(
+                command=tuple(shlex.split(args.codex_command, posix=False)),
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+            )
+            if args.command == "cmi-search-value-r1-seal":
+                result = seal_cmi_search_value_r1(
+                    args.workspace,
+                    cmi_r7_workspace=args.cmi_r7_workspace,
+                    cmi_r7_report_sha256=args.cmi_r7_report_sha256,
+                    provider=provider,
+                )
+            else:
+                result = run_cmi_search_value_r1(
                     args.workspace,
                     manifest_digest=args.manifest_digest,
                     provider=provider,

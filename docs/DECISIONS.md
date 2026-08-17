@@ -344,3 +344,10 @@
 - **决定**：接受 manifest `df1d2dd26730a5487e8e1e685339b7fd35430abd509cb4ea0433aa6458228209` 与 report SHA-256 `3072e74c1a0114920f98c7930097a5488dd8a50763709a073513a1ef4dca763f`。6/6 exact fresh states 均 technically evaluable，且唯一 primary endpoint `utility_delta > resolution` 全部为真；0 negative、0 tie，两 family 各 3/3 positive，cost guardrails 全通过。
 - **原因**：结果在没有 fresh 后调参、没有 state replacement、零模型和 matched deterministic pairs 下复现了 R5/R6 的 causal sign。Control 为 0/6 escape/replacement，Treatment 为 6/6；aggregate/max-state evaluator runtime ratio 为 `1.04189x` / `1.61769x`，不支持“靠明显增加 evaluator cost 换效果”的解释。
 - **后果**：输出 `CMI_OPERATOR_ADMITTED_ON_FRESH_ASSIGNMENT_COVERAGE_STATES` 与 `CMI_ENABLED_SEARCH_VS_IDENTICAL_SEARCH_WITHOUT_CMI_PREREGISTRATION_AUTHORIZED`。六个 exact states 永久 consumed；不增加 R7.x replay，不修改 CMI、threshold 或 gate。Operator admission 仍限于同两 family 和同 evaluator regime，不能写成 DiscoveryOS search core 已增强。下一科学问题是完整搜索系统的 CMI-on/off matched comparison。
+
+## D-050：CMI Search Value R1 使用共享前缀后的唯一组件分叉
+
+- **日期**：2026-08-17
+- **决定**：在六个由 salt 无筛选派生的 fresh Assignment/Coverage instances 上，先运行两步完全共享的 Local Patch 搜索前缀。只有冻结 applicability 成立时，Control 才继续默认 Local Patch、Treatment 才调用 R7 admitted CMI；随后两臂各运行同一 downstream Local Patch。若不 eligible，两臂共享 exact fallback 且 task 保留为 tie。每臂 token ceiling 为 `80,000`，并发固定为 1。
+- **原因**：共享前缀消除 intervention 前的 provider stochastic variance，并减少重复模型调用；自然 opportunity frequency 仍由未筛选任务决定。加入 downstream step 可区分“CMI 生成一个更好候选”与“CMI 候选被搜索保留并改变后续 parent/最终结果”。
+- **后果**：Search advantage 不能单独产生 CMI claim。只有 paired final/AUC/sign、`opportunity -> eligibility -> invocation -> accepted -> retained/downstream contribution` 和 cost 三门同时通过，才可输出限于同两 family/evaluator regime 的 CMI search value。未触发、未 retained 或无 downstream contribution 时，即使 Treatment aggregate 更高也不得归因给 CMI。六个实例只在 create-once run 开始后消费；协议封存后只允许 validity/executability blocker 修复，不允许改机制、threshold、task、gate 或 operator schedule。

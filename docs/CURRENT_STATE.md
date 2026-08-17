@@ -84,6 +84,9 @@ CMI_R7_PROTOCOL_IMPLEMENTED
 CMI_R7_FRESH_CAUSAL_REPLICATION_PASSED
 CMI_OPERATOR_ADMITTED_ON_FRESH_ASSIGNMENT_COVERAGE_STATES
 CMI_ENABLED_SEARCH_VS_IDENTICAL_SEARCH_WITHOUT_CMI_PREREGISTRATION_AUTHORIZED
+CMI_SEARCH_VALUE_R1_PROTOCOL_IMPLEMENTED
+CMI_SEARCH_VALUE_R1_PREREGISTRATION_READY
+CMI_SEARCH_VALUE_NOT_YET_ESTABLISHED
 BENCHMARK_BANK_V1_REGISTRY_IMPLEMENTED
 BENCHMARK_BANK_V1_DEVELOPMENT_SLICE_EXECUTABLE
 BENCHMARK_BANK_V1_R0_R1_ALGOTUNE_DEV_BATCH_EXECUTABLE
@@ -218,6 +221,7 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 32. Benchmark Bank v1 已实现并验证 47-family registry：R0/R1/R2/R3/R4/R5 分别为 `8/8/10/6/5/10`，四个外部来源绑定审计时 commit。Assignment 与 Coverage 两个 consumed families，以及 16 个 R0-R2 AlgoTune contract-derived families、32 个 external DEV instances，均可物化并运行 public/evaluator；29 个 families 仍为 `CATALOGUED`，0 个 external family scientifically admitted。R2 已覆盖全部 10 个 structural-search families，并在 bounded deterministic instances 上独立检查 input immutability、feasibility 与 exact objective。AlgoTune DEV adapters 绑定 pinned upstream task/description hash，使用纯标准库的独立本地 evaluator regimes，不冒充官方 AlgoTune evaluator。Registry validation 与物化测试不调用模型、不打开 SEALED shard、不消费 fresh instance；R2 claim ceiling 为 `EXTERNAL_R2_CONTRACT_DERIVED_DEVELOPMENT_ONLY`。详见 [`BENCHMARK_BANK_V1.md`](BENCHMARK_BANK_V1.md)。
 33. CMI-R7 已在 commit `913ab5e` 上封存并通过。Manifest digest 为 `df1d2dd26730a5487e8e1e685339b7fd35430abd509cb4ea0433aa6458228209`，report SHA-256 为 `3072e74c1a0114920f98c7930097a5488dd8a50763709a073513a1ef4dca763f`。6/6 states 均 valid 且 paired utility delta 超过 state resolution，0 negative、0 tie；Assignment/Coverage 各 3/3 positive。Control 为 0/6 escape/replacement，Treatment 为 6/6；breakthrough 为 `0/6 -> 1/6`。Aggregate/max-state evaluator runtime ratio 为 `1.04189x` / `1.61769x`，6 项冻结 gate 全通过；6 matched pairs、24 evaluator calls、24 probe calls、0 model calls、0 tokens。六个 exact fresh states 已消费，不得重跑。正式输出 `CMI_OPERATOR_ADMITTED_ON_FRESH_ASSIGNMENT_COVERAGE_STATES`，只授权另行预注册 CMI-enabled Search vs identical Search without CMI。States 是 instance-fresh，不是 distribution、task-family 或 evaluator-regime fresh；search value、概率、显著性、跨 family 泛化和 superiority 仍未建立。详见 [`CMI_R7_FRESH_CAUSAL_REPLICATION.md`](CMI_R7_FRESH_CAUSAL_REPLICATION.md)。
 34. ALE R3 六个 family 的 code commit、Hugging Face dataset commit、逐 ZIP LFS SHA-256/大小与 CC-BY-ND-4.0 数据许可证已绑定。官方 ZIP 将 public 工具/seeds 与 private seeds/standings 同包，stock session 初始化会同时生成 public/private inputs；当前 Bank 又缺少 native stdin program bundle，且本机 Docker CLI 可见但 Linux daemon 不可用。因此六题保持 `CATALOGUED`，执行 blocker 固定为 public-only selective extraction、native bundle 和 Docker judge preflight 三项。Registry 会拒绝缺少三项 digest 的伪 execution-ready 状态。本轮未下载/打开任何题目 ZIP，未读取 private seed，未运行 judge，也未消费 ALE shard。详见 [`BENCHMARK_BANK_V1.md`](BENCHMARK_BANK_V1.md)。
+35. CMI Search Value R1 协议已实现，尚未封存或执行。六个 instance-fresh tasks 由 salt 无筛选派生，Assignment/Coverage 各 3 个；每 task 共享两步 Local Patch 前缀，只有在冻结 applicability 成立时才分叉为默认 Local Patch Control 与冻结 CMI Treatment，随后各运行同一 downstream Local Patch。Primary gate 同时约束 paired final utility、anytime AUC、win/tie/loss 与 exact sign；attribution gate 强制记录 opportunity → eligibility → invocation → accepted descendant → retained/downstream contribution；cost gate 约束 token、evaluator calls 与 wall ratio。只有三门同时通过才可建立同两 family/evaluator regime 内的 CMI search value。详见 [`CMI_SEARCH_VALUE_R1.md`](CMI_SEARCH_VALUE_R1.md)。
 
 ## 状态更新规则
 
@@ -251,4 +255,5 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 - CMI-R5 consumed development causal value：[`CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md`](CMI_R5_CONSUMED_DEV_CAUSAL_VALUE.md)
 - CMI-R6 consumed distribution replication：[`CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md`](CMI_R6_CONSUMED_DISTRIBUTION_REPLICATION.md)
 - CMI-R7 fresh-state causal replication：[`CMI_R7_FRESH_CAUSAL_REPLICATION.md`](CMI_R7_FRESH_CAUSAL_REPLICATION.md)
+- CMI Search Value R1：[`CMI_SEARCH_VALUE_R1.md`](CMI_SEARCH_VALUE_R1.md)
 - Benchmark Bank v1：[`BENCHMARK_BANK_V1.md`](BENCHMARK_BANK_V1.md)
