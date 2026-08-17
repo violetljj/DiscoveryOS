@@ -113,3 +113,10 @@
 - **决定**：不启动 SI-3。CIB-R1 从 SI-2 中实际发生 non-incumbent selection 的 consumed states 冻结 calibration/validation split，在相同强模型、prompt contract、预算和 evaluator 下比较 incumbent parent 与实际 selected parent。每个 branch 用独立 provider request 生成三步 descendant chain；null、positive sensitivity、validity、fitness、replacement、anytime value 和成本共同进入预注册 gate。
 - **原因**：现有 Parent-dev replay 已证明 policy intervention 能沿构造的 deterministic downstream 传到 utility，但没有真实生成随机性，也没有回答这种传导在 strong agent 下是否稳定、为正且值得成本。整套系统 A/B 即使出现差异，也无法单独归因 Parent。
 - **后果**：只有跨 state paired gate 通过才可写 `REAL_PARENT_MECHANISM_CAUSAL_VALUE`，且只获得另行冻结 fresh trial 的候选资格。校准失败、provider failure、行为改变但 utility 等价和稳定负/零效应分别记录；任何结果都不改写 SI-2，也不自动开放或执行 SI-3。
+
+## D-017：CIB-R1 未建立 strong stochastic generator 下的 Parent 边际因果价值
+
+- **状态**：Accepted
+- **决定**：接受 CIB-R1 verdict `PARENT_INTERVENTION_VALUE_NOT_ESTABLISHED_UNDER_STRONG_STOCHASTIC_GENERATOR`。实际 SI-2 Parent receipts 的 non-incumbent intervention 保持 control-flow 事实，但在冻结强模型 downstream 中没有产生超出 state-local stochastic null 的 behavioral manipulation，九个 intervention pairs 的 final descendant value 全为 tie。因此 Parent 不获得现实机制 admission，也不获得 fresh search-value budget 资格。
+- **原因**：Calibration 与 validation 的 58 个 branches 全部可评估、资源门通过、live sensitivity 成立，排除了 bench 完全失灵或系统失败这一解释。与此同时，`0/3` states 通过 behavioral manipulation、`0/3` 通过 persistence/benefit、exact-sign `p=1.0`，没有支持稳定正向效应的证据。
+- **后果**：SI-3 继续关闭，不在 CIB-R1 consumed states 上改 prompt、margin、operator、state split 或增加 replicate 追逐正结果。该负结论只约束冻结的 consumed-state/model/operator surface；不得扩写为 Parent 普遍无效，但也不得用 mechanics、deterministic replay 或完整系统偶然胜负绕过此 admission。

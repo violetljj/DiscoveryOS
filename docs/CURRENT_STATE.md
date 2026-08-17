@@ -24,7 +24,9 @@ PARENT_CIB_DEVELOPMENT_TRACE_COMPLETE
 PARENT_VALUE_TRANSMISSION_DETECTED_ON_SEMANTICS_PRESERVING_DEV_REPLAY
 NO_REAL_MECHANISM_INTERVENTION_ADMITTED
 NEXT_FRESH_SEARCH_TRIAL_NOT_ADMITTED
-CIB_R1_PROTOCOL_READY_NOT_SEALED
+CIB_R1_REAL_DOWNSTREAM_COMPLETE
+PARENT_INTERVENTION_VALUE_NOT_ESTABLISHED_UNDER_STRONG_STOCHASTIC_GENERATOR
+REAL_PARENT_MECHANISM_NOT_ADMITTED
 ```
 
 当前系统是可运行、可测试、可重放的研究内核，不是已经证明一般搜索优势的发现系统，也不是生产级 blind/security sandbox。
@@ -105,6 +107,14 @@ CIB_R1_PROTOCOL_READY_NOT_SEALED
 - 实际 `ShinkaWeightedParentSelectionPolicy` 已接入三个 consumed MVP-0 dev states：3/3 receipts 可重放地选择 non-incumbent parent，18 个 paired receipts 检出 3/3 behavioral、immediate、persistence 和 benefit effects。Parent-dev manifest digest 为 `92558fb944b9062ce88b7f3fd2aa6e86968251cc9ded2365dfe120b55e517ec6`，report SHA-256 为 `50404450613130fba2b9823c2b3e50504dc4e8883506952fb3e3778a9394ad67`。
 - Parent-dev 只建立 `PARENT_VALUE_TRANSMISSION_DETECTED_ON_SEMANTICS_PRESERVING_DEV_REPLAY`：states/sources/seeds 为 mechanics 构造，null 是 deterministic zero-variance，downstream 不生成真实 child。因此它证明实际 policy 的 causal path 可观测，不 admit 现实 Parent value，也不改变 SI-3 gate。
 
+## CIB-R1 real downstream Parent trial
+
+- 从 SI-2 actual non-incumbent receipts 冻结 2 个 calibration states 与 3 个 validation states；validation 横跨 balanced cut、weighted coverage 和 capacitated assignment，未读取 fresh 或 blind task。
+- `gpt-5.6-sol / medium` 以相同 prompt contract、60,000-token branch ceiling 和独立 provider requests 生成三步 descendant chain。Calibration `16/16` branches evaluable 并冻结 behavioral margin `0.28635642` 与 utility margin `0.005`。
+- Validation `42/42` branches evaluable，live positive sensitivity 达到冻结的 `2/3` state minimum；但 actual Parent intervention 在 `0/3` states 超出 null+margin，benefit/persistence 同为 `0/3`。
+- 九个 intervention pairs 的 final descendant effect 为 `0 positive / 9 tie / 0 negative`，median final、validity-rate 与 replacement-rate delta 均为 `0`，exact-sign `p=1.0`。正式 verdict 为 `PARENT_INTERVENTION_VALUE_NOT_ESTABLISHED_UNDER_STRONG_STOCHASTIC_GENERATOR`。
+- 总计 58 model calls、`1,298,797` input+output tokens、29 paired receipts、0 fresh tasks；manifest digest `f14902c185470fb9fcb71bf28a7eb4a3c9562d4109db742d9147f47112fc0b4e`，report SHA-256 `7fbd3db909dc5d8da11bca9d12f164e0f0cb520333cf9aab012945d7afe74f72`。
+
 ## 当前下一道门
 
 1. SI-2 已 consumed，禁止在其 9+3 tasks 上调 parent、novelty、prompt、预算或阈值，也不得用同分布重跑改写 `SI2_SEARCH_VALUE_NOT_ESTABLISHED`。
@@ -112,7 +122,7 @@ CIB_R1_PROTOCOL_READY_NOT_SEALED
 3. 任何下一代搜索设计必须解释为何三条内部系统在 9/9 tasks 上 final 完全持平，并用新鲜 cohort 证伪；不能把更复杂机制或 confirmation 的 Vanilla 绝对改进误写为 DiscoveryOS superiority。
 4. 新机制进入 fresh trial 前必须先接入 CIB：用 outcome-blind calibration states 冻结 probe/margin，再在未参与校准的 representative dev states 上用真实 stochastic downstream 证明超出 null、可持续且跨 state 复现的 intervention value。Synthetic sensitivity 和 semantics-preserving Parent replay 都不能替代该 admission。
 5. 在新的 search-value admission 成立前，不扩展远端计算、生产 blind isolation 或更多机制数量。
-6. CIB-R1 已实现但尚未封存或调用模型：它只使用 SI-2 actual non-incumbent consumed states，先校准真实 stochastic null，再在三类独立 validation tasks 上审判 Parent downstream causal value。协议见 [`CIB_R1_REAL_DOWNSTREAM_CAUSAL_TRIAL.md`](CIB_R1_REAL_DOWNSTREAM_CAUSAL_TRIAL.md)。
+6. CIB-R1 已完成：58/58 branches evaluable、资源门通过且 fresh task 消耗为零，但 Parent 在 3/3 validation states 未产生超出 stochastic null 的 downstream behavioral manipulation，9 个 intervention pairs 的 final descendant delta 全为 tie。Parent 不获得现实机制 admission，SI-3 继续关闭；不得在这些 consumed states 上换 margin、prompt、operator 或增加 replicate 翻案。
 
 ## 状态更新规则
 
