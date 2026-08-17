@@ -34,6 +34,7 @@ from .novelty import (
     NoveltyReceipt,
     ShinkaStyleNoveltyPolicy,
 )
+from .functional_basin_escape import FunctionalBasinEscapeOperator, FunctionalBasinEscapeResult
 
 __all__ = [
     "ActionControllerConfig",
@@ -70,4 +71,6 @@ __all__ = [
     "NoveltyDecision",
     "NoveltyReceipt",
     "ShinkaStyleNoveltyPolicy",
+    "FunctionalBasinEscapeOperator",
+    "FunctionalBasinEscapeResult",
 ]

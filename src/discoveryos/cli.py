@@ -61,6 +61,8 @@ from discoveryos.benchmarks import (
     seal_cmi_real_diagnosis,
     admit_cmi_escape_brief,
     seal_cmi_escape_brief,
+    run_cmi_escape_operator,
+    seal_cmi_escape_operator,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.mechanism_intelligence import run_cmi_r0_synthetic, seal_cmi_r0_protocol
@@ -247,6 +249,13 @@ def build_parser() -> argparse.ArgumentParser:
     cmi_r3_admit = subparsers.add_parser("cmi-r3-admit-brief", help="admit the sealed Mechanism Brief using bound zero-model controls")
     cmi_r3_admit.add_argument("--workspace", type=Path, default=Path("runs/cmi-r3-functional-basin-escape-brief"))
     cmi_r3_admit.add_argument("--manifest-digest", required=True)
+    cmi_r4_seal = subparsers.add_parser("cmi-r4-seal-operator", help="seal the zero-model functional-basin escape Operator mechanics protocol")
+    cmi_r4_seal.add_argument("--workspace", type=Path, default=Path("runs/cmi-r4-functional-basin-escape-operator"))
+    cmi_r4_seal.add_argument("--cmi-r3-workspace", type=Path, default=Path("runs/cmi-r3-functional-basin-escape-brief"))
+    cmi_r4_seal.add_argument("--cmi-r3-report-sha256", required=True)
+    cmi_r4_run = subparsers.add_parser("cmi-r4-run-operator", help="run the sealed zero-model escape Operator mechanics controls")
+    cmi_r4_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-r4-functional-basin-escape-operator"))
+    cmi_r4_run.add_argument("--manifest-digest", required=True)
     cib_parent_seal = subparsers.add_parser(
         "cib-seal-parent-dev",
         help="seal consumed development states for a real parent-policy paired trace",
@@ -541,6 +550,14 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.command == "cmi-r3-admit-brief":
             result = admit_cmi_escape_brief(args.workspace, manifest_digest=args.manifest_digest)
+        elif args.command == "cmi-r4-seal-operator":
+            result = seal_cmi_escape_operator(
+                args.workspace,
+                cmi_r3_workspace=args.cmi_r3_workspace,
+                cmi_r3_report_sha256=args.cmi_r3_report_sha256,
+            )
+        elif args.command == "cmi-r4-run-operator":
+            result = run_cmi_escape_operator(args.workspace, manifest_digest=args.manifest_digest)
         elif args.command == "cib-seal-parent-dev":
             result = seal_parent_dev_cib_protocol(args.workspace)
         elif args.command == "cib-run-parent-dev":

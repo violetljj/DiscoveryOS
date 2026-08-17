@@ -73,6 +73,8 @@ CMI_R2_DEVELOPMENT_MECHANISM_BRIEF_AUTHORIZED
 NO_NEW_OPERATOR_AUTHORIZED
 CMI_R3_PROTOCOL_IMPLEMENTED
 CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF_ADMITTED
+CMI_R4_PROTOCOL_IMPLEMENTED
+CMI_R4_NOT_YET_EXECUTED
 NO_ESCAPE_OPERATOR_IMPLEMENTED
 NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 ```
@@ -193,6 +195,7 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 26. CMI-R1 real probe calibration 已正式通过。Manifest digest 为 `930ff7a5974da5d41b7b1d949b5b1fbd373ef4204fb8040f89149e92ef70f65d`，report SHA-256 为 `7de7d2238102045373dd8fddd043b1e746df557e0d2137b0433f291ad394f037`。Assignment 与 coverage 均恢复 `6/7` ranked controls，reference headroom 分别为 `0.20914510` / `0.10170301`，same-source functional distance 均为 `0`，baseline/reference distance 为 `0.41975309` / `0.27777778`。全程 0 model/provider calls、0 fresh search-value tasks；只授权另行预注册 bounded real diagnosis，不建立现实 bottleneck。详见 [`CMI_R1_REAL_PROBE_CALIBRATION.md`](CMI_R1_REAL_PROBE_CALIBRATION.md)。
 27. CMI-R2 bounded real diagnosis 已完成。Manifest digest 为 `e7729e2d186ce60acd00bf56f61b783c4d8025a8c2babe67c9824da9226d2a0f`，controls SHA-256 为 `7add4d0ec5aa490544b9a1e948b13b420a281b654a6599355b27018ae7ed7dad`，report SHA-256 为 `0dabc1d1fb9850266e5cbdb58a5868bffc45144c408d2d269df17504e47d3dfb`。6/6 calls evaluable/valid，合计 `116,729` tokens；evaluator sensitivity 与 valid-source rate 均为 `1.0`，反证 evaluator insensitivity 与 implementation bottleneck。每 state 的三个 source SHA-256 各不相同，但 evaluator score 与冻结 functional signature 各自完全相同，六个 within-state pair distances 全为 `0`；因此 `H5_STRUCTURAL_BASIN_LOCK` 在这两个 dev states 上被唯一支持，状态机输出 `MECHANISM_BRIEF_ALLOWED`。该结论不授权 Operator、value trial 或 fresh search-value budget。详见 [`CMI_R2_BOUNDED_REAL_DIAGNOSIS.md`](CMI_R2_BOUNDED_REAL_DIAGNOSIS.md)。
 28. CMI-R3 functional-basin escape Mechanism Brief 已正式 admitted。Create-once manifest digest 为 `f69966c6a3f7530eb29556c4148dc0bfcc16ae6a441ad5bc0cefee090dafa595`，admission report SHA-256 为 `903837b1fd3de85ed51f12be45c65c9fc5e89933acf37ab39f2895c16bf12acf`。12/12 frozen checks 通过，模型调用、evaluator 调用和 fresh tasks 均为零；不同 source 文本本身不构成干预，未来候选必须有效且在 state-local functional probe 上距 incumbent envelope 大于 `0.10`。Claim ceiling 保持 `DEVELOPMENT_MECHANISM_BRIEF_ONLY`，Operator implementation、value trial 和 fresh search-value budget 仍全部未授权。详见 [`CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md`](CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md)。
+29. CMI-R4 functional-basin-escape Operator mechanics 协议已实现但尚未执行。它只允许在两个新 development states 上验证 Brief 字段是否进入真实 Operator 路径，以及 treatment 是否在 public-test valid 前提下取得严格大于 `0.10` 的 functional distance；same-source null 必须为 `0`，隔离 positive control 必须大于 `0.10`。模型、evaluator 与 fresh search-value 调用均为零，utility/AUC 不进入通过门。详见 [`CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md`](CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md)。
 
 ## 状态更新规则
 
@@ -222,3 +225,4 @@ NO_OPERATOR_VALUE_TRIAL_AUTHORIZED
 - CMI-R1 real probe calibration：[`CMI_R1_REAL_PROBE_CALIBRATION.md`](CMI_R1_REAL_PROBE_CALIBRATION.md)
 - CMI-R2 bounded real diagnosis：[`CMI_R2_BOUNDED_REAL_DIAGNOSIS.md`](CMI_R2_BOUNDED_REAL_DIAGNOSIS.md)
 - CMI-R3 functional basin escape brief：[`CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md`](CMI_R3_FUNCTIONAL_BASIN_ESCAPE_BRIEF.md)
+- CMI-R4 functional basin escape Operator mechanics：[`CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md`](CMI_R4_FUNCTIONAL_BASIN_ESCAPE_OPERATOR.md)

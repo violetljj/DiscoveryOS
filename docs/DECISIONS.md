@@ -281,3 +281,10 @@
 - **决定**：接受 manifest `f69966c6a3f7530eb29556c4148dc0bfcc16ae6a441ad5bc0cefee090dafa595` 与 report SHA-256 `903837b1fd3de85ed51f12be45c65c9fc5e89933acf37ab39f2895c16bf12acf` 的 CMI-R3 admission。12/12 frozen checks 通过，claim ceiling 为 `DEVELOPMENT_MECHANISM_BRIEF_ONLY`。
 - **原因**：R2 authority、两状态 applicability、state-local null/positive controls、非平凡 functional-distance fingerprint、causal reachability 和失败语义均由不可变记录绑定；没有重跑 consumed states，也没有模型或 evaluator 调用。
 - **后果**：下一步只允许另行冻结新 development states 上的 escape-Operator protocol，并在 utility test 前先检查 functional fingerprint。当前仍无 Operator 被实现或 admitted，value trial 与 fresh search-value budget 继续关闭。
+
+## D-041：CMI-R4 先隔离验证 functional-basin-escape mechanics
+
+- **日期**：2026-08-17
+- **决定**：CMI-R4 只回答 `Structured Brief -> Real Operator -> valid candidate -> functional distance > 0.10`。协议绑定 CMI-R3 authority，在两个新 development states 上运行确定性最小 Operator、same-source null 与隔离 positive control；记录 source、structural、functional 与 descendant-behavior distance，但只有 functional fingerprint 和因果传导进入通过门。
+- **原因**：Direct/Repair 已证明 executable transmission 不等于 utility；R2 又证明不同 source 可以落在相同 functional basin。若在 value trial 前不先验证真实 functional escape，Operator execution、basin escape 与 utility effect 会再次混为一个不可诊断问题。
+- **后果**：R4 使用零模型、零 evaluator、零 fresh search-value task；positive reference 不得进入 Operator 输入，utility/AUC 不比较。即使通过也只建立 bounded development mechanics，causal-value trial 与 fresh budget 继续关闭。
