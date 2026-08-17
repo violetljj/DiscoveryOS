@@ -28,6 +28,11 @@ from .conditioning_fidelity import (
     run_synthetic_gcf,
     seal_synthetic_gcf_protocol,
 )
+from .mechanism_brief_real import (
+    calibrate_mechanism_brief,
+    run_mechanism_brief_validation,
+    seal_mechanism_brief_protocol,
+)
 
 __all__ = [
     "audit_local_patch_admission_report",
@@ -60,4 +65,7 @@ __all__ = [
     "parent_cib_r1_settlement",
     "seal_synthetic_gcf_protocol",
     "run_synthetic_gcf",
+    "seal_mechanism_brief_protocol",
+    "calibrate_mechanism_brief",
+    "run_mechanism_brief_validation",
 ]

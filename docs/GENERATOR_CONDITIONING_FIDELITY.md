@@ -102,3 +102,7 @@ python -m discoveryos gcf-run-synthetic `
 ```
 
 No real generator call is part of these entrypoints. A future real GCF protocol must be sealed before the first model call and must version the generation contract rather than modifying the consumed CIB-R1 root.
+
+## First real diagnosis
+
+The first real use is preregistered in [`GCF_R1_REAL_MECHANISM_BRIEF.md`](GCF_R1_REAL_MECHANISM_BRIEF.md). It changes only a mutually exclusive constructive-greedy versus iterative-local-improvement brief over the five consumed CIB-R1 states. Its committed protocol must be sealed before any model call. This is the point where GCF stops accumulating framework features and begins testing a real channel hypothesis.

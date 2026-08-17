@@ -134,3 +134,10 @@
 - **决定**：在继续研究 controller、Parent、Failure Evidence 或 Operator value 前，先对 `PARENT_SOURCE`、`FAILURE_EVIDENCE` 和 `MECHANISM_BRIEF` 分别执行单变量 conditioning 诊断。GCF 用 same-condition 独立 stochastic null，逐阶段测量 proposal、implementation、repair、final 的 condition survival，并用冻结 hidden behavioral probe 区分结构响应与语义执行。GCF-0 calibration、GCF-1 detectability、GCF-2 semantic transmission 和 GCF-3 downstream causal value eligibility 分开裁决。
 - **原因**：CIB-R1 只说明 Parent 条件没有在最终 downstream 产生可分辨价值，不能定位条件未进入 proposal、计划未翻译、repair 同质化、结构差异未变成行为，还是 behavior 存活但 utility 为 tie。直接再跑 controller A/B 会继续混淆生成通道与上游策略价值。
 - **后果**：Synthetic identifiability corpus 和 consumed mechanics/development states 可用于 GCF-0 至 GCF-2 诊断，但不得产生 generalization 或 search-value claim。只有现实 channel 在独立 validation states 上通过 GCF-2，才有资格以新 contract、hypothesis、calibration、margin 和独立 surface 预注册 GCF-3 trial；conditioning fidelity 是 downstream value 的必要条件，不是充分条件。
+
+## D-020：停止扩展 GCF 框架，先用 Mechanism Brief 现实诊断检验 transmission
+
+- **状态**：Accepted
+- **决定**：第一个现实 GCF channel 固定为 `MECHANISM_BRIEF`，优先于 Failure Evidence 和 Parent Source。使用 CIB-R1 的 2 个 calibration 与 3 个跨任务族 validation consumed states，只改变 constructive greedy 与 iterative local improvement 两份互斥 brief；generator 输出 proposal、implementation、repair、final 四个阶段，确定性 AST/文本 probe 与冻结 hidden behavior probe 对 state-local A/A、B/B stochastic null 作 paired comparison。
+- **原因**：明确 mechanism instruction 是最直接、最可能被 generator 执行的上游控制信号。如果它不能穿过 staged generator 并形成 hidden behavior separation，继续优化 parent、planner、memory 或 scheduler 缺少必要的执行通道基础。增加框架功能或单元测试数量不能替代这一现实识别问题。
+- **后果**：协议共冻结 66 个独立 model calls；calibration proposal detectability 失败即阻断 validation。GCF-2 只要求跨至少 2/3 validation states 的 final structural 与 hidden-behavior separation，utility 只记录、不参与 transmission admission。正结果仅允许另行预注册独立 GCF-3 value trial；负结果转向 generator interface/execution contract，不依次调 prompt、brief、margin 或 consumed state 追逐通过。

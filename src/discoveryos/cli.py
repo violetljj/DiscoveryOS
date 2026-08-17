@@ -32,6 +32,9 @@ from discoveryos.benchmarks import (
     parent_cib_r1_settlement,
     run_synthetic_gcf,
     seal_synthetic_gcf_protocol,
+    calibrate_mechanism_brief,
+    run_mechanism_brief_validation,
+    seal_mechanism_brief_protocol,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.providers import CodexExecProvider
@@ -196,6 +199,22 @@ def build_parser() -> argparse.ArgumentParser:
     gcf_run.add_argument("--workspace", type=Path, default=Path("runs/gcf-synthetic-r1"))
     gcf_run.add_argument("--manifest-digest", required=True)
     for name, help_text in (
+        ("gcf-r1-seal-mechanism-brief", "seal the first real consumed-state Mechanism Brief GCF diagnosis"),
+        ("gcf-r1-calibrate-mechanism-brief", "run frozen real Mechanism Brief GCF calibration states"),
+        ("gcf-r1-run-mechanism-brief", "run validation after the frozen Mechanism Brief calibration gate"),
+    ):
+        command_parser = subparsers.add_parser(name, help=help_text)
+        command_parser.add_argument("--workspace", type=Path, default=Path("runs/gcf-r1-mechanism-brief"))
+        command_parser.add_argument("--model", required=True)
+        command_parser.add_argument("--codex-command", default="codex")
+        command_parser.add_argument("--reasoning-effort", required=True)
+        if name == "gcf-r1-seal-mechanism-brief":
+            command_parser.add_argument("--source-workspace", type=Path, default=Path("runs/cib-r1-parent-real"))
+            command_parser.add_argument("--source-manifest-digest", required=True)
+            command_parser.add_argument("--max-workers", type=int, default=2)
+        else:
+            command_parser.add_argument("--manifest-digest", required=True)
+    for name, help_text in (
         ("cib-r1-seal-parent-real", "seal actual consumed SI-2 parent interventions before stochastic calls"),
         ("cib-r1-calibrate-parent-real", "run outcome-blind CIB-R1 stochastic calibration states"),
         ("cib-r1-run-parent-real", "run the calibrated CIB-R1 validation states"),
@@ -349,6 +368,42 @@ def main(argv: list[str] | None = None) -> int:
             result = seal_synthetic_gcf_protocol(args.workspace)
         elif args.command == "gcf-run-synthetic":
             result = run_synthetic_gcf(args.workspace, manifest_digest=args.manifest_digest)
+        elif args.command in {
+            "gcf-r1-seal-mechanism-brief",
+            "gcf-r1-calibrate-mechanism-brief",
+            "gcf-r1-run-mechanism-brief",
+        }:
+            provider = CodexExecProvider(
+                command=tuple(shlex.split(args.codex_command, posix=False)),
+                model=args.model,
+                reasoning_effort=args.reasoning_effort,
+                output_schema=__import__(
+                    "discoveryos.benchmarks.mechanism_brief_real",
+                    fromlist=["STAGED_GENERATION_SCHEMA"],
+                ).STAGED_GENERATION_SCHEMA,
+            )
+            if args.command == "gcf-r1-seal-mechanism-brief":
+                result = seal_mechanism_brief_protocol(
+                    args.workspace,
+                    source_workspace=args.source_workspace,
+                    source_manifest_digest=args.source_manifest_digest,
+                    provider=provider,
+                    max_workers=args.max_workers,
+                )
+            elif args.command == "gcf-r1-calibrate-mechanism-brief":
+                result = calibrate_mechanism_brief(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
+            else:
+                result = run_mechanism_brief_validation(
+                    args.workspace,
+                    manifest_digest=args.manifest_digest,
+                    provider=provider,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True),
+                )
         elif args.command in {
             "cib-r1-seal-parent-real",
             "cib-r1-calibrate-parent-real",

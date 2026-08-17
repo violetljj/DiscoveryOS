@@ -118,3 +118,4 @@ python -m discoveryos demo-replay --workspace runs/clearance-demo
 - SI-2 consumed-trace causal diagnosis：`SEARCH_CAUSALITY_AUTOPSY.md`
 - Causal Intervention Bench：`CAUSAL_INTERVENTION_BENCH.md`
 - Generator Conditioning Fidelity：`GENERATOR_CONDITIONING_FIDELITY.md`
+- First real Mechanism Brief GCF diagnosis：`GCF_R1_REAL_MECHANISM_BRIEF.md`
