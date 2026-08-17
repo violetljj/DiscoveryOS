@@ -337,6 +337,20 @@ class SearchLoopIntegrationTests(unittest.IsolatedAsyncioTestCase):
             self.assertIn("ADA_LOCAL_MODE:EXPLORE", local_provider.requests[1].prompt)
             self.assertIn("sibling_outcomes", local_provider.requests[1].prompt)
             self.assertIn("TIED", local_provider.requests[1].prompt)
+            self.assertEqual(1, len(structural_provider.requests))
+            self.assertIn(
+                "EVOX_STRATEGY_DEPLOYMENT_V1",
+                structural_provider.requests[0].prompt,
+            )
+            self.assertIn(
+                "EVOX_VARIATION_MODE:COMPONENT_TRANSFER",
+                structural_provider.requests[0].prompt,
+            )
+            deployments = ledger.node_payloads("evox_strategy_deployment")
+            settlements = ledger.node_payloads("evox_strategy_settlement")
+            self.assertEqual(1, len(deployments))
+            self.assertEqual(1, len(settlements))
+            self.assertEqual("RETAIN", settlements[0]["transition"])
 
             actions = [payload["action"] for payload in ledger.search_action_payloads(spec.run_id)]
             self.assertEqual(

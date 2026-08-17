@@ -225,6 +225,26 @@ class EvidenceLedger:
     def add_node(self, node_id: str, node_type: str, payload: Any) -> bool:
         return self._insert_once("graph_nodes", "node_id", node_id, {"node_type": node_type, "payload": jsonable(payload), "created_at": utc_now()})
 
+    def node_payload(self, node_id: str, node_type: str | None = None) -> dict[str, Any] | None:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT node_type,payload FROM graph_nodes WHERE node_id=?",
+                (node_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        if node_type is not None and row["node_type"] != node_type:
+            raise LedgerConflict(f"graph node type mismatch: {node_id}")
+        return json.loads(row["payload"])
+
+    def node_payloads(self, node_type: str) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT payload FROM graph_nodes WHERE node_type=? ORDER BY created_at,node_id",
+                (node_type,),
+            ).fetchall()
+        return [json.loads(row["payload"]) for row in rows]
+
     def add_edge(self, source_id: str, target_id: str, edge_type: str, payload: Any) -> bool:
         with self.connect() as connection:
             existing = connection.execute(

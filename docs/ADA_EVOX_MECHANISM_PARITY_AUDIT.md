@@ -124,4 +124,4 @@ If either slice fails causal transmission, it is removed or diagnosed on L0-L2; 
 
 ## Post-audit implementation status
 
-The Ada trajectory slice is now mechanics-ready and has zero-model control/generation-context transmission evidence; see [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md). This does not establish candidate behavior or search value. EvoX parity remains unimplemented and P2 remains frozen.
+Both bounded slices are now mechanics-ready. The Ada slice has zero-model trajectory-conditioned control/generation-context transmission evidence; see [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md). The EvoX slice has typed same-run deployment, observation, scoring, retain/switch/rollback provenance and zero-model parent/variation transmission evidence; see [`EVOX_STRATEGY_PARITY_SLICE.md`](EVOX_STRATEGY_PARITY_SLICE.md). Neither establishes candidate behavior or search value. P2 remains frozen until the four comparison Profiles are revised, re-digested and pass the common zero-model fairness gate.

@@ -118,6 +118,7 @@ python -m discoveryos harness-profile-show
 - 当前结论和下一步：`CURRENT_STATE.md`
 - Ada/EvoX 官方机制到内部 Profile 的映射与 P2 前置边界：`ADA_EVOX_MECHANISM_PARITY_AUDIT.md`
 - Ada trajectory slice 的实现与零模型传递证据：`ADA_TRAJECTORY_PARITY_SLICE.md`
+- EvoX typed strategy state machine 的实现与零模型传递证据：`EVOX_STRATEGY_PARITY_SLICE.md`
 - 已确定的设计原因：`DECISIONS.md`
 - 本机依赖和工具位置：`LOCAL_ENVIRONMENT.md`
 - 总体架构路线：`ARCHITECTURE.md`

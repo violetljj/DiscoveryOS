@@ -15,9 +15,10 @@ HISTORICAL_PROTOCOL_REPLAY_COMPATIBILITY_PRESERVED
 STATIC_HARNESS_COMPOSITION_VALUE_NOT_EVALUATED
 P2_DEVELOPMENT_PROTOCOL_NOT_SEALED
 MECHANISM_COMPLETE_PARITY_NOT_ESTABLISHED
-P2_PROTOCOL_PAUSED_PENDING_BOUNDED_PARITY_CLOSURE
+P2_PROTOCOL_PAUSED_PENDING_PROFILE_REVISION_AND_FAIRNESS_GATE
 ADA_TRAJECTORY_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
-EVOX_PARITY_SLICE_NOT_IMPLEMENTED
+EVOX_TYPED_STRATEGY_STATE_MACHINE_MECHANICS_READY
+EVOX_PARENT_AND_VARIATION_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
 DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
 ```
 
@@ -130,7 +131,7 @@ The source-bound [`ADA_EVOX_MECHANISM_PARITY_AUDIT.md`](ADA_EVOX_MECHANISM_PARIT
 
 P2 sealing is paused for a bounded, zero-model parity closure: trajectory-conditioned Ada local adaptation and a typed same-run EvoX strategy deployment/switch/rollback slice. The audit explicitly excludes wholesale runtime import, private archives or evaluators, unrestricted strategy-code generation, cross-task memory and fresh assets.
 
-The first slice is implemented and documented in [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md). Its receipt-bound router and generation-context tests establish zero-model mechanism transmission only; they do not establish candidate behavior or value. EvoX parity is still absent, so no P2 Profile is scientifically unlocked.
+Both bounded slices are implemented. [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md) records receipt-bound trajectory control and generation-context transmission. [`EVOX_STRATEGY_PARITY_SLICE.md`](EVOX_STRATEGY_PARITY_SLICE.md) records typed same-run strategy deployment, observation, scoring and retain/switch/rollback, including changes to parent selection and variation guidance. These zero-model tests establish mechanics/transmission only; they do not establish candidate behavior or value. No P2 Profile is scientifically unlocked until the comparison arms are revised, re-digested and pass the common fairness gate.
 
 ## Remaining deliberate legacy boundary
 
@@ -140,4 +141,4 @@ Parent/Novelty/CMI and old protocol runners remain frozen regression/evidence as
 
 ## Next gate
 
-Next implement the typed same-run EvoX strategy deployment/switch/rollback slice and pass its zero-model runtime-transmission gate. Then revise and re-digest the four Profiles and seal the matched-resource P2 protocol, including exact task instances, child budget split and settlement for naive parallel, provider executable/version/settings, model calls, evaluator-call ceilings, wall/resource envelopes, statistics, winner rule and stop conditions. V1 mechanics do not authorize broader adaptive routing, cross-task memory, Harness evolution, fresh assets or stronger claims.
+Next revise and re-digest four explicit comparison Profiles: `neither`, `Ada-only`, `EvoX-only` and shared `Ada+EvoX`. They must pass a zero-model check for the same executor, evaluator, ledger, total budget, reservation surface and resource envelope before sealing the matched-resource P2 protocol. That later protocol must freeze exact task instances, any child budget split and settlement, provider executable/version/settings, model calls, evaluator-call ceilings, wall/resource envelopes, statistics, winner rule and stop conditions. V1 mechanics do not authorize broader adaptive routing, cross-task memory, Harness evolution, fresh assets or stronger claims.

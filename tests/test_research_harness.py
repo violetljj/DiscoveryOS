@@ -623,6 +623,16 @@ class ResearchHarnessStrategyTests(unittest.TestCase):
                 self.assertEqual(SearchAction.STRUCTURAL_ESCAPE, decision.action)
                 self.assertEqual("evox_meta_strategy_v1", decision.strategy_id)
                 self.assertIn("CROSS_SEED_LOCAL_TO_STRUCTURAL", decision.reason_codes)
+                self.assertTrue(
+                    any(code.startswith("EVOX_DEPLOYMENT:") for code in decision.reason_codes)
+                )
+                self.assertTrue(
+                    any(code.startswith("EVOX_STRATEGY_SPEC:") for code in decision.reason_codes)
+                )
+                self.assertIn(
+                    "EVOX_VARIATION_MODE:COMPONENT_TRANSFER",
+                    decision.reason_codes,
+                )
                 self.assertTrue(controller.replay(decision, state)[0])
 
     @staticmethod

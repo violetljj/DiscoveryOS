@@ -836,6 +836,13 @@ class UnifiedActionExecutor:
                 step=receipt.step,
                 payload=jsonable(receipt),
             )
+        deploy_strategy = getattr(
+            self.generative_operators.get(decision.operator_id or ""),
+            "deploy_strategy",
+            None,
+        )
+        if callable(deploy_strategy):
+            deploy_strategy(state=state, decision=decision)
         if decision.action in GENERATIVE_ACTIONS:
             selected_operator = self.generative_operators.get(decision.operator_id or "")
             if selected_operator is None:
@@ -882,6 +889,13 @@ class UnifiedActionExecutor:
                     payload=jsonable(result),
                 )
                 self.ledger.record_event("SEARCH_ACTION_EXECUTED", jsonable(result))
+                self._settle_operator_strategy(
+                    selected_operator,
+                    state=state,
+                    decision=decision,
+                    result_candidate_id=None,
+                    evidence=None,
+                )
                 return result
             generation_budget = (
                 decision.generation_reserve
@@ -1089,7 +1103,34 @@ class UnifiedActionExecutor:
             payload=jsonable(result),
         )
         self.ledger.record_event("SEARCH_ACTION_EXECUTED", jsonable(result))
+        self._settle_operator_strategy(
+            selected_operator if decision.action in GENERATIVE_ACTIONS else None,
+            state=state,
+            decision=decision,
+            result_candidate_id=result.result_candidate_id,
+            evidence=evidence,
+        )
         return result
+
+    def _settle_operator_strategy(
+        self,
+        operator: LocalPatchOperator | None,
+        *,
+        state: SearchState,
+        decision: SearchDecision,
+        result_candidate_id: str | None,
+        evidence: EvidenceRecord | None,
+    ) -> None:
+        settle_strategy = getattr(operator, "settle_strategy", None)
+        if callable(settle_strategy):
+            settle_strategy(
+                state=state,
+                decision=decision,
+                result_candidate_id=result_candidate_id,
+                evidence=evidence,
+                metric_name=self.spec.metric_name,
+                metric_direction=self.spec.metric_direction,
+            )
 
     async def _evaluate(
         self,

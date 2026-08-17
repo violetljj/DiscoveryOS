@@ -8,8 +8,8 @@ ADA_TRAJECTORY_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
 ADA_TRAJECTORY_GENERATION_CONTEXT_TRANSMISSION_CONFIRMED_ZERO_MODEL
 ADA_CANDIDATE_BEHAVIOR_VALUE_NOT_EVALUATED
 ADA_SEARCH_VALUE_NOT_EVALUATED
-EVOX_PARITY_SLICE_NOT_IMPLEMENTED
-P2_REMAINS_FROZEN
+EVOX_TYPED_STRATEGY_STATE_MACHINE_MECHANICS_READY
+P2_REMAINS_FROZEN_PENDING_PROFILE_REVISION_AND_FAIRNESS_GATE
 ```
 
 This slice implements only the Ada closure frozen by [`ADA_EVOX_MECHANISM_PARITY_AUDIT.md`](ADA_EVOX_MECHANISM_PARITY_AUDIT.md). It does not import islands, UCB scheduling, a QD archive, migration, paradigm generation or any private evaluator/budget/winner authority.
@@ -45,4 +45,4 @@ The provider in these tests is a local deterministic fixture; no model/provider 
 
 ## Next gate
 
-Ada parity is closed only at the mechanism-transmission level requested for this stage. P2 remains frozen. The next implementation stage is the separate EvoX typed strategy state machine with frozen `deploy -> observe -> score -> switch/retain -> rollback` transitions and provenance. Neither slice authorizes a P2 run until the EvoX slice passes the same zero-model runtime-transmission standard and the four arms are revised and re-digested.
+Ada parity is closed only at the mechanism-transmission level requested for this stage. The separate EvoX state-machine slice has now passed its zero-model mechanics/transmission gate; see [`EVOX_STRATEGY_PARITY_SLICE.md`](EVOX_STRATEGY_PARITY_SLICE.md). P2 remains frozen until the four arms are revised, re-digested and checked by the shared zero-model fairness gate.

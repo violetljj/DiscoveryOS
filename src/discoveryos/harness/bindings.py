@@ -19,6 +19,7 @@ _CODE_BUNDLE_PATHS = (
     "harness/ada_adaptation.py",
     "harness/bindings.py",
     "harness/context.py",
+    "harness/evox_strategy.py",
     "harness/plugins.py",
     "harness/runtime.py",
     "harness/strategies.py",

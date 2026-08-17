@@ -22,6 +22,7 @@ from discoveryos.util import digest_json
 
 from .ada_adaptation import AdaTrajectoryPolicy, AdaTrajectoryReceipt
 from .bindings import harness_code_bundle_digest
+from .evox_strategy import EvoXDeploymentPlan, EvoXStrategyStateMachine
 from .context import ResearchContext, ServiceKey
 from .plugins import (
     HarnessEventSink,
@@ -129,6 +130,28 @@ class EvoXMetaStrategyOperator(StructuralRewriteOperator):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(strategy_id="evox_meta_strategy_v1", **kwargs)
+        self.strategy_machine = EvoXStrategyStateMachine(self.ledger)
+
+    def strategy_plan(
+        self,
+        state: SearchState,
+        decision_parent_id: str | None,
+    ) -> EvoXDeploymentPlan:
+        return self.strategy_machine.plan(state, decision_parent_id)
+
+    def deploy_strategy(self, *, state: SearchState, decision: SearchDecision) -> None:
+        self.strategy_machine.deploy(state, decision)
+
+    def generation_guidance(
+        self,
+        *,
+        state: SearchState,
+        decision: SearchDecision,
+    ) -> tuple[str, ...]:
+        return self.strategy_machine.generation_guidance(state, decision)
+
+    def settle_strategy(self, **kwargs: Any):
+        return self.strategy_machine.settle(**kwargs)
 
 
 @dataclass(frozen=True, slots=True)
@@ -223,6 +246,7 @@ class HarnessResearchController(DeterministicActionController):
         base = self.base.decide(state)
         strategy_id = base.strategy_id
         operator_id = base.operator_id
+        selected_candidate_id: str | None = None
         reasons: tuple[str, ...] = ()
         if base.action is SearchAction.LOCAL_PATCH:
             source = self._candidate(state, base.candidate_id)
@@ -269,6 +293,13 @@ class HarnessResearchController(DeterministicActionController):
             reasons = ("HARNESS_STRUCTURAL_ESCAPE",)
             if ResearchCapability.META_STRATEGY in structural.capabilities:
                 reasons += ("HARNESS_META_STRATEGY",)
+                structural_operator = self.registry.get(structural.operator_id)
+                strategy_plan = getattr(structural_operator, "strategy_plan", None)
+                if not callable(strategy_plan):
+                    raise ValueError("meta-strategy capability lacks a typed strategy state machine")
+                plan = strategy_plan(state, base.candidate_id)
+                reasons += plan.reason_codes
+                selected_candidate_id = plan.selected_parent_id
             if (
                 self.routing.allow_cross_seed
                 and source is not None
@@ -285,6 +316,7 @@ class HarnessResearchController(DeterministicActionController):
             operator_id=operator_id,
             strategy_id=strategy_id,
             extra_reasons=reasons,
+            candidate_id=selected_candidate_id,
         )
 
     @staticmethod
@@ -309,12 +341,14 @@ class HarnessResearchController(DeterministicActionController):
         operator_id: str | None,
         strategy_id: str | None,
         extra_reasons: tuple[str, ...],
+        candidate_id: str | None = None,
     ) -> SearchDecision:
+        resolved_candidate_id = candidate_id or decision.candidate_id
         return SearchDecision.create(
             state=state,
             controller_digest=self.digest,
             action=decision.action,
-            candidate_id=decision.candidate_id,
+            candidate_id=resolved_candidate_id,
             branch_id=decision.branch_id,
             operator_id=operator_id,
             strategy_id=strategy_id,
@@ -329,7 +363,11 @@ class HarnessResearchController(DeterministicActionController):
             budget_reserved=decision.budget_reserved,
             preflight_affordable=decision.preflight_affordable,
             rejected_action=decision.rejected_action,
-            parent_selection_receipt=decision.parent_selection_receipt,
+            parent_selection_receipt=(
+                decision.parent_selection_receipt
+                if resolved_candidate_id == decision.candidate_id
+                else None
+            ),
             reusable_component_ids=decision.reusable_component_ids,
         )
 
