@@ -54,6 +54,8 @@ from discoveryos.benchmarks import (
     calibrate_operator_causal_value,
     run_operator_causal_value_validation,
     seal_operator_causal_value_protocol,
+    run_cmi_probe_calibration,
+    seal_cmi_probe_calibration,
 )
 from discoveryos.domains.clearance_demo import demo_status, replay_demo, run_demo_certification, run_demo_discovery
 from discoveryos.mechanism_intelligence import run_cmi_r0_synthetic, seal_cmi_r0_protocol
@@ -203,6 +205,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     cmi_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-r0-synthetic"))
     cmi_run.add_argument("--manifest-digest", required=True)
+    cmi_r1_seal = subparsers.add_parser(
+        "cmi-r1-seal-probes",
+        help="seal two fresh dev episodes for zero-model real probe calibration",
+    )
+    cmi_r1_seal.add_argument("--workspace", type=Path, default=Path("runs/cmi-r1-real-probe-calibration"))
+    cmi_r1_run = subparsers.add_parser(
+        "cmi-r1-run-probes",
+        help="run the sealed evaluator, implementation, and functional probe controls",
+    )
+    cmi_r1_run.add_argument("--workspace", type=Path, default=Path("runs/cmi-r1-real-probe-calibration"))
+    cmi_r1_run.add_argument("--manifest-digest", required=True)
     cib_parent_seal = subparsers.add_parser(
         "cib-seal-parent-dev",
         help="seal consumed development states for a real parent-policy paired trace",
@@ -471,6 +484,10 @@ def main(argv: list[str] | None = None) -> int:
             result = seal_cmi_r0_protocol(args.workspace)
         elif args.command == "cmi-r0-run-synthetic":
             result = run_cmi_r0_synthetic(args.workspace, manifest_digest=args.manifest_digest)
+        elif args.command == "cmi-r1-seal-probes":
+            result = seal_cmi_probe_calibration(args.workspace)
+        elif args.command == "cmi-r1-run-probes":
+            result = run_cmi_probe_calibration(args.workspace, manifest_digest=args.manifest_digest)
         elif args.command == "cib-seal-parent-dev":
             result = seal_parent_dev_cib_protocol(args.workspace)
         elif args.command == "cib-run-parent-dev":

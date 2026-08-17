@@ -246,3 +246,10 @@
 - **决定**：新增 `CAUSAL_MECHANISM_INTELLIGENCE_R0`，但只实现最小纵向切片：冻结 failure phenotype、至少两个竞争 bottleneck hypotheses、精确覆盖它们的 cheap diagnostic probes、资源绑定结果与确定性状态机。只有恰好一个 hypothesis 为 `SUPPORTED` 且其余全部为 `REFUTED` 时，状态机才输出 `MECHANISM_BRIEF_ALLOWED`；`UNRESOLVED`、`NOT_EVALUABLE`、多 hypothesis supported 或绑定/预算违规均 fail closed。CMI 属于 Search/Research 平面，永远不拥有科学 verdict 或 claim ceiling 权威。
 - **原因**：EMC-R3 已建立真实执行通道，Direct/Repair R1 又在该通道上得到所有 value endpoint 为零的可解释 null。当前主要缺口不再是继续增加 Operator 插槽，而是从失败 phenotype 区分 representation ceiling、evaluator insensitivity、implementation bottleneck、structural basin lock 等竞争解释，并让 Operator 由仍存活的瓶颈理论推导。
 - **后果**：R0 只运行零模型、零 evaluator、零 fresh-task 的 null/positive synthetic controls；positive 只证明预构造 `H5_STRUCTURAL_BASIN_LOCK` 可被恢复，不建立现实 bottleneck。现实阶段必须另行封存 never-consumed dev states、probe semantics、阈值、预算和独立 value surface。此前不得选择新 Operator、生成现实 Mechanism Brief 或开放 fresh search-value budget。
+
+## D-036：现实诊断先通过零模型 probe calibration
+
+- **日期**：2026-08-17
+- **决定**：CMI-R1 只在两个从未消费的 assignment/coverage development episodes 上校准诊断工具，不生成候选。每个 state 冻结 baseline、三个 intermediate controls、reference、六个 evaluator seeds 与三个独立 functional-probe seeds。必须同时满足 baseline/reference valid、reference headroom 至少一个 score resolution、7 个预声明 ranked pairs 至少恢复 6 个、same-source functional distance 精确为零、baseline/reference functional distance 至少 `0.10`。
+- **原因**：若 evaluator control、perfect implementation control 或 functional basin assay 本身不敏感，直接花模型预算进行现实瓶颈诊断只会得到不可解释的 null。把该门放在 provider 前可以用秒级本地执行排除 instrumentation failure。
+- **后果**：R1 无模型、无 provider、无 fresh search-value task。两状态任一失败即关闭当前 probe 定义，不得进入现实诊断。全部通过也只授权另行预注册小规模现实诊断，不建立现实 bottleneck、不生成 Mechanism Brief、不选择 Operator。
