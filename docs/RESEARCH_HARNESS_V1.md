@@ -14,6 +14,8 @@ CORE_CLI_ISOLATED_FROM_HISTORICAL_PROTOCOL_RUNNERS
 HISTORICAL_PROTOCOL_REPLAY_COMPATIBILITY_PRESERVED
 STATIC_HARNESS_COMPOSITION_VALUE_NOT_EVALUATED
 P2_DEVELOPMENT_PROTOCOL_NOT_SEALED
+MECHANISM_COMPLETE_PARITY_NOT_ESTABLISHED
+P2_PROTOCOL_PAUSED_PENDING_BOUNDED_PARITY_CLOSURE
 DISCOVERYOS_SEARCH_VALUE_NOT_YET_ESTABLISHED
 ```
 
@@ -115,6 +117,12 @@ Focused tests establish:
 
 These tests establish only execution mechanics and dependency isolation. They do not establish official Ada/EvoX parity, static composition value, adaptive value, generalization or superiority.
 
+## Mechanism parity audit
+
+The source-bound [`ADA_EVOX_MECHANISM_PARITY_AUDIT.md`](ADA_EVOX_MECHANISM_PARITY_AUDIT.md) confirms that the current Ada/EvoX plugins are mechanism-role proxies, not mechanism-complete ports. Ada currently retains lineage-local refinement but not the official hierarchical adaptive loop. EvoX currently retains a stagnation-triggered structural solution rewrite but not the official evolution of parent-selection and variation strategy.
+
+P2 sealing is paused for a bounded, zero-model parity closure: trajectory-conditioned Ada local adaptation and a typed same-run EvoX strategy deployment/switch/rollback slice. The audit explicitly excludes wholesale runtime import, private archives or evaluators, unrestricted strategy-code generation, cross-task memory and fresh assets.
+
 ## Remaining deliberate legacy boundary
 
 `SearchLoopRunner`, `DeterministicActionController`, ledger projector and unified executor remain stable Kernel/Runtime primitives. Historical protocols can still instantiate them directly to preserve replay behavior. New search work must enter through `HarnessSearchRuntime`; direct construction is compatibility-only and must not become a new default path.
@@ -123,4 +131,4 @@ Parent/Novelty/CMI and old protocol runners remain frozen regression/evidence as
 
 ## Next gate
 
-The next scientific gate is unchanged: seal a matched-resource P2 protocol, including exact L0-L2 task instances, child budget split and settlement for naive parallel, provider executable/version/settings, model calls, evaluator-call ceilings, wall/resource envelopes, statistics, winner rule and stop conditions, before the first formal model call. Only then may the development wave run. V1 mechanics do not authorize adaptive routing, cross-task memory, Harness evolution, fresh assets or stronger claims.
+Before sealing P2, implement only the two bounded slices frozen by the mechanism parity audit and pass their zero-model P0/P1.5 causal-transmission gate on L0-L2 assets. Then revise and re-digest the four Profiles and seal the matched-resource P2 protocol, including exact task instances, child budget split and settlement for naive parallel, provider executable/version/settings, model calls, evaluator-call ceilings, wall/resource envelopes, statistics, winner rule and stop conditions. V1 mechanics do not authorize broader adaptive routing, cross-task memory, Harness evolution, fresh assets or stronger claims.

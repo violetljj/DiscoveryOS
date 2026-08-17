@@ -116,6 +116,7 @@ python -m discoveryos harness-profile-show
 
 - 系统理念与长期边界：`SYSTEM_PHILOSOPHY.md`
 - 当前结论和下一步：`CURRENT_STATE.md`
+- Ada/EvoX 官方机制到内部 Profile 的映射与 P2 前置边界：`ADA_EVOX_MECHANISM_PARITY_AUDIT.md`
 - 已确定的设计原因：`DECISIONS.md`
 - 本机依赖和工具位置：`LOCAL_ENVIRONMENT.md`
 - 总体架构路线：`ARCHITECTURE.md`
