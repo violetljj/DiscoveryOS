@@ -149,7 +149,14 @@ class PowerLeaseError(RuntimeError):
 class WindowsPowerInhibitionLease:
     """Process-scoped Windows power request held through post-run reconciliation."""
 
-    _REQUESTS = ((1, "SYSTEM_REQUIRED"), (3, "EXECUTION_REQUIRED"))
+    _REQUESTS = (
+        (0, "DISPLAY_REQUIRED"),
+        (1, "SYSTEM_REQUIRED"),
+        (3, "EXECUTION_REQUIRED"),
+    )
+    _ES_CONTINUOUS = 0x80000000
+    _ES_SYSTEM_REQUIRED = 0x00000001
+    _ES_DISPLAY_REQUIRED = 0x00000002
 
     def __init__(self, reason: str) -> None:
         self.reason = reason
@@ -159,6 +166,7 @@ class WindowsPowerInhibitionLease:
         self._acquired_at: str | None = None
         self._released_at: str | None = None
         self._failure: str | None = None
+        self._thread_execution_state_set = False
 
     def acquire(self) -> None:
         if sys.platform != "win32":
@@ -177,6 +185,8 @@ class WindowsPowerInhibitionLease:
         kernel32.PowerClearRequest.restype = ctypes.c_bool
         kernel32.CloseHandle.argtypes = (ctypes.c_void_p,)
         kernel32.CloseHandle.restype = ctypes.c_bool
+        kernel32.SetThreadExecutionState.argtypes = (ctypes.c_ulong,)
+        kernel32.SetThreadExecutionState.restype = ctypes.c_ulong
 
         self._reason_buffer = ctypes.create_unicode_buffer(self.reason)
         context = ReasonContext(0, 1, ctypes.cast(self._reason_buffer, ctypes.c_void_p))
@@ -191,6 +201,12 @@ class WindowsPowerInhibitionLease:
                 if not kernel32.PowerSetRequest(ctypes.c_void_p(self._handle), request_type):
                     raise PowerLeaseError(f"PowerSetRequest({name}) failed: winerror={ctypes.get_last_error()}")
                 self._set.append((request_type, name))
+            state = self._ES_CONTINUOUS | self._ES_SYSTEM_REQUIRED | self._ES_DISPLAY_REQUIRED
+            if not kernel32.SetThreadExecutionState(state):
+                raise PowerLeaseError(
+                    f"SetThreadExecutionState(DISPLAY+SYSTEM) failed: winerror={ctypes.get_last_error()}"
+                )
+            self._thread_execution_state_set = True
         except BaseException as error:
             self._failure = str(error)
             self.release()
@@ -205,7 +221,13 @@ class WindowsPowerInhibitionLease:
         kernel32.PowerClearRequest.restype = ctypes.c_bool
         kernel32.CloseHandle.argtypes = (ctypes.c_void_p,)
         kernel32.CloseHandle.restype = ctypes.c_bool
+        kernel32.SetThreadExecutionState.argtypes = (ctypes.c_ulong,)
+        kernel32.SetThreadExecutionState.restype = ctypes.c_ulong
         failures: list[str] = []
+        if self._thread_execution_state_set:
+            if not kernel32.SetThreadExecutionState(self._ES_CONTINUOUS):
+                failures.append(f"SetThreadExecutionState(clear):winerror={ctypes.get_last_error()}")
+            self._thread_execution_state_set = False
         for request_type, name in reversed(self._set):
             if not kernel32.PowerClearRequest(ctypes.c_void_p(self._handle), request_type):
                 failures.append(f"PowerClearRequest({name}):winerror={ctypes.get_last_error()}")
@@ -221,7 +243,7 @@ class WindowsPowerInhibitionLease:
     def receipt(self) -> PowerLeaseReceipt:
         return PowerLeaseReceipt(
             acquired=self._acquired_at is not None,
-            provider="WINDOWS_POWER_REQUEST_API",
+            provider="WINDOWS_POWER_REQUEST_API+SET_THREAD_EXECUTION_STATE",
             request_types=tuple(name for _, name in self._set),
             acquired_at_utc=self._acquired_at,
             released_at_utc=self._released_at,
