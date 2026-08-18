@@ -26,11 +26,25 @@ class BenchmarkBankTests(unittest.TestCase):
     def test_v1_registry_has_frozen_ladder_and_executable_dev_slice(self) -> None:
         registry = load_benchmark_bank(REGISTRY)
         report = validate_benchmark_bank(registry)
-        self.assertEqual(47, report["family_count"])
-        self.assertEqual({"R0": 8, "R1": 8, "R2": 10, "R3": 6, "R4": 5, "R5": 10}, report["tier_counts"])
-        self.assertEqual(18, report["development_ready_families"])
-        self.assertEqual(29, report["catalogued_families"])
+        self.assertEqual(49, report["family_count"])
+        self.assertEqual({"R0": 8, "R1": 8, "R2": 12, "R3": 6, "R4": 5, "R5": 10}, report["tier_counts"])
+        self.assertEqual(26, report["development_ready_families"])
+        self.assertEqual(23, report["catalogued_families"])
         self.assertEqual(0, report["fresh_instances_consumed"])
+
+        external = [
+            family
+            for family in registry["families"]
+            if family.get("evidence_role") == "CONTRACT_DERIVED_DEVELOPMENT"
+        ]
+        self.assertEqual(24, len(external))
+        self.assertEqual(
+            {"R0": 6, "R1": 6, "R2": 12},
+            {
+                tier: sum(family["difficulty_tier"] == tier for family in external)
+                for tier in ("R0", "R1", "R2")
+            },
+        )
 
     def test_catalogued_external_family_cannot_execute_or_open_sealed_shard(self) -> None:
         decision = assess_shard_access(
@@ -190,6 +204,106 @@ class BenchmarkBankTests(unittest.TestCase):
             evaluation = subprocess.run(
                 [sys.executable, "evaluate.py"],
                 cwd=second,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(0, evaluation.returncode, evaluation.stderr)
+            payload = json.loads(evaluation.stdout)
+            self.assertEqual(0.0, payload["metrics"]["valid"])
+            self.assertEqual(0.0, payload["metrics"]["score"])
+
+    def test_p2_v4_expansion_selection_and_all_instances_are_zero_model_executable(self) -> None:
+        registry = load_benchmark_bank(REGISTRY)
+        audit = registry["p2_v4_expansion_audit"]
+        self.assertEqual(0, audit["model_calls"])
+        self.assertEqual(0, audit["fresh_or_sealed_assets_opened"])
+        self.assertEqual(
+            ["least_squares", "fft_convolution", "min_weight_assignment", "kd_tree", "kmeans"],
+            audit["r1_sha256_rank"],
+        )
+        families = [
+            family
+            for family in registry["families"]
+            if family.get("adapter_id") == "discoveryos.algotune_p2v4_contract_dev.v1"
+        ]
+        self.assertEqual(8, len(families))
+        with tempfile.TemporaryDirectory() as temp_dir:
+            for family in families:
+                self.assertEqual(2, len(family["instance_ids"]))
+                for instance_id in family["instance_ids"]:
+                    output = Path(temp_dir) / instance_id
+                    report = materialize_bank_instance(
+                        REGISTRY,
+                        family_id=family["family_id"],
+                        instance_id=instance_id,
+                        output_dir=output,
+                    )
+                    resolution = report["resolution"]
+                    self.assertEqual(
+                        "EXTERNAL_CONTRACT_DERIVED_DEVELOPMENT_ONLY",
+                        resolution["claim_ceiling"],
+                    )
+                    self.assertEqual(
+                        "DISCOVERYOS_STDLIB_ALGOTUNE_P2V4_CONTRACT_DEV_V1",
+                        resolution["evaluator_regime"],
+                    )
+                    contract = json.loads((output / "task-contract.json").read_text(encoding="utf-8"))
+                    self.assertFalse(contract["upstream_evaluator_reused"])
+                    self.assertEqual("DEV", contract["partition_role"])
+                    public = subprocess.run(
+                        [sys.executable, "public_tests.py"],
+                        cwd=output,
+                        text=True,
+                        capture_output=True,
+                        check=False,
+                    )
+                    self.assertEqual(0, public.returncode, f"{instance_id}: {public.stderr}")
+                    evaluation = subprocess.run(
+                        [sys.executable, "evaluate.py"],
+                        cwd=output,
+                        text=True,
+                        capture_output=True,
+                        check=False,
+                    )
+                    self.assertEqual(0, evaluation.returncode, f"{instance_id}: {evaluation.stderr}")
+                    payload = json.loads(evaluation.stdout)
+                    self.assertEqual(1.0, payload["metrics"]["valid"], instance_id)
+                    self.assertGreater(payload["metrics"]["score"], 0.0, instance_id)
+
+    def test_p2_v4_expansion_digest_binding_and_invalid_candidate_fail_closed(self) -> None:
+        registry = load_benchmark_bank(REGISTRY)
+        family = next(item for item in registry["families"] if item["family_id"] == "tsp")
+        family["development_binding"]["upstream_task_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "DEVELOPMENT_DIGEST_BINDING_MISMATCH:tsp"):
+            validate_benchmark_bank(registry)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            replay = Path(temp_dir) / "replay"
+            output = Path(temp_dir) / "invalid"
+            first = materialize_bank_instance(
+                REGISTRY,
+                family_id="vertex_cover",
+                instance_id="vertex_cover_dev_alpha",
+                output_dir=output,
+            )
+            second = materialize_bank_instance(
+                REGISTRY,
+                family_id="vertex_cover",
+                instance_id="vertex_cover_dev_alpha",
+                output_dir=replay,
+            )
+            self.assertEqual(
+                first["resolution"]["instance_digest"],
+                second["resolution"]["instance_digest"],
+            )
+            self.assertEqual(
+                first["resolution"]["evaluator_digest"],
+                second["resolution"]["evaluator_digest"],
+            )
+            (output / "algorithm.py").write_text("def solve(problem):\n    return []\n", encoding="utf-8")
+            evaluation = subprocess.run(
+                [sys.executable, "evaluate.py"],
+                cwd=output,
                 text=True,
                 capture_output=True,
                 check=False,

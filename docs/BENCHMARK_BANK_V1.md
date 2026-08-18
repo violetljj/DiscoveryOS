@@ -7,15 +7,17 @@ BENCHMARK_BANK_V1_REGISTRY_IMPLEMENTED
 BENCHMARK_BANK_V1_DEVELOPMENT_SLICE_EXECUTABLE
 BENCHMARK_BANK_V1_SIX_ALGOTUNE_CONTRACT_DEV_FAMILIES_EXECUTABLE
 BENCHMARK_BANK_V1_TEN_ALGOTUNE_R2_CONTRACT_DEV_FAMILIES_EXECUTABLE
+BENCHMARK_BANK_V1_P2_V4_EIGHT_FAMILY_EXPANSION_EXECUTABLE
+P2_V4_6_6_12_EXTERNAL_DEV_FAMILY_RESERVOIR_READY
 BENCHMARK_BANK_V1_ALE_R3_ARTIFACTS_PINNED_EXECUTION_BLOCKED
 BENCHMARK_BANK_V1_SKYDISCOVER_R4_R5_SOURCE_TREES_AUDITED_EXECUTION_BLOCKED
 BENCHMARK_BANK_V1_EXTERNAL_SCIENTIFIC_ADMISSION_NOT_ESTABLISHED
 ZERO_FRESH_INSTANCES_CONSUMED
 ```
 
-Benchmark Bank v1 makes the problem family a durable research asset while treating a sealed instance or shard as the consumable scientific unit. It does not declare all listed benchmarks runnable. The registry currently contains 47 core families: two internal consumed families and 16 external contract-derived AlgoTune families are `DEVELOPMENT_READY`; 29 families remain `CATALOGUED`; zero external family is `ADMITTED`.
+Benchmark Bank v1 makes the problem family a durable research asset while treating a sealed instance or shard as the consumable scientific unit. It does not declare all listed benchmarks runnable. The registry currently contains 49 core families: two internal consumed families and 24 external contract-derived AlgoTune families are `DEVELOPMENT_READY`; 23 families remain `CATALOGUED`; zero external family is `ADMITTED`.
 
-The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../benchmarks/bank/v1/registry.json). The R0-R5 audited bank has registry digest `99cfa092e01522627514b175eb25970246db987dbad00a4ff2d92eeb339a6b6d`.
+The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../benchmarks/bank/v1/registry.json). The expanded R0-R5 bank has registry digest `742637df6a5de643e17a9db19070a11c5be311c3ba06d56e54035ec5737e13cf`.
 
 ## Difficulty ladder
 
@@ -23,7 +25,7 @@ The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../ben
 |---|---|---:|
 | R0 | regression and mechanics | 8 |
 | R1 | easy search-value smoke | 8 |
-| R2 | structural search | 10 |
+| R2 | structural search | 12 |
 | R3 | long-horizon heuristic search | 6 |
 | R4 | real systems optimization | 5 |
 | R5 | public frontier/SOTA replay and stress | 10 |
@@ -125,6 +127,25 @@ The second external batch adds all ten registered R2 families, with two determin
 The adapter is `discoveryos.algotune_r2_contract_dev.v1`; its evaluator regime is `DISCOVERYOS_STDLIB_ALGOTUNE_R2_CONTRACT_DEV_V1`. Each evaluator independently checks the upstream-compatible output structure, input immutability, feasibility and exact objective on deliberately bounded deterministic cases before timing the candidate. Incorrect or suboptimal candidates receive `valid=0` and `score=0`.
 
 These instances exercise structural-search mechanics without adding OR-Tools, CVXPY, POT, NetworkX or PySAT to the DiscoveryOS core environment. They are not scale-equivalent to upstream instances and do not establish official AlgoTune performance, external competitiveness or scientific admission. Their claim ceiling is `EXTERNAL_R2_CONTRACT_DERIVED_DEVELOPMENT_ONLY`.
+
+## P2 V4 outcome-blind family expansion
+
+The third adapter, `discoveryos.algotune_p2v4_contract_dev.v1`, adds eight families solely to satisfy the pre-model P2 V4 `6 R0 / 6 R1 / 12 R2` independent-family reservoir. It remains a standard-library contract-derived DEV regime, not the upstream evaluator or scientific admission.
+
+| Tier | Added family | Selection basis | DEV instances |
+|---|---|---|---:|
+| R0 | Affine Transform 2D | all three missing registered R0 contracts | 2 |
+| R0 | Real Eigenvalues | all three missing registered R0 contracts | 2 |
+| R0 | Minimum Spanning Tree | all three missing registered R0 contracts | 2 |
+| R1 | Least Squares | first of five by frozen SHA-256 rank | 2 |
+| R1 | FFT Convolution | second of five by frozen SHA-256 rank | 2 |
+| R1 | Minimum-Weight Assignment | third of five by frozen SHA-256 rank | 2 |
+| R2 | Minimum Vertex Cover | missing cover-selection structural contract | 2 |
+| R2 | Traveling Salesman | missing sequence/cycle structural contract | 2 |
+
+Every family binds the task and description SHA-256 from pinned AlgoTune commit `dff9914c10800c7a031c9e8c3d4d1c8cd1b38906`. The registry records the complete R1 rank, selected R0/R1/R2 identities, coverage rationale, `model_calls=0`, and `fresh_or_sealed_assets_opened=0`. The 16 new instances materialize deterministically, reject input mutation/invalid or suboptimal output, and passed their public/evaluator execution tests. Adapter source SHA-256 at this closure is `90197a9be80dc71a0d8ec2679de295e8b85c688602ce5fa2092aefd09d1b0e51`.
+
+This establishes only a candidate family reservoir. It does not choose the one primary instance per family, establish V4 residual headroom, run the cohort-wide power lease/Executability Gate, seal a V4 manifest, or authorize generation.
 
 ## ALE R3 audited blocker
 

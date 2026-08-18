@@ -5,7 +5,8 @@
 ```text
 P2_V4_PREMODEL_DESIGN_STATISTICAL_SEAL_FROZEN
 P2_V4_MAXIMUM_BLOCKS_24
-P2_V4_INDEPENDENT_FAMILY_COHORT_NOT_YET_AVAILABLE
+P2_V4_INDEPENDENT_FAMILY_RESERVOIR_READY
+P2_V4_FULL_COHORT_EXECUTABILITY_NOT_YET_RUN
 P2_V4_COHORT_MANIFEST_NOT_SEALED
 P2_V4_SCIENTIFIC_GENERATION_NOT_AUTHORIZED
 P3_NOT_AUTHORIZED
@@ -41,7 +42,7 @@ The primary cohort must contain exactly 24 `DEVELOPMENT_READY` external contract
 | R2 | 12 |
 | **Total** | **24** |
 
-The current Bank has only 16 such families (`3 R0 / 3 R1 / 10 R2`), although it has 32 instances. It is therefore not sufficient for this design. At least eight additional eligible families are required (`+3 R0 / +3 R1 / +2 R2`) before a V4 cohort can be frozen. Reusing both alpha/beta instances as if they were independent families is prohibited.
+The Bank expansion now provides exactly 24 such families (`6 R0 / 6 R1 / 12 R2`) and 48 deterministic DEV instances. Registry digest `742637df6a5de643e17a9db19070a11c5be311c3ba06d56e54035ec5737e13cf` binds the zero-model reservoir. This closes only source availability: the SHA-ranked single instance per family has not yet been selected, materialized under the cohort lease, or passed the required 24/24 Gate. Reusing both alpha/beta instances as if they were independent families remains prohibited.
 
 ### Outcome-blind admission and ordering
 
@@ -163,7 +164,7 @@ Keeping the V3 per-arm ceilings provisionally unchanged gives a hard maximum of 
 
 The only authorized sequence is:
 
-1. expand and validate the Benchmark Bank to at least the frozen `6/6/12` family reservoir without model calls;
+1. ~~expand and validate the Benchmark Bank to at least the frozen `6/6/12` family reservoir without model calls~~ — complete at registry digest `742637df...e13cf`;
 2. implement the V4 cohort selector, full-cohort Gate, attempt-level recovery state machine, split cost ledger, aggregate/replay and focused adversarial tests;
 3. run the 24/24 zero-model cohort gate;
 4. create and verify a clean-worktree, create-once V4 manifest that binds this seal;
