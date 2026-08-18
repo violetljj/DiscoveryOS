@@ -8,8 +8,9 @@ P2_ZERO_MODEL_FACTORIAL_FAIRNESS_GATE_PASS
 P2_FACTORIAL_V1_PROTOCOL_SEALED_HISTORICAL
 P2_FACTORIAL_V1_EXECUTION_AUTHORITY_FAILED_PRE_MODEL
 P2_FACTORIAL_V2_TASK_COMMIT_IDENTITY_FAILED_PRE_MODEL
-P2_FACTORIAL_V3_PENDING_CREATE_ONCE_SEAL
-P2_SEARCH_VALUE_NOT_EVALUATED
+P2_FACTORIAL_V3_COMPLETED_NOT_EVALUABLE
+P2_FACTORIAL_V3_REPLAY_PASS
+P2_SEARCH_VALUE_NOT_ESTABLISHED
 ```
 
 This gate closes only the execution-fairness prerequisite created by D-060. It used deterministic local fixtures, made no external model call, opened no fresh/SEALED asset and produced no candidate-behavior or search-value result.
@@ -25,7 +26,7 @@ This gate closes only the execution-fairness prerequisite created by D-060. It u
 | `evox_only` | off | on | `profile_33463b8b06be00e9aea43f81` |
 | `ada_evox` | on | on | `profile_4d94994c9187c74cad4a20a0` |
 
-The current preseal Profile audit digest is `4753549b6d454bdaba9a2bec6795fcc8314a3563058270609cf86129226916c7`; the exact V3 sealed digest must be rechecked from the committed detached worktree. Direct and Router selections are byte-identical across arms, including `bootstrap_steps=1` and `allow_cross_seed=true`. Every arm always has exactly one `LOCAL_REFINEMENT` and one `STRUCTURAL_ESCAPE` provider. Ada replaces the trajectory-unconditioned local control; EvoX replaces the strategy-unconditioned structural control. Thus the factors change guidance/state semantics without removing an action capability or generation opportunity. Every arm is static and has one content-addressed Profile and one `HarnessSearchRuntime`; the prior two-child naive-parallel topology is not part of this factorial question.
+The sealed Profile audit digest is `4753549b6d454bdaba9a2bec6795fcc8314a3563058270609cf86129226916c7`, rechecked from the committed detached worktree. Direct and Router selections are byte-identical across arms, including `bootstrap_steps=1` and `allow_cross_seed=true`. Every arm always has exactly one `LOCAL_REFINEMENT` and one `STRUCTURAL_ESCAPE` provider. Ada replaces the trajectory-unconditioned local control; EvoX replaces the strategy-unconditioned structural control. Thus the factors change guidance/state semantics without removing an action capability or generation opportunity. Every arm is static and has one content-addressed Profile and one `HarnessSearchRuntime`; the prior two-child naive-parallel topology is not part of this factorial question.
 
 ## Executable fairness invariants
 
@@ -51,8 +52,8 @@ The eventual P2 comparison is a 2x2 factorial test of:
 2. the main effect of online EvoX search-strategy adaptation;
 3. their interaction, represented by `(Ada+EvoX - Ada-only) - (EvoX-only - neither)` under the predeclared metric and aggregation rule.
 
-This document does not choose tasks, provider versions, model-call ceilings, evaluator-call ceilings, statistics, winner thresholds or stop conditions. Those belong to a separate create-once P2 development protocol. Until that protocol is frozen before the first model call, P2 remains scientifically unexecuted and no static-composition, search-value, generalization or superiority claim is authorized.
+This document does not choose tasks, provider versions, model-call ceilings, evaluator-call ceilings, statistics, winner thresholds or stop conditions. Those belong to the separate create-once P2 development protocol. V3 executed but closed `NOT_EVALUABLE` because only 9/12 paired blocks were evaluable; no factorial estimand was computed and no static-composition, search-value, generalization or superiority claim is authorized.
 
 ## Next gate
 
-Seal the matched-resource P2 development protocol on L0-L2 assets only. It must bind exact task instances, all provider executable/model/settings identities, per-arm calls and resource envelopes, evaluator semantics, factorial estimands, multiplicity/statistics, winner rule, stop conditions, replay and the development-only claim ceiling. No new search mechanism may be added during that seal.
+P3 remains closed. V3 cannot be repaired, resumed, backfilled or resampled. Any future P2 proposal must be a separately justified protocol revision and must establish its evaluator/resource executability on L0-L2 without altering this gate or reusing V3 as a tunable cohort.

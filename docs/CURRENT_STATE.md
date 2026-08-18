@@ -26,8 +26,10 @@ P2_FACTORIAL_V1_EXECUTION_AUTHORITY_FAILED_PRE_MODEL
 P2_FACTORIAL_V1_MODEL_CALLS_ZERO
 P2_FACTORIAL_V2_TASK_COMMIT_IDENTITY_FAILED_PRE_MODEL
 P2_FACTORIAL_V2_MODEL_CALLS_ZERO
-P2_FACTORIAL_V3_RUNNER_IMPLEMENTED
-P2_FACTORIAL_V3_PENDING_CREATE_ONCE_SEAL
+P2_FACTORIAL_V3_COMPLETED_NOT_EVALUABLE
+P2_FACTORIAL_V3_REPLAY_PASS
+P2_FACTORIAL_ESTIMANDS_NOT_COMPUTED
+P3_NOT_AUTHORIZED
 ADA_TRAJECTORY_PARITY_SLICE_MECHANICS_READY
 ADA_TRAJECTORY_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
 ADA_SEARCH_VALUE_NOT_EVALUATED
@@ -156,7 +158,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 - 可执行代码 bundle、临时 Git worktree runner、路径策略、超时进程树终止和 run receipts。
 - ASHA mechanics admission；bounded Local Patch、一次 mechanical repair 和 generation provenance。
 - Structural Rewrite mechanics、ledger-backed state projector、deterministic action controller、unified executor 和 anytime settlement。
-- Research Harness V1/V1.1：typed/scoped `ResearchContext`、manifest-bound `ResearchProfile`、不可覆盖的 authority services、真实 `ExperimentExecutor` 预算/评估权威、独立 local/structural provider、原子插件启动/逆序清理，以及 Profile → unified executor → ledger-backed search loop 的默认执行闭环。P2 comparison 已重冻为单 runtime 的 `neither / Ada-only / EvoX-only / Ada+EvoX` 2x2 factorial Profiles；Direct 与 Router 绑定完全相同，Ada/EvoX factors 只在同 capability control 与 parity slice 间替换。零模型公平性审计验证同一 runtime/executor/evaluator/budget/reservation/provider/resource surface，以及每臂内部唯一 Ledger/Research Graph 权威和跨臂 job-scoped ledger 隔离。插件 manifest 与 strategy descriptor 共同声明 `BOOTSTRAP_PROPOSAL`、`LOCAL_REFINEMENT`、`STRUCTURAL_ESCAPE`、`META_STRATEGY`，Router 不再包含 Direct/Ada/EvoX operator/strategy id，并对缺失或重复 capability provider fail closed。P2 development protocol 已 create-once sealed，但尚未启动模型调用或启用 Harness adaptation。
+- Research Harness V1/V1.1：typed/scoped `ResearchContext`、manifest-bound `ResearchProfile`、不可覆盖的 authority services、真实 `ExperimentExecutor` 预算/评估权威、独立 local/structural provider、原子插件启动/逆序清理，以及 Profile → unified executor → ledger-backed search loop 的默认执行闭环。P2 comparison 已重冻为单 runtime 的 `neither / Ada-only / EvoX-only / Ada+EvoX` 2x2 factorial Profiles；Direct 与 Router 绑定完全相同，Ada/EvoX factors 只在同 capability control 与 parity slice 间替换。零模型公平性审计验证同一 runtime/executor/evaluator/budget/reservation/provider/resource surface，以及每臂内部唯一 Ledger/Research Graph 权威和跨臂 job-scoped ledger 隔离。插件 manifest 与 strategy descriptor 共同声明 `BOOTSTRAP_PROPOSAL`、`LOCAL_REFINEMENT`、`STRUCTURAL_ESCAPE`、`META_STRATEGY`，Router 不再包含 Direct/Ada/EvoX operator/strategy id，并对缺失或重复 capability provider fail closed。P2 V3 已正式执行并 replay，但因仅 9/12 paired blocks 可评估而关闭为 `NOT_EVALUABLE`；未计算 factorial estimands，Harness adaptation/P3 未获授权。
 - residual-headroom task admission 与 matched-resource Search-Value MVP 协议/runner。
 - Benchmark Bank v1 的 47-family commit-pinned registry、DEV/SHADOW/SEALED 生命周期门、统一 adapter contract，以及可执行的 consumed Assignment/Coverage development 物化切片。
 
@@ -240,8 +242,8 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 1. Ada trajectory slice 已通过零模型 control/generation-context transmission：productive/weak trajectory 会产生不同 receipt、mode、decision 与真实 Harness generation request，绑定漂移 fail closed。它不建立 candidate behavior 或 search value；完整边界见 [`ADA_TRAJECTORY_PARITY_SLICE.md`](ADA_TRAJECTORY_PARITY_SLICE.md)。
 2. EvoX typed same-run strategy state machine 已通过零模型 mechanics/transmission：冻结策略可部署、观察、评分、retain/switch/rollback，并实际改变 parent mode 与 variation guidance；完整边界见 [`EVOX_STRATEGY_PARITY_SLICE.md`](EVOX_STRATEGY_PARITY_SLICE.md)。它不建立 candidate behavior 或 search value。
 3. `neither / Ada-only / EvoX-only / Ada+EvoX` 四臂已重新冻结并通过零模型公平性门。协议预检进一步发现并修复了 off-arm 缺少 structural capability 的 executability blocker：现在所有 arm 始终保留同一 bootstrap/local/structural capability，Ada 只替换 trajectory-unconditioned local control，EvoX 只替换 strategy-unconditioned structural control；三类 action path 的 reservation surface 相同。每臂仍使用独立物理 ledger，arm 内 candidate、strategy、lineage、evidence 和 budget 共享同一 Ledger/Research Graph 权威。完整边界见 [`P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md`](P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md)。
-4. P2 V1 在模型调用前因 LF/CRLF-sensitive Harness digest fail closed，且未绑定完整 runner。V2 修复该问题并绑定 exact 12-block 执行闭环，但首个 block 又在模型调用前发现生成 task repository 的 commit timestamp identity 不可重放；V1/V2 均为 `0` model calls、`0/12` blocks，partial root 不可续跑。V3 继续冻结相同题目、provider、资源和统计，只把内容稳定的 task Git tree 设为权威、临时 commit 降为诊断 provenance；V3 仍须从 clean committed worktree create-once seal 后才授权首个模型调用。见 [`P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md`](P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md)。
-5. 只有 P2 静态 factorial comparison 取得正向、可重放结果，才允许设计 P3 adaptive profile；否则先诊断静态组合。
+4. P2 V1 在模型调用前因 LF/CRLF-sensitive Harness digest fail closed，且未绑定完整 runner。V2 修复该问题并绑定 exact 12-block 执行闭环，但首个 block 又在模型调用前发现生成 task repository 的 commit timestamp identity 不可重放；V1/V2 均为 `0` model calls、`0/12` blocks，partial root 不可续跑。V3 在 commit `8d9b80d`、manifest `86622585040bc1c88604b73d2bde978267e792741f6b026da997ab196602fef5` 上执行完 12/12 blocks：9 个完整可评估，1 个因 wall ceiling 违规而系统不可评估，`load_balance_alpha` 两个 replicate 因 baseline evaluator preflight 不可评估而零 generation call 关闭。全量记录 172 generation calls、176 evaluator calls、3,415,877 tokens；按全 12 blocks 必须可评估的冻结规则，正式终态为 `NOT_EVALUABLE`、`estimands=null`、`p3_authorized=false`。replay `issues=[]`，canonical report digest `e68ed3ade290dce7ef1b85129842c5fe68125dbb3aa4eb42fcf3f123807faa01`。见 [`P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md`](P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md)。
+5. V3 已消费且不得修复、续跑、补 block 或事后计算不完整 estimand。P3 adaptive profile 继续关闭；任何后续 P2 必须另行提出并预注册，不能把 9 个可评估 block 的描述性模式改写成 Ada/EvoX 主效应或交互结论。
 6. P3 通过后才允许 P4 memory-conditioned comparison；P4 通过后才允许 P5 Harness evolution。当前不开放 fresh/SEALED 资产或 superiority/generalization claim。
 
 ## 历史阶段边界（继续有效，但不再是默认开发主线）

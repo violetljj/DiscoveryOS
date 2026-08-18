@@ -463,3 +463,10 @@
 - **决定**：V2 首个 block 在 0 model calls 时发现 seal preflight 与正式 materialization 的 task Git commit 不同。任务生成器每次创建内容相同的 repository，但 commit author/committer timestamp 使 commit ID 改变。V2 partial root 保持不可续跑；V3 将 `HEAD^{tree}` 作为 task repository 内容权威，生成 commit 只保留为非权威诊断 provenance。
 - **原因**：科学绑定需要识别题目文件内容，而不是一次性临时仓库的时钟元数据。放宽为“不校验 repository”会失去 fail-closed；固定或忽略 commit 而不绑定 tree 也不足以证明 task/evaluator/lock 内容一致。
 - **后果**：V3 seal 必须记录每题 tree identity，正式 block materialization 必须重算并完全匹配；task payload、initial source、evaluator、reference/intermediate digests 继续同时绑定。其余四臂、12 blocks、provider、资源、estimands、统计和 claim ceiling 不变。V3 仍须新 commit、新 create-once root 和零模型 authority/preflight 通过后才授权模型调用。
+
+## D-067：接受 P2 V3 的不可评估终态并保持 P3 关闭
+
+- **日期**：2026-08-18
+- **决定**：接受 `DISCOVERYOS_P2_ADA_EVOX_FACTORIAL_DEVELOPMENT_V3` 的 create-once 执行终态。V3 绑定 commit `8d9b80d301407e2028e51024d5b96bce9b93e5f5`、Profile fairness digest `4753549b6d454bdaba9a2bec6795fcc8314a3563058270609cf86129226916c7`、manifest digest `86622585040bc1c88604b73d2bde978267e792741f6b026da997ab196602fef5` 和 `codex-cli 0.148.0-alpha.9`。12/12 blocks 均有终态，但只有 9 个完整可评估；因此按 D-063 的全 block 门正式输出 `NOT_EVALUABLE`、`estimands=null`、`p3_authorized=false`。
+- **原因**：`bounded_knapsack_beta-seed-17082601` 的 `neither` 臂累计 wall time `3944.295s`，超过冻结 `2100s` ceiling；两个 `load_balance_alpha` blocks 的 baseline evaluator 均在 generation 前返回 `BASELINE_EVALUATOR_NOT_EVALUABLE:neither`。前者是资源/系统失败，后者是 preflight/evaluator failure，均不得写成任何因子的科学负结果。其余 9 blocks 的描述性 outcome 不足以替代预声明的 12-block paired estimands。
+- **后果**：V3 记录 172 generation calls、176 evaluator calls、3,415,877 tokens。replay 以 `issues=[]` 通过，canonical report digest 为 `e68ed3ade290dce7ef1b85129842c5fe68125dbb3aa4eb42fcf3f123807faa01`。V3 root 不修复、不续跑、不补 block、不重算不完整 estimand；P3、adaptive profile、fresh task、superiority/generalization claim 均不授权。任何未来 P2 必须作为新协议问题重新论证，不能把本批已见结果当作可调 cohort。
