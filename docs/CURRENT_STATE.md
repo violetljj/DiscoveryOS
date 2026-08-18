@@ -246,7 +246,9 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 5. V3 已消费且不得修复、续跑、补 block 或事后计算不完整 estimand。P3 adaptive profile 继续关闭；任何后续 P2 必须另行提出并预注册，不能把 9 个可评估 block 的描述性模式改写成 Ada/EvoX 主效应或交互结论。
 6. V3 wall-time autopsy 已以 0 generation calls 完成。异常 arm 的两次 provider calls 只有 `38.187s + 20.516s`；`3950.079s` end-to-end 中 `3881.575s` 落在 evaluator runner 的未细分区间，并与 Windows Modern Standby 从 `2026-08-17T21:04:05.438Z` 到 `22:11:38.640Z` 的事件对齐。内部 Git patch、build/test、`evaluate.py` command 合计仅 `2.331s`，异常 arm CPU 为 `0.9375s`。失败因此收窄为 `INFRA_FAILURE_HOST_SUSPEND_TIMING_CONTAMINATION`，不是 provider/network outlier 或算法计算耗尽；这不恢复 V3 可评估性。完整边界见 [`P2_INFRASTRUCTURE_AUTOPSY.md`](P2_INFRASTRUCTURE_AUTOPSY.md)。
 7. 当前下一步改为 `load_balance_alpha` baseline autopsy → consumed L0-L2 Executability Gate → 独立 admission 规则下的新 P2。Gate 完成前不再花 generation budget；不得因已见 V3 failure 删除 task、挑选 9 个完整 blocks 或提高 wall ceiling。P3 继续关闭。
-8. P3 通过后才允许 P4 memory-conditioned comparison；P4 通过后才允许 P5 Harness evolution。当前不开放 fresh/SEALED 资产或 superiority/generalization claim。
+8. `load_balance_alpha` baseline autopsy 已以 0 generation calls 完成。两个 replicate 的底层 runner branch 分别是 `TIMEOUT:test` 与 `TIMEOUT:repository_setup`，但 `12946–12948s` 与 `12760s` 的巨大 wall/极低 CPU 均与连续 Modern Standby/hibernate 事件对齐。两个 immutable materialization 在临时副本走完整 evaluator/parser replay 都得到 `VALID / score=0.3565120065120065 / valid=1.0`；alpha 与 beta 的 initial source、public test、lock、commands、parser、reference/intermediate assets 相同，task-level 只差冻结 evaluator `CASES`。正式类别为 `ENVIRONMENT_INFRA_FAILURE_HOST_LOW_POWER_STATE_CONTAMINATION`，不是 task/evaluator/materialization defect。见 [`P2_LOAD_BALANCE_BASELINE_AUTOPSY.md`](P2_LOAD_BALANCE_BASELINE_AUTOPSY.md)。
+9. Autopsy 已完成，但 Executability Gate 尚未实现或通过。下一独立阶段才允许根据两个已封存 failure classes 设计 Gate，并在 consumed L0-L2 population 上验证；当前仍不得花 scientific generation budget。
+10. P3 通过后才允许 P4 memory-conditioned comparison；P4 通过后才允许 P5 Harness evolution。当前不开放 fresh/SEALED 资产或 superiority/generalization claim。
 
 ## 历史阶段边界（继续有效，但不再是默认开发主线）
 

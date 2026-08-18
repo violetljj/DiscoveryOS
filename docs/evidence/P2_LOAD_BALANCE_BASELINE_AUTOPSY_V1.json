@@ -1,0 +1,139 @@
+{
+  "analysis_version": "P2_LOAD_BALANCE_BASELINE_AUTOPSY_V1",
+  "source": {
+    "protocol_id": "DISCOVERYOS_P2_ADA_EVOX_FACTORIAL_DEVELOPMENT_V3",
+    "protocol_manifest_digest": "86622585040bc1c88604b73d2bde978267e792741f6b026da997ab196602fef5",
+    "canonical_report_digest": "e68ed3ade290dce7ef1b85129842c5fe68125dbb3aa4eb42fcf3f123807faa01",
+    "generation_calls_executed": 0,
+    "v3_root_modified": false
+  },
+  "original_failures": [
+    {
+      "block_id": "load_balance_alpha-seed-17082601",
+      "receipt_validity": "NOT_EVALUABLE",
+      "failure_kind": "BUDGET_EXHAUSTED",
+      "failure_signature": "BUDGET_EXHAUSTED:wall_seconds:prior=TIMEOUT:repository_setup",
+      "wall_seconds": 12760.051456100016,
+      "cpu_seconds": 0.046875,
+      "command_artifact_count": 0,
+      "observed_subtype": "HOST_HIBERNATE_DEADLINE_EXPIRED_DURING_REPOSITORY_SETUP"
+    },
+    {
+      "block_id": "load_balance_alpha-seed-17082602",
+      "receipt_validity": "NOT_EVALUABLE",
+      "failure_kind": "BUDGET_EXHAUSTED",
+      "failure_signature": "BUDGET_EXHAUSTED:wall_seconds:prior=TIMEOUT:test",
+      "wall_seconds": 12948.246794299994,
+      "cpu_seconds": 0.25,
+      "command_artifacts": [
+        {
+          "step": "build",
+          "exit_code": 0,
+          "timed_out": false,
+          "wall_seconds": 0.24392059999809135,
+          "cpu_seconds": 0.171875
+        },
+        {
+          "step": "test",
+          "exit_code": 0,
+          "timed_out": true,
+          "wall_seconds": 12946.684620700005,
+          "cpu_seconds": 0.078125
+        }
+      ],
+      "observed_subtype": "HOST_SUSPEND_TIMEOUT_DURING_TEST"
+    }
+  ],
+  "host_power_events": [
+    {
+      "record_id": 50110,
+      "provider": "Microsoft-Windows-Kernel-Power",
+      "event_id": 506,
+      "utc": "2026-08-17T22:11:38.6426638Z",
+      "meaning": "ENTER_MODERN_STANDBY"
+    },
+    {
+      "record_id": 50115,
+      "provider": "Microsoft-Windows-Kernel-Power",
+      "event_id": 507,
+      "utc": "2026-08-18T01:47:28.2461457Z",
+      "meaning": "EXIT_MODERN_STANDBY"
+    },
+    {
+      "record_id": 50119,
+      "provider": "Microsoft-Windows-Kernel-Power",
+      "event_id": 42,
+      "utc": "2026-08-18T01:47:31.5412449Z",
+      "meaning": "HIBERNATE_FROM_SLEEP_STANDBY_BATTERY_BUDGET_EXCEEDED"
+    },
+    {
+      "record_id": 50122,
+      "provider": "Microsoft-Windows-Kernel-General",
+      "event_id": 1,
+      "utc": "2026-08-18T05:20:07.5004016Z",
+      "meaning": "SYSTEM_TIME_JUMP_12754104_MS_AFTER_HIBERNATE"
+    },
+    {
+      "record_id": 50144,
+      "provider": "Microsoft-Windows-Power-Troubleshooter",
+      "event_id": 1,
+      "utc": "2026-08-18T05:20:11.5507669Z",
+      "reported_sleep_utc": "2026-08-18T01:47:28.244056300Z",
+      "reported_wake_utc": "2026-08-18T05:20:10.472102100Z"
+    }
+  ],
+  "exact_replays": [
+    {
+      "block_id": "load_balance_alpha-seed-17082601",
+      "source_commit": "57e7f6d7ad87d99b7a653432a48c47e18d227e4d",
+      "validity": "VALID",
+      "score": 0.3565120065120065,
+      "valid": 1.0,
+      "failure_signature": null
+    },
+    {
+      "block_id": "load_balance_alpha-seed-17082602",
+      "source_commit": "832c7ffb4441d57ef09e016f42973dabe8150d58",
+      "validity": "VALID",
+      "score": 0.3565120065120065,
+      "valid": 1.0,
+      "failure_signature": null
+    }
+  ],
+  "alpha_beta_differential": {
+    "identical_materialized_files": [
+      "algorithm.py",
+      "public_tests.py",
+      "requirements.lock"
+    ],
+    "different_materialized_files": [
+      "evaluate.py"
+    ],
+    "evaluate_py_difference": "FROZEN_CASES_ONLY",
+    "identical_initial_state_digest": "4568d2db1a0be6b9e743e0f10ea7b17f0632ba6189f9ad299f7a90fb6ba27dae",
+    "identical_baseline_source_digest": "c4da8a2612c850636a528d8f631f5be71e61b8a287fd78945f2dc34e2906a62b",
+    "identical_reference_digest": "87c6aa229210deb0ef0be4d43e4e4745b54c9e0d65dcd1608de4ac178c87ea1a",
+    "alpha_manifest_baseline_replays": [
+      0.3565120065120065,
+      0.3565120065120065
+    ],
+    "beta_manifest_baseline_replays": [
+      0.36310499609679936,
+      0.36310499609679936
+    ],
+    "alpha_tree_digest": "e61dcc123018cdc0d223662ccf13f83eac7a8ee8",
+    "beta_tree_digest": "e741be4c0fbceab082b3e91c876540fcc7cd0ed4"
+  },
+  "rejected_classes": [
+    "TASK_NOT_BASELINE_EVALUABLE",
+    "EVALUATOR_CONTRACT_DEFECT",
+    "MATERIALIZATION_DEFECT",
+    "INITIAL_SOURCE_INVALID",
+    "BUILD_OR_IMPORT_FAILURE",
+    "OUTPUT_PARSING_FAILURE",
+    "REFERENCE_OR_DEPENDENCY_FAILURE",
+    "SCORE_NON_FINITE_OR_UNSUPPORTED"
+  ],
+  "failure_class": "ENVIRONMENT_INFRA_FAILURE_HOST_LOW_POWER_STATE_CONTAMINATION",
+  "claim_ceiling": "BASELINE_AUTOPSY_ONLY_V3_REMAINS_NOT_EVALUABLE_EXECUTABILITY_GATE_NOT_IMPLEMENTED_P3_CLOSED"
+}
