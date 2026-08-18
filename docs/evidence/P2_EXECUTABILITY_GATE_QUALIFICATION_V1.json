@@ -1,0 +1,108 @@
+{
+  "qualification_version": "DISCOVERYOS_EXECUTABILITY_GATE_QUALIFICATION_V1",
+  "status": "EXECUTABILITY_GATE_QUALIFIED_ON_CONSUMED_L0_L2",
+  "claim_ceiling": "MECHANICS_AND_CONSUMED_DEVELOPMENT_ONLY",
+  "generation_calls_executed": 0,
+  "provider_calls_executed": 0,
+  "fresh_or_sealed_assets_opened": 0,
+  "source_v3_protocol_manifest_digest": "86622585040bc1c88604b73d2bde978267e792741f6b026da997ab196602fef5",
+  "source_v3_manifest_sha256": "54e537a5c4a95b68380c40993cc0ad4f90d901c769be25dff1465da3dda637b2",
+  "canonical_qualification_digest": "ef3412803754d6412521fd51ef3a73965eca88ee55343db91670bc179361c56f",
+  "canonical_receipt_sha256": "7a18a651798e1d99dfe5c354a75cdd8cdff66c92b63020ab4d17071292401a7f",
+  "implementation_digests": {
+    "executability_gate_source": "8d965662e4b7f517170bed1b8dc870e6854784319434c5f0e2dad9d8f8851987",
+    "qualification_source": "6dac162ffe47fd3ec94095a17b96f52c578b0e504e4664a9b1f78546f0e65736"
+  },
+  "environment": {
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python_executable": "E:\\DiscoveryOS\\.venv\\Scripts\\python.exe",
+    "python_version": "3.11.9"
+  },
+  "policy": {
+    "baseline_replays": 2,
+    "score_tolerance": 1e-12,
+    "unexplained_wall_seconds": 2.0,
+    "unexplained_wall_fraction": 0.2,
+    "power_event_lookback_seconds": 86400.0
+  },
+  "live_awake_qualification": [
+    {
+      "task_id": "bounded_knapsack_alpha",
+      "status": "EXECUTABILITY_GATE_PASS",
+      "score_replays": [0.5890599680732508, 0.5890599680732508],
+      "total_wall_seconds": 1.9369999999998981,
+      "cpu_seconds": 0.234375,
+      "unexplained_wall_seconds": 1.0426708999998482,
+      "overlapping_power_events": 0
+    },
+    {
+      "task_id": "bounded_knapsack_beta",
+      "status": "EXECUTABILITY_GATE_PASS",
+      "score_replays": [0.4726732039907509, 0.4726732039907509],
+      "total_wall_seconds": 1.8279999999999745,
+      "cpu_seconds": 0.265625,
+      "unexplained_wall_seconds": 1.0266056000004937,
+      "overlapping_power_events": 0
+    },
+    {
+      "task_id": "conflict_coloring_alpha",
+      "status": "EXECUTABILITY_GATE_PASS",
+      "score_replays": [0.9052706552706553, 0.9052706552706553],
+      "total_wall_seconds": 1.844000000000051,
+      "cpu_seconds": 0.21875,
+      "unexplained_wall_seconds": 1.0240193000004183,
+      "overlapping_power_events": 0
+    },
+    {
+      "task_id": "conflict_coloring_beta",
+      "status": "EXECUTABILITY_GATE_PASS",
+      "score_replays": [0.8199760983797986, 0.8199760983797986],
+      "total_wall_seconds": 1.844000000000051,
+      "cpu_seconds": 0.21875,
+      "unexplained_wall_seconds": 1.0349101000010705,
+      "overlapping_power_events": 0
+    },
+    {
+      "task_id": "load_balance_alpha",
+      "status": "EXECUTABILITY_GATE_PASS",
+      "score_replays": [0.3565120065120065, 0.3565120065120065],
+      "total_wall_seconds": 1.9070000000001528,
+      "cpu_seconds": 0.265625,
+      "unexplained_wall_seconds": 1.0620004999996127,
+      "overlapping_power_events": 0
+    },
+    {
+      "task_id": "load_balance_beta",
+      "status": "EXECUTABILITY_GATE_PASS",
+      "score_replays": [0.36310499609679936, 0.36310499609679936],
+      "total_wall_seconds": 1.8279999999999745,
+      "cpu_seconds": 0.25,
+      "unexplained_wall_seconds": 1.0381606999994801,
+      "overlapping_power_events": 0
+    }
+  ],
+  "adversarial_fixtures": [
+    {"fixture": "awake", "expected_failure_class": null, "matched_expected": true},
+    {"fixture": "suspend", "expected_failure_class": "INFRA_FAILURE_HOST_LOW_POWER_STATE_CONTAMINATION", "matched_expected": true},
+    {"fixture": "hibernate", "expected_failure_class": "INFRA_FAILURE_HOST_LOW_POWER_STATE_CONTAMINATION", "matched_expected": true},
+    {"fixture": "timeout", "expected_failure_class": "INFRA_FAILURE_EXECUTION_TIMEOUT", "matched_expected": true},
+    {"fixture": "unexplained_wall", "expected_failure_class": "INFRA_FAILURE_TIMING_RECONCILIATION", "matched_expected": true},
+    {"fixture": "lease_failure", "expected_failure_class": "INFRA_FAILURE_POWER_INHIBITION_UNAVAILABLE", "matched_expected": true},
+    {"fixture": "materialization_drift", "expected_failure_class": "MATERIALIZATION_DEFECT", "matched_expected": true}
+  ],
+  "real_low_power_detection_during_development": {
+    "status": "FAIL_CLOSED_AS_DESIGNED",
+    "event_record_id": 50491,
+    "event_id": 506,
+    "kind": "ENTER_MODERN_STANDBY",
+    "timestamp_utc": "2026-08-18T07:14:37.5356896Z",
+    "message_sha256": "0ce83776703f8a9719718200591bd96ded3670b46aff3282d58e789c61891b6b",
+    "effect_on_design": "added lease-acquired current-power-state precheck before baseline execution"
+  },
+  "limits": {
+    "new_p2_designed_or_sealed": false,
+    "p2_v3_modified_or_reaggregated": false,
+    "recovery_or_backfill_policy_decided": false,
+    "p3_authorized": false
+  }
+}
