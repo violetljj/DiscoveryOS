@@ -121,6 +121,7 @@ python -m discoveryos harness-profile-show
 - EvoX typed strategy state machine 的实现与零模型传递证据：`EVOX_STRATEGY_PARITY_SLICE.md`
 - P2 四臂重冻与零模型统一 runtime 公平性门：`P2_FACTORIAL_ZERO_MODEL_FAIRNESS_GATE.md`
 - P2 Ada × EvoX matched-resource development protocol：`P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md`
+- P2 V4 independent cohort, power, recovery and statistics pre-model seal：`P2_FACTORIAL_V4_PREMODEL_STATISTICAL_SEAL.md`
 - 已确定的设计原因：`DECISIONS.md`
 - 本机依赖和工具位置：`LOCAL_ENVIRONMENT.md`
 - 总体架构路线：`ARCHITECTURE.md`

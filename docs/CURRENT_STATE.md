@@ -29,6 +29,11 @@ P2_FACTORIAL_V2_MODEL_CALLS_ZERO
 P2_FACTORIAL_V3_COMPLETED_NOT_EVALUABLE
 P2_FACTORIAL_V3_REPLAY_PASS
 P2_FACTORIAL_ESTIMANDS_NOT_COMPUTED
+P2_V4_PREMODEL_DESIGN_STATISTICAL_SEAL_FROZEN
+P2_V4_MAXIMUM_BLOCKS_24
+P2_V4_INDEPENDENT_FAMILY_COHORT_NOT_YET_AVAILABLE
+P2_V4_COHORT_MANIFEST_NOT_SEALED
+P2_V4_SCIENTIFIC_GENERATION_NOT_AUTHORIZED
 P3_NOT_AUTHORIZED
 ADA_TRAJECTORY_PARITY_SLICE_MECHANICS_READY
 ADA_TRAJECTORY_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
@@ -247,7 +252,7 @@ Control Plane 与 Evidence Authority 的默认执行环境仍是当前本机。�
 6. V3 wall-time autopsy 已以 0 generation calls 完成。异常 arm 的两次 provider calls 只有 `38.187s + 20.516s`；`3950.079s` end-to-end 中 `3881.575s` 落在 evaluator runner 的未细分区间，并与 Windows Modern Standby 从 `2026-08-17T21:04:05.438Z` 到 `22:11:38.640Z` 的事件对齐。内部 Git patch、build/test、`evaluate.py` command 合计仅 `2.331s`，异常 arm CPU 为 `0.9375s`。失败因此收窄为 `INFRA_FAILURE_HOST_SUSPEND_TIMING_CONTAMINATION`，不是 provider/network outlier 或算法计算耗尽；这不恢复 V3 可评估性。完整边界见 [`P2_INFRASTRUCTURE_AUTOPSY.md`](P2_INFRASTRUCTURE_AUTOPSY.md)。
 7. `load_balance_alpha` baseline autopsy 与 consumed L0-L2 Executability Gate 均已完成。Gate V1 以 OS power-inhibition lease 作为 preventer，以 lease 后的 active-state precheck、session power-event reconciliation、immutable tree + 两次 full-evaluator baseline replay、timing/provider receipt reconciliation 作为 detector；任一失败均阻止 block admission。完整边界见 [`P2_EXECUTABILITY_GATE.md`](P2_EXECUTABILITY_GATE.md)。
 8. `load_balance_alpha` baseline autopsy 已以 0 generation calls 完成。两个 replicate 的底层 runner branch 分别是 `TIMEOUT:test` 与 `TIMEOUT:repository_setup`，但 `12946–12948s` 与 `12760s` 的巨大 wall/极低 CPU 均与连续 Modern Standby/hibernate 事件对齐。两个 immutable materialization 在临时副本走完整 evaluator/parser replay 都得到 `VALID / score=0.3565120065120065 / valid=1.0`；alpha 与 beta 的 initial source、public test、lock、commands、parser、reference/intermediate assets 相同，task-level 只差冻结 evaluator `CASES`。正式类别为 `ENVIRONMENT_INFRA_FAILURE_HOST_LOW_POWER_STATE_CONTAMINATION`，不是 task/evaluator/materialization defect。见 [`P2_LOAD_BALANCE_BASELINE_AUTOPSY.md`](P2_LOAD_BALANCE_BASELINE_AUTOPSY.md)。
-9. Executability Gate canonical qualification 在六个 V3 L2 consumed tasks 上 `6/6 PASS`，每题 baseline 两次 finite/VALID/deterministic，七个 L0 adversarial fixtures `7/7` 命中预期 class；总计 0 generation/provider calls、0 fresh/SEALED assets。当前下一步变为**单独设计新的 P2 protocol/revision**；在新 protocol 事前冻结前仍不得花 scientific generation budget。Future host-infra recovery/checkpoint continuation 尚未决定，不能由 Gate 默认为 backfill。V3 保持 `NOT_EVALUABLE / estimands=null`，P3 继续关闭。
+9. Executability Gate canonical qualification 在六个 V3 L2 consumed tasks 上 `6/6 PASS`，每题 baseline 两次 finite/VALID/deterministic，七个 L0 adversarial fixtures `7/7` 命中预期 class；总计 0 generation/provider calls、0 fresh/SEALED assets。P2 V4 的 pre-model design/statistical seal 已冻结：科学问题和 V3 的三 estimands、resolution/sign/Holm/P3 规则不变；最大 `N=24`，一 distinct family 一 block，必须先有 `6 R0 / 6 R1 / 12 R2` 的 outcome-blind external DEV family cohort 并完成 `24/24` full-cohort Gate；只有机器证明的 host low-power/power-lease 或零调用 transient host materialization failure 才能整 block censor 后最多重试一次，全局最多两次。当前 Bank 只有 `3/3/10 = 16` 个合格 family，因此下一步是零模型扩 Bank，而不是写 scientific runner 或花 generation budget。完整设计见 [`P2_FACTORIAL_V4_PREMODEL_STATISTICAL_SEAL.md`](P2_FACTORIAL_V4_PREMODEL_STATISTICAL_SEAL.md)。V3 保持 `NOT_EVALUABLE / estimands=null`，P3 继续关闭。
 10. P3 通过后才允许 P4 memory-conditioned comparison；P4 通过后才允许 P5 Harness evolution。当前不开放 fresh/SEALED 资产或 superiority/generalization claim。
 
 ## 历史阶段边界（继续有效，但不再是默认开发主线）

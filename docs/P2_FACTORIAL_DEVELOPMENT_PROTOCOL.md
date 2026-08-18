@@ -10,6 +10,8 @@ P2_FACTORIAL_V2_MODEL_CALLS_ZERO
 P2_FACTORIAL_V3_COMPLETED_NOT_EVALUABLE
 P2_FACTORIAL_V3_REPLAY_PASS
 P2_FACTORIAL_ESTIMANDS_NOT_COMPUTED
+P2_V4_PREMODEL_DESIGN_STATISTICAL_SEAL_FROZEN
+P2_V4_SCIENTIFIC_GENERATION_NOT_AUTHORIZED
 P3_NOT_AUTHORIZED
 ```
 
@@ -53,7 +55,7 @@ Every direction is predeclared positive. Each requires median paired effect of a
 
 A positive result could have established only a bounded factorial development signal on these consumed tasks. It could not establish official AdaEvolve/EvoX parity, fresh-task generalization, DiscoveryOS superiority or production readiness.
 
-V3 is closed. It does not authorize P3, a replacement cohort, backfill, resampling or repair of its consumed root. Any future P2 attempt requires a new question and protocol revision whose executability is established on L0-L2 without reusing this run as a tunable cohort.
+V3 is closed. It does not authorize P3, a replacement cohort, backfill, resampling or repair of its consumed root. P2 V4 retains the same scientific question but is a new independent protocol revision: its pre-model design/statistical rules are frozen in [`P2_FACTORIAL_V4_PREMODEL_STATISTICAL_SEAL.md`](P2_FACTORIAL_V4_PREMODEL_STATISTICAL_SEAL.md). V4 cannot use V3 as a tunable cohort and currently has no cohort manifest or generation authority.
 
 ## V3 execution result
 
