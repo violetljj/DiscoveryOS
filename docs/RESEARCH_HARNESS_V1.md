@@ -17,6 +17,7 @@ P2_DEVELOPMENT_PROTOCOL_SEALED_PRE_MODEL
 MECHANISM_COMPLETE_PARITY_NOT_ESTABLISHED
 P2_ZERO_MODEL_FACTORIAL_FAIRNESS_GATE_PASS
 P2_V4_PREMODEL_DESIGN_STATISTICAL_SEAL_FROZEN
+P2_V41_PREMODEL_EVALUATOR_REVISION_FROZEN
 P2_V4_SCIENTIFIC_GENERATION_NOT_AUTHORIZED
 ADA_TRAJECTORY_CONTROL_TRANSMISSION_CONFIRMED_ZERO_MODEL
 EVOX_TYPED_STRATEGY_STATE_MACHINE_MECHANICS_READY
@@ -146,5 +147,7 @@ Parent/Novelty/CMI and old protocol runners remain frozen regression/evidence as
 ## Next gate
 
 V1 failed its first independent-worktree authority check before any model call because the Harness digest was line-ending sensitive and the frozen source lacked a complete runner. V2 normalized CRLF/LF and bound the 12-block runner, but its first block exposed a second pre-model identity bug: generated task repositories use timestamp-varying commit IDs despite identical trees. V3 bound the stable task Git tree, sealed from commit `8d9b80d`, and completed all 12 scheduled terminals. Only 9 paired blocks were evaluable: one exceeded the frozen wall ceiling and both `load_balance_alpha` replicates failed baseline-evaluator preflight. The frozen all-block rule therefore closed V3 as `NOT_EVALUABLE`, with `estimands=null` and `p3_authorized=false`; replay passed with no issues. V1/V2/V3 roots remain immutable. See [`P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md`](P2_FACTORIAL_DEVELOPMENT_PROTOCOL.md).
+
+P2 V4 keeps the same four Profiles and scientific estimands but requires 24 independent external DEV families. Before cohort selection, a zero-model probe showed that the Bank's wall-clock DEV score could not satisfy Executability Gate baseline determinism. V4.1 therefore versions only the evaluator/resolution surface to deterministic CPython 3.11 opcode cost; 48/48 reservoir instances replay identically with predeclared headroom. This does not alter Harness factors or authorize generation. See [`P2_FACTORIAL_V4_PREMODEL_STATISTICAL_SEAL.md`](P2_FACTORIAL_V4_PREMODEL_STATISTICAL_SEAL.md).
 
 The successor V4 design is now frozen before runner or manifest implementation. It preserves the V3 factorial estimands, exact sign/Holm/effect and P3 rules, uses at most 24 distinct problem-family blocks, requires a 24/24 full-cohort Executability Gate before any model call, and permits only machine-proven whole-block recovery for a bounded whitelist of exogenous host failures. The zero-model Bank expansion now supplies the required `6 R0 / 6 R1 / 12 R2` external DEV family reservoir; the next gate is implementation and adversarial validation of the selector/full-cohort/recovery/accounting path, not scientific generation. See [`P2_FACTORIAL_V4_PREMODEL_STATISTICAL_SEAL.md`](P2_FACTORIAL_V4_PREMODEL_STATISTICAL_SEAL.md).

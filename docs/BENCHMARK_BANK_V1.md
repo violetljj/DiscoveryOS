@@ -9,6 +9,7 @@ BENCHMARK_BANK_V1_SIX_ALGOTUNE_CONTRACT_DEV_FAMILIES_EXECUTABLE
 BENCHMARK_BANK_V1_TEN_ALGOTUNE_R2_CONTRACT_DEV_FAMILIES_EXECUTABLE
 BENCHMARK_BANK_V1_P2_V4_EIGHT_FAMILY_EXPANSION_EXECUTABLE
 P2_V4_6_6_12_EXTERNAL_DEV_FAMILY_RESERVOIR_READY
+P2_V41_DETERMINISTIC_OPCODE_EVALUATOR_REVISION_FROZEN
 BENCHMARK_BANK_V1_ALE_R3_ARTIFACTS_PINNED_EXECUTION_BLOCKED
 BENCHMARK_BANK_V1_SKYDISCOVER_R4_R5_SOURCE_TREES_AUDITED_EXECUTION_BLOCKED
 BENCHMARK_BANK_V1_EXTERNAL_SCIENTIFIC_ADMISSION_NOT_ESTABLISHED
@@ -17,7 +18,7 @@ ZERO_FRESH_INSTANCES_CONSUMED
 
 Benchmark Bank v1 makes the problem family a durable research asset while treating a sealed instance or shard as the consumable scientific unit. It does not declare all listed benchmarks runnable. The registry currently contains 49 core families: two internal consumed families and 24 external contract-derived AlgoTune families are `DEVELOPMENT_READY`; 23 families remain `CATALOGUED`; zero external family is `ADMITTED`.
 
-The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../benchmarks/bank/v1/registry.json). The expanded R0-R5 bank has registry digest `742637df6a5de643e17a9db19070a11c5be311c3ba06d56e54035ec5737e13cf`.
+The machine-readable authority is [`../benchmarks/bank/v1/registry.json`](../benchmarks/bank/v1/registry.json). The expanded and evaluator-revised R0-R5 bank has registry digest `8428268400f6c23c13e58b0476b08c25e0870980feb081c7481063efd7b97a0a`.
 
 ## Difficulty ladder
 
@@ -93,7 +94,7 @@ The first external development batch exposes six task contracts from pinned Algo
 | R1 | Cholesky Factorization | 2 |
 | R1 | Linear System Solver | 2 |
 
-The adapter is `discoveryos.algotune_contract_dev.v1`. It materializes `algorithm.py`, `public_tests.py`, `evaluate.py`, `task-contract.json`, and `bank-instance.json`. Every registry entry binds the exact upstream task and description hashes. The local evaluator regime is `DISCOVERYOS_STDLIB_ALGOTUNE_CONTRACT_DEV_V1`; it uses deterministic generated DEV cases, validates input immutability and task correctness, then records median local runtime and a higher-is-better development score.
+The original adapter was `discoveryos.algotune_contract_dev.v1`. It materialized `algorithm.py`, `public_tests.py`, `evaluate.py`, `task-contract.json`, and `bank-instance.json`, with exact upstream task/description hashes and deterministic generated DEV cases. Its median wall-clock runtime score is retained only as historical development infrastructure and is superseded for the current registry by the V4.1 deterministic evaluator described below.
 
 This is deliberately a standard-library contract-compatible development regime. It does not vendor or claim equivalence with AlgoTune's NumPy/SciPy/NetworkX evaluator/runtime, and it does not reproduce official performance results. Its claim ceiling is `EXTERNAL_CONTRACT_DERIVED_DEVELOPMENT_ONLY`. Promotion to `ADMITTED` still requires exact upstream environment execution, license receipt, resource envelope, partition construction and replay under a separately frozen protocol.
 
@@ -124,13 +125,13 @@ The second external batch adds all ten registered R2 families, with two determin
 | Maximum Independent Set | OR-Tools | bounded subset enumeration |
 | Minimum Dominating Set | OR-Tools | bounded subset enumeration |
 
-The adapter is `discoveryos.algotune_r2_contract_dev.v1`; its evaluator regime is `DISCOVERYOS_STDLIB_ALGOTUNE_R2_CONTRACT_DEV_V1`. Each evaluator independently checks the upstream-compatible output structure, input immutability, feasibility and exact objective on deliberately bounded deterministic cases before timing the candidate. Incorrect or suboptimal candidates receive `valid=0` and `score=0`.
+The original adapter was `discoveryos.algotune_r2_contract_dev.v1` with regime `DISCOVERYOS_STDLIB_ALGOTUNE_R2_CONTRACT_DEV_V1`. Its family-specific output, input-immutability, feasibility and exact-objective checks remain, but its wall-clock score is superseded in the current registry by the V4.1 deterministic evaluator. Invalid or suboptimal candidates still fail closed.
 
 These instances exercise structural-search mechanics without adding OR-Tools, CVXPY, POT, NetworkX or PySAT to the DiscoveryOS core environment. They are not scale-equivalent to upstream instances and do not establish official AlgoTune performance, external competitiveness or scientific admission. Their claim ceiling is `EXTERNAL_R2_CONTRACT_DERIVED_DEVELOPMENT_ONLY`.
 
 ## P2 V4 outcome-blind family expansion
 
-The third adapter, `discoveryos.algotune_p2v4_contract_dev.v1`, adds eight families solely to satisfy the pre-model P2 V4 `6 R0 / 6 R1 / 12 R2` independent-family reservoir. It remains a standard-library contract-derived DEV regime, not the upstream evaluator or scientific admission.
+The third historical adapter, `discoveryos.algotune_p2v4_contract_dev.v1`, added eight families solely to satisfy the pre-model P2 V4 `6 R0 / 6 R1 / 12 R2` independent-family reservoir. Its family material remains contract-derived DEV evidence, not the upstream evaluator or scientific admission; its wall-clock score is likewise superseded by V4.1.
 
 | Tier | Added family | Selection basis | DEV instances |
 |---|---|---|---:|
@@ -144,6 +145,12 @@ The third adapter, `discoveryos.algotune_p2v4_contract_dev.v1`, adds eight famil
 | R2 | Traveling Salesman | missing sequence/cycle structural contract | 2 |
 
 Every family binds the task and description SHA-256 from pinned AlgoTune commit `dff9914c10800c7a031c9e8c3d4d1c8cd1b38906`. The registry records the complete R1 rank, selected R0/R1/R2 identities, coverage rationale, `model_calls=0`, and `fresh_or_sealed_assets_opened=0`. The 16 new instances materialize deterministically, reject input mutation/invalid or suboptimal output, and passed their public/evaluator execution tests. Adapter source SHA-256 at this closure is `90197a9be80dc71a0d8ec2679de295e8b85c688602ce5fa2092aefd09d1b0e51`.
+
+## P2 V4.1 deterministic evaluator revision
+
+The current registry binds all 24 external contract-derived families to `discoveryos.algotune_p2v41_deterministic_dev.v1` and `DISCOVERYOS_P2V41_DETERMINISTIC_OPCODE_DEV_V1`. The score is the negative executed CPython 3.11 opcode count for frames from materialized `algorithm.py`; the family-specific correctness and input-immutability checks remain authoritative. This replaces wall-clock scoring only because an untouched baseline produced two valid scores differing by `0.004711276446948687`, which could not satisfy Executability Gate V1's `1e-12` determinism requirement.
+
+Each task contract binds a positive score resolution plus two valid, distinct fixed-case lookup calibration scores. These calibration programs establish at least four reachable development-resolution steps and are never admitted as scientific candidates. All 48 DEV instances passed public tests and two full evaluator replays with identical score/opcode count. This remains a fixed-case DEV cost proxy, not official AlgoTune performance, hardware-independent complexity, generalization evidence, or scientific admission. The pre-model binding is recorded in [`P2_FACTORIAL_V4_PREMODEL_STATISTICAL_SEAL.md`](P2_FACTORIAL_V4_PREMODEL_STATISTICAL_SEAL.md).
 
 This establishes only a candidate family reservoir. It does not choose the one primary instance per family, establish V4 residual headroom, run the cohort-wide power lease/Executability Gate, seal a V4 manifest, or authorize generation.
 

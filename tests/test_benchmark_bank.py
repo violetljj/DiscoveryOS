@@ -109,14 +109,14 @@ class BenchmarkBankTests(unittest.TestCase):
                 self.assertEqual(0, evaluation.returncode, evaluation.stderr)
                 self.assertIn('"metrics"', evaluation.stdout)
 
-    def test_six_algotune_contract_families_materialize_and_execute_every_dev_instance(self) -> None:
+    def test_all_external_contract_families_use_deterministic_v41_evaluator(self) -> None:
         registry = load_benchmark_bank(REGISTRY)
         families = [
             family
             for family in registry["families"]
-            if family.get("adapter_id") == "discoveryos.algotune_contract_dev.v1"
+            if family.get("adapter_id") == "discoveryos.algotune_p2v41_deterministic_dev.v1"
         ]
-        self.assertEqual(6, len(families))
+        self.assertEqual(24, len(families))
         with tempfile.TemporaryDirectory() as temp_dir:
             for family in families:
                 self.assertEqual(2, len(family["instance_ids"]))
@@ -134,12 +134,15 @@ class BenchmarkBankTests(unittest.TestCase):
                         resolution["claim_ceiling"],
                     )
                     self.assertEqual(
-                        "DISCOVERYOS_STDLIB_ALGOTUNE_CONTRACT_DEV_V1",
+                        "DISCOVERYOS_P2V41_DETERMINISTIC_OPCODE_DEV_V1",
                         resolution["evaluator_regime"],
                     )
                     contract = json.loads((output / "task-contract.json").read_text(encoding="utf-8"))
                     self.assertFalse(contract["upstream_evaluator_reused"])
                     self.assertEqual("DEV", contract["partition_role"])
+                    self.assertGreaterEqual(contract["headroom_steps"], 4.0)
+                    self.assertEqual(2, len(set(contract["intermediate_scores"])))
+                    self.assertGreater(contract["score_resolution"], 0)
                     public = subprocess.run(
                         [sys.executable, "public_tests.py"],
                         cwd=output,
@@ -148,18 +151,26 @@ class BenchmarkBankTests(unittest.TestCase):
                         check=False,
                     )
                     self.assertEqual(0, public.returncode, f"{instance_id}: {public.stderr}")
-                    evaluation = subprocess.run(
-                        [sys.executable, "evaluate.py"],
-                        cwd=output,
-                        text=True,
-                        capture_output=True,
-                        check=False,
+                    evaluations = tuple(
+                        subprocess.run(
+                            [sys.executable, "evaluate.py"],
+                            cwd=output,
+                            text=True,
+                            capture_output=True,
+                            check=False,
+                        )
+                        for _ in range(2)
                     )
-                    self.assertEqual(0, evaluation.returncode, f"{instance_id}: {evaluation.stderr}")
-                    payload = json.loads(evaluation.stdout)
-                    self.assertEqual(1.0, payload["metrics"]["valid"], instance_id)
-                    self.assertGreater(payload["metrics"]["score"], 0.0, instance_id)
-                    self.assertGreater(payload["metrics"]["median_runtime_ms"], 0.0, instance_id)
+                    for evaluation in evaluations:
+                        self.assertEqual(0, evaluation.returncode, f"{instance_id}: {evaluation.stderr}")
+                    payloads = tuple(json.loads(item.stdout) for item in evaluations)
+                    self.assertTrue(all(item["metrics"]["valid"] == 1.0 for item in payloads), instance_id)
+                    self.assertEqual(payloads[0]["metrics"]["score"], payloads[1]["metrics"]["score"])
+                    self.assertEqual(
+                        payloads[0]["metrics"]["algorithm_opcode_count"],
+                        payloads[1]["metrics"]["algorithm_opcode_count"],
+                    )
+                    self.assertEqual(contract["score_resolution"], payloads[0]["metrics"]["score_resolution"])
 
     def test_algotune_dev_binding_is_fail_closed(self) -> None:
         registry = load_benchmark_bank(REGISTRY)
@@ -211,7 +222,7 @@ class BenchmarkBankTests(unittest.TestCase):
             self.assertEqual(0, evaluation.returncode, evaluation.stderr)
             payload = json.loads(evaluation.stdout)
             self.assertEqual(0.0, payload["metrics"]["valid"])
-            self.assertEqual(0.0, payload["metrics"]["score"])
+            self.assertEqual(-1.0e30, payload["metrics"]["score"])
 
     def test_p2_v4_expansion_selection_and_all_instances_are_zero_model_executable(self) -> None:
         registry = load_benchmark_bank(REGISTRY)
@@ -222,54 +233,15 @@ class BenchmarkBankTests(unittest.TestCase):
             ["least_squares", "fft_convolution", "min_weight_assignment", "kd_tree", "kmeans"],
             audit["r1_sha256_rank"],
         )
-        families = [
-            family
-            for family in registry["families"]
-            if family.get("adapter_id") == "discoveryos.algotune_p2v4_contract_dev.v1"
-        ]
-        self.assertEqual(8, len(families))
-        with tempfile.TemporaryDirectory() as temp_dir:
-            for family in families:
-                self.assertEqual(2, len(family["instance_ids"]))
-                for instance_id in family["instance_ids"]:
-                    output = Path(temp_dir) / instance_id
-                    report = materialize_bank_instance(
-                        REGISTRY,
-                        family_id=family["family_id"],
-                        instance_id=instance_id,
-                        output_dir=output,
-                    )
-                    resolution = report["resolution"]
-                    self.assertEqual(
-                        "EXTERNAL_CONTRACT_DERIVED_DEVELOPMENT_ONLY",
-                        resolution["claim_ceiling"],
-                    )
-                    self.assertEqual(
-                        "DISCOVERYOS_STDLIB_ALGOTUNE_P2V4_CONTRACT_DEV_V1",
-                        resolution["evaluator_regime"],
-                    )
-                    contract = json.loads((output / "task-contract.json").read_text(encoding="utf-8"))
-                    self.assertFalse(contract["upstream_evaluator_reused"])
-                    self.assertEqual("DEV", contract["partition_role"])
-                    public = subprocess.run(
-                        [sys.executable, "public_tests.py"],
-                        cwd=output,
-                        text=True,
-                        capture_output=True,
-                        check=False,
-                    )
-                    self.assertEqual(0, public.returncode, f"{instance_id}: {public.stderr}")
-                    evaluation = subprocess.run(
-                        [sys.executable, "evaluate.py"],
-                        cwd=output,
-                        text=True,
-                        capture_output=True,
-                        check=False,
-                    )
-                    self.assertEqual(0, evaluation.returncode, f"{instance_id}: {evaluation.stderr}")
-                    payload = json.loads(evaluation.stdout)
-                    self.assertEqual(1.0, payload["metrics"]["valid"], instance_id)
-                    self.assertGreater(payload["metrics"]["score"], 0.0, instance_id)
+        selected = set(audit["selected_r0"] + audit["selected_r1"] + audit["selected_r2"])
+        self.assertEqual(8, len(selected))
+        self.assertTrue(
+            all(
+                family.get("adapter_id") == "discoveryos.algotune_p2v41_deterministic_dev.v1"
+                for family in registry["families"]
+                if family["family_id"] in selected
+            )
+        )
 
     def test_p2_v4_expansion_digest_binding_and_invalid_candidate_fail_closed(self) -> None:
         registry = load_benchmark_bank(REGISTRY)
@@ -311,58 +283,23 @@ class BenchmarkBankTests(unittest.TestCase):
             self.assertEqual(0, evaluation.returncode, evaluation.stderr)
             payload = json.loads(evaluation.stdout)
             self.assertEqual(0.0, payload["metrics"]["valid"])
-            self.assertEqual(0.0, payload["metrics"]["score"])
+            self.assertEqual(-1.0e30, payload["metrics"]["score"])
 
     def test_ten_algotune_r2_families_materialize_and_execute_every_dev_instance(self) -> None:
         registry = load_benchmark_bank(REGISTRY)
         families = [
             family
             for family in registry["families"]
-            if family.get("adapter_id") == "discoveryos.algotune_r2_contract_dev.v1"
+            if family.get("difficulty_tier") == "R2"
+            and family.get("evidence_role") == "CONTRACT_DERIVED_DEVELOPMENT"
         ]
-        self.assertEqual(10, len(families))
-        with tempfile.TemporaryDirectory() as temp_dir:
-            for family in families:
-                self.assertEqual(2, len(family["instance_ids"]))
-                for instance_id in family["instance_ids"]:
-                    output = Path(temp_dir) / instance_id
-                    report = materialize_bank_instance(
-                        REGISTRY,
-                        family_id=family["family_id"],
-                        instance_id=instance_id,
-                        output_dir=output,
-                    )
-                    resolution = report["resolution"]
-                    self.assertEqual(
-                        "EXTERNAL_R2_CONTRACT_DERIVED_DEVELOPMENT_ONLY",
-                        resolution["claim_ceiling"],
-                    )
-                    self.assertEqual(
-                        "DISCOVERYOS_STDLIB_ALGOTUNE_R2_CONTRACT_DEV_V1",
-                        resolution["evaluator_regime"],
-                    )
-                    contract = json.loads((output / "task-contract.json").read_text(encoding="utf-8"))
-                    self.assertFalse(contract["upstream_evaluator_reused"])
-                    self.assertEqual("DEV", contract["partition_role"])
-                    public = subprocess.run(
-                        [sys.executable, "public_tests.py"],
-                        cwd=output,
-                        text=True,
-                        capture_output=True,
-                        check=False,
-                    )
-                    self.assertEqual(0, public.returncode, f"{instance_id}: {public.stderr}")
-                    evaluation = subprocess.run(
-                        [sys.executable, "evaluate.py"],
-                        cwd=output,
-                        text=True,
-                        capture_output=True,
-                        check=False,
-                    )
-                    self.assertEqual(0, evaluation.returncode, f"{instance_id}: {evaluation.stderr}")
-                    payload = json.loads(evaluation.stdout)
-                    self.assertEqual(1.0, payload["metrics"]["valid"], instance_id)
-                    self.assertGreater(payload["metrics"]["score"], 0.0, instance_id)
+        self.assertEqual(12, len(families))
+        self.assertTrue(
+            all(
+                family.get("adapter_id") == "discoveryos.algotune_p2v41_deterministic_dev.v1"
+                for family in families
+            )
+        )
 
     def test_algotune_r2_digest_binding_and_candidate_failure_are_fail_closed(self) -> None:
         registry = load_benchmark_bank(REGISTRY)
@@ -404,7 +341,7 @@ class BenchmarkBankTests(unittest.TestCase):
             self.assertEqual(0, evaluation.returncode, evaluation.stderr)
             payload = json.loads(evaluation.stdout)
             self.assertEqual(0.0, payload["metrics"]["valid"])
-            self.assertEqual(0.0, payload["metrics"]["score"])
+            self.assertEqual(-1.0e30, payload["metrics"]["score"])
 
     def test_ale_r3_catalog_is_pinned_and_cannot_pretend_to_be_execution_ready(self) -> None:
         registry = load_benchmark_bank(REGISTRY)
