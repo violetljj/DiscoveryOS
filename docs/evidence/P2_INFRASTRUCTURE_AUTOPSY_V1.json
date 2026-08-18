@@ -1,0 +1,78 @@
+{
+  "analysis_version": "P2_INFRASTRUCTURE_AUTOPSY_V1",
+  "source": {
+    "protocol_id": "DISCOVERYOS_P2_ADA_EVOX_FACTORIAL_DEVELOPMENT_V3",
+    "protocol_manifest_digest": "86622585040bc1c88604b73d2bde978267e792741f6b026da997ab196602fef5",
+    "canonical_report_digest": "e68ed3ade290dce7ef1b85129842c5fe68125dbb3aa4eb42fcf3f123807faa01",
+    "generation_calls_executed": 0
+  },
+  "outlier": {
+    "block_id": "bounded_knapsack_beta-seed-17082601",
+    "arm": "neither",
+    "actual_wall_seconds": 3944.2953633000143,
+    "actual_cpu_seconds": 0.9375,
+    "end_to_end_seconds": 3950.078999999998,
+    "provider_wall_seconds": 58.703000000008615,
+    "recorded_git_patch_seconds": 1.2030000000086147,
+    "recorded_local_build_test_seconds": 0.7992017999931704,
+    "recorded_evaluator_command_seconds": 0.328738299998804,
+    "runner_uninstrumented_seconds": 3881.575059900002,
+    "scheduler_evidence_overhead_seconds": 1.686363300002995,
+    "outer_harness_residual_seconds": 5.783636699983617,
+    "wall_cpu_ratio": 4207.248387520015
+  },
+  "normal_evaluable_arms": {
+    "count": 39,
+    "actual_wall_seconds": {
+      "min": 51.7651575000491,
+      "median": 158.83097880000423,
+      "p95": 228.21965610000188,
+      "max": 230.09386300001643
+    },
+    "wall_cpu_ratio": {
+      "min": 82.79421792941524,
+      "median": 231.51404042446947,
+      "p95": 446.24264339397126,
+      "max": 536.2997403825917
+    }
+  },
+  "provider": {
+    "existing_call_count": 172,
+    "duration_seconds": {
+      "min": 15.718999999997322,
+      "median": 32.14050000000134,
+      "p95": 60.46799999999348,
+      "max": 83.64100000000326
+    },
+    "outlier_arm_call_seconds": [
+      38.187000000005355,
+      20.51600000000326
+    ],
+    "retry_event_count": 0,
+    "transport_timeout_event_count": 0,
+    "generation_budget_exceeded_tokens_count": 54,
+    "code_mode_host_missing_error_item_count": 172
+  },
+  "host_power_events": [
+    {
+      "log": "System",
+      "provider": "Microsoft-Windows-Kernel-Power",
+      "record_id": 50104,
+      "event_id": 506,
+      "utc": "2026-08-17T21:04:05.4377906Z",
+      "state": "ENTER_MODERN_STANDBY",
+      "reason": "Idle Timeout"
+    },
+    {
+      "log": "System",
+      "provider": "Microsoft-Windows-Kernel-Power",
+      "record_id": 50108,
+      "event_id": 507,
+      "utc": "2026-08-17T22:11:38.6404400Z",
+      "state": "EXIT_MODERN_STANDBY",
+      "reason": "Austerity Battery Drain Budget Exceeded"
+    }
+  ],
+  "verdict": "P2_V3_WALL_OUTLIER_ATTRIBUTED_TO_HOST_SUSPEND_TIMING_CONTAMINATION",
+  "claim_ceiling": "INFRASTRUCTURE_AUTOPSY_ONLY_P2_V3_REMAINS_NOT_EVALUABLE_P3_CLOSED"
+}
